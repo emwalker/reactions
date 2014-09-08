@@ -4,42 +4,67 @@ import numpy as np
 
 
 class Channel(object):
-    def __init__(self, df):
+    def __init__(self, model, df, photon_count):
+        self.model = model
+        df['escaping_photons'] = df.transmitted_fraction * photon_count
         self.df = df
 
-    @property
-    def escaped_photons(self):
-        return self.df
+
+class Material(object):
+    def __init__(self, df):
+        self.df = df.sort('photon_energy')
+        self.density = df['density'].iloc[0]
+        self.photon_energy = df.photon_energy.values
+        self.mu_over_rho = df.mu_over_rho.values
 
 
 class Generation(object):
-    def __init__(self, engine, df):
-        self.engine = engine
-        df = self._escaping_photons(df)
-        df = self._nist_energies(df)
+    def __init__(self, model, df):
+        self.model = model
+        df = self._nist_material_values(df)
+        df = self._transmitted_fraction(df)
         self.df = df
 
-    def channel_for(self, transition, name):
+    def channel_for(self, transition, name, photon_count):
         df = self.df[(self.df.transition == transition) & (self.df.channel == name)]
-        return Channel(df)
+        return Channel(self, df, photon_count)
 
-    def _nist_energies(self, df):
+    def _nist_material_values(self, df):
+        for column in ('mu_over_rho', 'density'):
+            df[column] = np.nan
+        def helper(group):
+            name = group['material'].iloc[0]
+            material = self.model.material_for(name)
+            energies = group.photon_energy.copy()
+            energies.sort()
+            idx = np.searchsorted(material.photon_energy, energies)
+            mu_over_rho = material.mu_over_rho[idx]
+            if np.isnan(mu_over_rho).any():
+                raise Exception('no suitable energy found for {}'.format(name))
+            group['mu_over_rho'] = mu_over_rho
+            group['density'] = material.density
+            return group
+        df = df.groupby('material').apply(helper)
         return df
 
-    def _escaping_photons(self, df):
-        df = self.engine.add_materials(df)
+    def _transmitted_fraction(self, df):
+        """Calculate the fraction of photons that escape through various materials.
+
+        mu_over_row: mass attenuation coefficient, in cm^2/g.  Values taken from tables
+        such as this one: http://physics.nist.gov/PhysRefData/XrayMassCoef/ElemTab/z82.html.
+        For more information, see: http://physics.nist.gov/PhysRefData/XrayMassCoef/chap2.html.
+        """
         def thickness(value):
             match = re.match(r'(\d+)\s*cm', value)
             if match:
                 return float(match.group(1))
             raise Exception('do not recognize thickness: {}'.format(value))
         thickness_cm = df.material_thickness.apply(thickness)
-        df['transmitted_fraction'] = np.exp(-df.mass_attenuation_coefficient * df.density * thickness_cm)
-        df['escaping_photons'] = df.photon_count * df.transmitted_fraction
+        df['transmitted_fraction'] = np.exp(-df.mu_over_rho * df.density * thickness_cm)
         return df
 
 
-class Engine(object):
+class Model(object):
     @classmethod
     def from_csv(cls, materials_path, initpath):
         df_materials = pd.read_csv(materials_path, header=0)
@@ -50,8 +75,8 @@ class Engine(object):
         self.df_materials = df_materials
         self.generations = [Generation(self, df_generation)]
 
-    def add_materials(self, df):
-        df_after = df.merge(self.df_materials, on=['material'])
-        if len(df) != len(df_after):
-            raise Exception('one or more materials not found')
-        return df_after
+    def material_for(self, name):
+        df = self.df_materials[self.df_materials.material == name]
+        if len(df) < 1:
+            raise Exception('no material found: {}'.format(name))
+        return Material(df)
