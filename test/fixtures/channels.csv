@@ -1,4 +1,4 @@
-transition,channel,material,escaping_photons
-"58Ni(d,p)59Ni",Ni K x-rays,lead (1cm),0e0
-"58Ni(d,p)59Ni",Ni K x-rays,lead (2cm),0e0
-"58Ni(d,p)59Ni",Ni K x-rays,lead (5cm),0e0
+transition,channel,material,material_thickness,photon_energy,photon_count
+"58Ni(d,p)59Ni",Ni K x-rays,Lead,1cm,15e3,6.3979e+16
+"58Ni(d,p)59Ni",Ni K x-rays,Lead,2cm,15e3,6.3979e+16
+"58Ni(d,p)59Ni",Ni K x-rays,Lead,5cm,15e3,6.3979e+16

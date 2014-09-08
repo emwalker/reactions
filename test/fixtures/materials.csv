@@ -1,4 +1,4 @@
-name,photon_energy,mass_attenuation_coefficient
-lead (1cm),1e3,1
-lead (2cm),1e3,1
-lead (5cm),1e3,1
+material,photon_energy,mass_attenuation_coefficient,density
+Lead,1e3,1.08E+02,11.34
+Nickel,1e3,7.08E+01,8.908
+Pyrex,1e3,5.22E+00,2.230E+00
