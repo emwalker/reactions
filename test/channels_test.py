@@ -12,11 +12,12 @@ class ChannelsTest(unittest.TestCase):
         channel = self.model.generations[-1].channel_for('58Ni(d,p)59Ni', 'Ni K x-rays')
         values = channel.escaping_photons(6.3979e+16).values.tolist()
         self.assertEqual(values, [
-            ['Pyrex',  '1cm', 566884433791.0281],
-            ['Nickel', '1cm', 7.30679905354258e-258],
-            ['Lead',   '1cm', 0.0],
-            ['Lead',   '2cm', 0.0],
-            ['Lead',   '5cm', 0.0],
+            ['Pyrex',    '1cm',   566884433791.0281],
+            ['Nickel',   '1cm',   7.30679905354258e-258],
+            ['Lead',     '1cm',   0.0],
+            ['Lead',     '2cm',   0.0],
+            ['Lead',     '5cm',   0.0],
+            ['Air, Dry', '100cm', 5.267115195919887e+16],
         ])
 
     def test_escaping_ep_annihilation_photons(self):
@@ -24,11 +25,12 @@ class ChannelsTest(unittest.TestCase):
         channel = self.model.generations[-1].channel_for('58Ni(d,p)59Ni', 'β-β+ annihilation photons')
         values = channel.escaping_photons(41).values.tolist()
         self.assertEqual(values, [
-            ['Pyrex',  '1cm', 34.27415483196742],
-            ['Nickel', '1cm', 20.204807006274784],
-            ['Lead',   '1cm', 9.957639710984768],
-            ['Lead',   '2cm', 2.418404600336118],
-            ['Lead',   '5cm', 0.03464548262924468],
+            ['Pyrex',    '1cm',   34.27415483196742],
+            ['Nickel',   '1cm',   20.204807006274784],
+            ['Lead',     '1cm',   9.957639710984768],
+            ['Lead',     '2cm',   2.418404600336118],
+            ['Lead',     '5cm',   0.03464548262924468],
+            ['Air, Dry', '100cm', 40.60396783279807],
         ])
 
 
