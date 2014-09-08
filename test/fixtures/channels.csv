@@ -4,3 +4,8 @@ transition,channel,material,material_thickness,photon_energy,photon_count
 "58Ni(d,p)59Ni",Ni K x-rays,Lead,1cm,15e-3
 "58Ni(d,p)59Ni",Ni K x-rays,Lead,2cm,15e-3
 "58Ni(d,p)59Ni",Ni K x-rays,Lead,5cm,15e-3
+"58Ni(d,p)59Ni",β-β+ annihilation photons,Pyrex,1cm,0.511
+"58Ni(d,p)59Ni",β-β+ annihilation photons,Nickel,1cm,0.511
+"58Ni(d,p)59Ni",β-β+ annihilation photons,Lead,1cm,0.511
+"58Ni(d,p)59Ni",β-β+ annihilation photons,Lead,2cm,0.511
+"58Ni(d,p)59Ni",β-β+ annihilation photons,Lead,5cm,0.511
