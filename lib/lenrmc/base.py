@@ -4,10 +4,14 @@ import numpy as np
 
 
 class Channel(object):
-    def __init__(self, model, df, photon_count):
+    def __init__(self, model, df):
         self.model = model
-        df['escaping_photons'] = df.transmitted_fraction * photon_count
         self.df = df
+
+    def escaping_photons(self, photon_count):
+        df = self.df.copy()
+        df['escaping_photons'] = self.df.transmitted_fraction * photon_count
+        return df[['material', 'material_thickness', 'escaping_photons']]
 
 
 class Material(object):
@@ -25,9 +29,9 @@ class Generation(object):
         df = self._transmitted_fraction(df)
         self.df = df
 
-    def channel_for(self, transition, name, photon_count):
+    def channel_for(self, transition, name):
         df = self.df[(self.df.transition == transition) & (self.df.channel == name)]
-        return Channel(self, df, photon_count)
+        return Channel(self, df)
 
     def _nist_material_values(self, df):
         for column in ('mu_over_rho', 'density'):
