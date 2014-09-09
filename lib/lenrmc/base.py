@@ -7,6 +7,7 @@ class Channel(object):
     def __init__(self, model, df):
         self.model = model
         self.df = df
+        self.photon_energy = df.photon_energy
 
     def escaping_photons(self, materials, photon_count):
         df = self.df.copy()
@@ -15,7 +16,6 @@ class Channel(object):
         return df[['material', 'material_thickness', 'escaping_photons']]
 
     def _transmitted_fraction(self, materials, df):
-        combined = pd.concat(map(lambda m: m.df, materials))
         array = map(lambda m: m.transmitted_fraction_for(df.photon_energy), materials)
         df_fractions = pd.concat(array)
         df_fractions['join_key'] = 1
@@ -24,7 +24,34 @@ class Channel(object):
         return df
 
 
-class Material(object):
+class CompositeLayer(object):
+    def __init__(self, layers, **kwargs):
+        self.name = kwargs.get('name', '/'.join(map(lambda l: l.name, layers)))
+        self.layers = layers
+
+    def transmitted_fraction_for(self, photon_energies):
+        if self.layers:
+            fractions = []
+            thicknesses = []
+            result = None
+            for material in self.layers:
+                thicknesses.append(material.thickness)
+                result = material.transmitted_fraction_for(photon_energies)
+                fractions.append(result.transmitted_fraction)
+            df = result.copy()
+            df['transmitted_fraction'] = reduce(lambda l,r: l * r, fractions)
+            df['material'] = self.name
+            df['material_thickness'] = '/'.join(thicknesses)
+        else:
+            df = None
+        return df
+
+
+class Layer(object):
+    @classmethod
+    def of(cls, layers, **kwargs):
+        return CompositeLayer(layers, **kwargs)
+
     def __init__(self, name, thickness, df):
         self.df = df.copy()
         self.density = df.density.iloc[0]
@@ -34,8 +61,8 @@ class Material(object):
         self.photon_energy = df.photon_energy.values
         self.mu_over_rho = df.mu_over_rho.values
 
-    def transmitted_fraction_for(self, photon_energy):
-        energies = photon_energy.copy()
+    def transmitted_fraction_for(self, photon_energies):
+        energies = photon_energies.copy()
         energies.sort()
         idx = np.searchsorted(self.photon_energy, energies)
         mu_over_rho = self.mu_over_rho[idx]
@@ -88,8 +115,11 @@ class Model(object):
         self.df_materials = df_materials
         self.generations = [Generation(self, df_generation)]
 
-    def material_for(self, name, thickness):
+    def layer_for(self, name, thickness):
         df = self.df_materials[self.df_materials.material == name]
         if len(df) < 1:
             raise Exception('no material found: {}'.format(name))
-        return Material(name, thickness, df)
+        return Layer(name, thickness, df)
+
+    def layer_of(self, *args, **kwargs):
+        return Layer.of(*args, **kwargs)
