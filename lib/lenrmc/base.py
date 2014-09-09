@@ -8,47 +8,46 @@ class Channel(object):
         self.model = model
         self.df = df
 
-    def escaping_photons(self, photon_count):
+    def escaping_photons(self, materials, photon_count):
         df = self.df.copy()
-        df['escaping_photons'] = self.df.transmitted_fraction * photon_count
+        df = self._transmitted_fraction(materials, df)
+        df['escaping_photons'] = df.transmitted_fraction * photon_count
         return df[['material', 'material_thickness', 'escaping_photons']]
+
+    def _transmitted_fraction(self, materials, df):
+        combined = pd.concat(map(lambda m: m.df, materials))
+        array = map(lambda m: m.transmitted_fraction_for(df.photon_energy), materials)
+        df_fractions = pd.concat(array)
+        df_fractions['join_key'] = 1
+        df['join_key'] = 1
+        df = df.merge(df_fractions, on='join_key')
+        return df
 
 
 class Material(object):
-    def __init__(self, df):
+    def __init__(self, name, thickness, df):
+        self.df = df.copy()
+        self.density = df.density.iloc[0]
+        self.df['name'] = self.name = name
+        self.df['material_thickness'] = self.thickness = thickness
         self.df = df.sort('photon_energy')
-        self.density = df['density'].iloc[0]
         self.photon_energy = df.photon_energy.values
         self.mu_over_rho = df.mu_over_rho.values
 
-
-class Generation(object):
-    def __init__(self, model, df):
-        self.model = model
-        df = self._nist_material_values(df)
+    def transmitted_fraction_for(self, photon_energy):
+        energies = photon_energy.copy()
+        energies.sort()
+        idx = np.searchsorted(self.photon_energy, energies)
+        mu_over_rho = self.mu_over_rho[idx]
+        if np.isnan(mu_over_rho).any():
+            raise Exception('no suitable energy found for {}'.format(name))
+        df = pd.DataFrame({
+            'material': self.name,
+            'mu_over_rho': mu_over_rho,
+            'density': self.density,
+            'material_thickness': self.thickness,
+        })
         df = self._transmitted_fraction(df)
-        self.df = df
-
-    def channel_for(self, transition, name):
-        df = self.df[(self.df.transition == transition) & (self.df.channel == name)]
-        return Channel(self, df)
-
-    def _nist_material_values(self, df):
-        for column in ('mu_over_rho', 'density'):
-            df[column] = np.nan
-        def helper(group):
-            name = group['material'].iloc[0]
-            material = self.model.material_for(name)
-            energies = group.photon_energy.copy()
-            energies.sort()
-            idx = np.searchsorted(material.photon_energy, energies)
-            mu_over_rho = material.mu_over_rho[idx]
-            if np.isnan(mu_over_rho).any():
-                raise Exception('no suitable energy found for {}'.format(name))
-            group['mu_over_rho'] = mu_over_rho
-            group['density'] = material.density
-            return group
-        df = df.groupby('material').apply(helper)
         return df
 
     def _transmitted_fraction(self, df):
@@ -68,6 +67,16 @@ class Generation(object):
         return df
 
 
+class Generation(object):
+    def __init__(self, model, df):
+        self.model = model
+        self.df = df
+
+    def channel_for(self, transition, name):
+        df = self.df[(self.df.transition == transition) & (self.df.channel == name)]
+        return Channel(self, df)
+
+
 class Model(object):
     @classmethod
     def from_csv(cls, materials_path, initpath):
@@ -79,8 +88,8 @@ class Model(object):
         self.df_materials = df_materials
         self.generations = [Generation(self, df_generation)]
 
-    def material_for(self, name):
+    def material_for(self, name, thickness):
         df = self.df_materials[self.df_materials.material == name]
         if len(df) < 1:
             raise Exception('no material found: {}'.format(name))
-        return Material(df)
+        return Material(name, thickness, df)
