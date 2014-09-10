@@ -23,7 +23,7 @@ class ChannelsTest(unittest.TestCase):
         cls.model = model
 
     def test_escaping_15_kev_xrays(self):
-        channel = self.model.generations[-1].channel_for('58Ni(d,p)59Ni', 'Ni K x-rays')
+        channel = self.model.generations[-1].channel_for('58Ni(d,p)59Ni', 'bremsstrahlung')
         values = channel.escaping_photons(self.materials, 6.3979e+16).values.tolist()
         self.assertEqual(values, [
             ['Pyrex',    '1cm',            566884433791.0281],
@@ -47,6 +47,20 @@ class ChannelsTest(unittest.TestCase):
             ['Lead',     '5cm',            0.03464548262924468],
             ['Air, Dry', '100cm',          40.60396783279807],
             ['E-Cat',    '1cm/1cm/100cm',  4.859727039894301],
+        ])
+
+    def test_escaping_deexcitation_gammas(self):
+        "See what happens to the 87 keV deexcitation gammas."
+        channel = self.model.generations[-1].channel_for('62Ni(d,p)63Ni', 'β- deexcitation gammas')
+        values = channel.escaping_photons(self.materials, 2.06E+12).values.tolist()
+        self.assertEqual(values, [
+            ['Pyrex',    '1cm',            1423608695585.4648],
+            ['Nickel',   '1cm',            39460858705.86735],
+            ['Lead',     '1cm',            807.8101747903463],
+            ['Lead',     '2cm',            3.167753779101019e-07],
+            ['Lead',     '5cm',            1.9101950428524097e-35],
+            ['Air, Dry', '100cm',          2022100722783.4817],
+            ['E-Cat',    '1cm/1cm/100cm',  15.189525048364029],
         ])
 
 
