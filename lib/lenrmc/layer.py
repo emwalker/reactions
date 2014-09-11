@@ -3,7 +3,7 @@ import math
 import pandas as pd
 import numpy as np
 
-from .helpers import centimeters_to_float
+from .helpers import centimeters_to_float, MultiDataFrame
 
 
 class CompositeLayer(object):
@@ -13,19 +13,26 @@ class CompositeLayer(object):
 
     def transmitted_fraction_for(self, photon_energies):
         if self.layers:
+            dfs = []
             fractions = []
             thicknesses = []
             result = None
             for material in self.layers:
-                thicknesses.append(material.thickness)
-                result = material.transmitted_fraction_for(photon_energies)
-                fractions.append(result.transmitted_fraction)
-            df = result.copy()
-            df['transmitted_fraction'] = reduce(lambda l,r: l * r, fractions)
-            df['material'] = self.name
-            df['material_thickness'] = '/'.join(thicknesses)
+                df = self._transmitted_fraction(material, photon_energies, fractions, thicknesses)
+                dfs.append(df)
+            multi_df = MultiDataFrame(dfs)
         else:
-            df = None
+            multi_df = None
+        return multi_df
+
+    def _transmitted_fraction(self, material, photon_energies, fractions, thicknesses):
+        thicknesses.append(material.thickness)
+        result = material.transmitted_fraction_for(photon_energies).last
+        fractions.append(result.transmitted_fraction)
+        df = result.copy()
+        df['transmitted_fraction'] = reduce(lambda l,r: l * r, fractions)
+        df['material'] = self.name
+        df['material_thickness'] = '/'.join(thicknesses)
         return df
 
 
@@ -57,7 +64,7 @@ class Layer(object):
             'material_thickness': self.thickness,
         })
         df = self._transmitted_fraction(df)
-        return df
+        return MultiDataFrame([df])
 
     def _transmitted_fraction(self, df):
         """Calculate the fraction of photons that escape through various materials.
@@ -89,4 +96,4 @@ class DetectorLayer(Layer):
             'material_thickness': [self.thickness],
             'transmitted_fraction': [self.transmitted_fraction],
         })
-        return df
+        return MultiDataFrame([df])

@@ -63,6 +63,18 @@ class ChannelsTest(unittest.TestCase):
             ['E-Cat (6150AD-b)', '1cm/1cm/20cm/D', 0.019009949934766165],
         ])
 
+    def test_compound_layer(self):
+        "A compound layer should keep track of the photon transmission of each successive layer."
+        channel = self.model.generations[-1].channel_for('58Ni(d,p)59Ni', 'β-β+ annihilation photons')
+        compound = self.materials[-1]
+        multi_df = channel.escaping_photons([compound], 41)
+        self.assertEqual(multi_df.last.values.tolist(), [
+            ['E-Cat (6150AD-b)', '1cm',            20.204807006274784],
+            ['E-Cat (6150AD-b)', '1cm/1cm',        4.907126551182075],
+            ['E-Cat (6150AD-b)', '1cm/1cm/20cm',   4.897609807430786],
+            ['E-Cat (6150AD-b)', '1cm/1cm/20cm/D', 0.019009949934766165]
+        ])
+
 
 if __name__ == '__main__':
     unittest.main()
