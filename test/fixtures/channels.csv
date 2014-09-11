@@ -2,4 +2,3 @@ transition,channel,photon_energy,photon_count
 "58Ni(d,p)59Ni",bremsstrahlung,15e-3
 "58Ni(d,p)59Ni",β-β+ annihilation photons,0.511
 "62Ni(d,p)63Ni",bremsstrahlung,11e-3
-"62Ni(d,p)63Ni",β- deexcitation gammas,87e-3

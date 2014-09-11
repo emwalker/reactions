@@ -1,5 +1,7 @@
 # coding: UTF-8
 import unittest
+import math
+
 import numpy as np
 from lenrmc.base import *
 from lenrmc.layer import DetectorLayer
@@ -28,6 +30,8 @@ class ChannelsTest(unittest.TestCase):
         cls.model = model
 
     def test_detector_transmitted_fraction(self):
+        self.assertEqual(self.detector.solid_angle, math.pi * 0.05971499970933625)
+        self.assertEqual(self.detector.relative_coverage, 0.014928749927334062)
         self.assertEqual(self.detector.transmitted_fraction, 0.003881474981106856)
 
     def test_escaping_15_kev_xrays(self):
@@ -57,21 +61,6 @@ class ChannelsTest(unittest.TestCase):
             ['Air, Dry',         '20cm',           40.92048574868956],
             ['E-Cat',            '1cm/1cm/20cm',   4.897609807430786],
             ['E-Cat (6150AD-b)', '1cm/1cm/20cm/D', 0.019009949934766165],
-        ])
-
-    def test_escaping_deexcitation_gammas(self):
-        "See what happens to the 87 keV deexcitation gammas."
-        channel = self.model.generations[-1].channel_for('62Ni(d,p)63Ni', 'β- deexcitation gammas')
-        values = channel.escaping_photons(self.materials, 2.06E+12).values.tolist()
-        self.assertEqual(values, [
-            ['Pyrex',            '1cm',            1423608695585.4648],
-            ['Nickel',           '1cm',            39460858705.86735],
-            ['Lead',             '1cm',            807.8101747903463],
-            ['Lead',             '2cm',            3.167753779101019e-07],
-            ['Lead',             '5cm',            1.9101950428524097e-35],
-            ['Air, Dry',         '20cm',           2052363739986.252],
-            ['E-Cat',            '1cm/1cm/20cm',   15.416853416660036],
-            ['E-Cat (6150AD-b)', '1cm/1cm/20cm/D', 0.059840130824157685],
         ])
 
 
