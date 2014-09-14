@@ -1,3 +1,4 @@
+# coding: utf-8
 import argparse
 import os
 import sys
@@ -22,7 +23,7 @@ class TransitionReport(Report):
     def _write_channel_to(self, io, table):
         energy_mev, channel, transition = table.unique_values_at(['photon_energy', 'channel', 'transition'])
         energy_kev = energy_mev * 1000
-        df_view = table.df[['material', 'material_thickness', 'escaping_photons']]
+        df_view = table.df[['material', 'material_thickness', 'photon_count', 'escaping_photons']]
         tbl = tabulate(df_view, headers=df_view.columns.tolist())
         io.write("""
 Escaping {:.0f} keV {} photons from {} transitions:
@@ -41,19 +42,16 @@ class App(object):
         TransitionReport(photons).write_to(sys.stdout)
 
     def _channel_data(self):
-        columns = ['transition', 'channel', 'photon_energy']
-        table = operator.table(
-            'System 1',
-            values=[['58Ni(d,p)59Ni', 'bremsstrahlung', 511e-3]],
-            columns=columns
-        )
-        system = table.merge(operator.materials, on=[operator.closest('photon_energy')])
+        system = operator.channels.merge(operator.materials, on=[operator.closest('photon_energy')])
         return system
 
     def _photon_counts(self):
         counts = operator.table(
             'Photon counts',
-            values=[['58Ni(d,p)59Ni', 'bremsstrahlung', 5e10]],
+            values=[
+                ['58Ni(d,p)59Ni', 'bremsstrahlung', 6.3979e+16],
+                ['58Ni(d,p)59Ni', 'β-β+ annihilation', 41],
+            ],
             columns=['transition', 'channel', 'photon_count']
         )
         return counts
