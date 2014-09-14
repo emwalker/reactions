@@ -10,7 +10,7 @@ from lenrmc.layer import DetectorLayer
 class ChannelsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        model = Model.from_csv('fixtures/materials.csv', 'fixtures/channels.csv')
+        model = Model()
         nickel_1cm = model.layer_for('Nickel', '1cm')
         lead_1cm = model.layer_for('Lead', '1cm')
         air_20cm = model.layer_for('Air, Dry', '20cm')

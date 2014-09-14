@@ -1,4 +1,5 @@
 import re
+import os
 
 import pandas as pd
 import numpy as np
@@ -50,14 +51,16 @@ class Generation(object):
 
 
 class Model(object):
-    @classmethod
-    def from_csv(cls, materials_path, initpath):
-        df_materials = pd.read_csv(materials_path, header=0)
-        df_generation = pd.read_csv(initpath, header=0)
-        return cls(df_materials, df_generation)
+    materials_path = os.path.join(os.path.dirname(__file__), '../../db/materials.csv')
+    channels_path  = os.path.join(os.path.dirname(__file__), '../../db/channels.csv')
 
-    def __init__(self, df_materials, df_generation):
-        self.df_materials = df_materials
+    @classmethod
+    def from_csv(cls, materials_path, channels_path):
+        return cls(materials_path, channels_path)
+
+    def __init__(self, materials_path=None, channels_path=None):
+        self.df_materials = pd.read_csv(materials_path or self.materials_path, header=0)
+        df_generation = pd.read_csv(channels_path or self.channels_path, header=0)
         self.generations = [Generation(self, df_generation)]
 
     def layer_for(self, name, thickness):
