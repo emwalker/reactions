@@ -3,9 +3,6 @@ import argparse
 import os
 import sys
 
-from tabulate import tabulate
-
-sys.path.append('lib')
 from lenrmc import operator
 
 
@@ -24,22 +21,39 @@ class TransitionReport(Report):
         energy_mev, channel, transition = table.unique_values_at(['photon_energy', 'channel', 'transition'])
         energy_kev = energy_mev * 1000
         df_view = table.df[['material', 'material_thickness', 'photon_count', 'escaping_photons']]
-        tbl = tabulate(df_view, headers=df_view.columns.tolist())
         io.write("""
 Escaping {:.0f} keV {} photons from {} transitions:
 
 {}
 
 
-""".format(energy_kev, channel, transition, tbl))
+""".format(energy_kev, channel, transition, repr(df_view)))
 
+
+class LayerReport(Report):
+    def write_to(self, io):
+        tables = self.array.partition_by(['material', 'material_thickness'])
+        for table in tables:
+            self._write_channel_to(io, table)
+
+    def _write_channel_to(self, io, table):
+        material, thickness = table.unique_values_at(['material', 'material_thickness'])
+        df_view = table.df[['transition', 'channel', 'photon_count', 'escaping_photons']]
+        io.write("""
+Photons escaping through {} of {}:
+
+{}
+
+
+""".format(thickness, material, repr(df_view)))
 
 
 class App(object):
     def run(self):
         channels_by_layer = self._attenuators() * self._photon_counts() * self._channel_data()
         photons = operator.escaping_photons() * operator.transmitted_fraction() * channels_by_layer
-        TransitionReport(photons).write_to(sys.stdout)
+        for cls in (TransitionReport, LayerReport):
+            cls(photons).write_to(sys.stdout)
 
     def _channel_data(self):
         system = operator.channels.merge(operator.materials, on=[operator.closest('photon_energy')])
