@@ -14,6 +14,9 @@ class MultiDataFrame(object):
     def __init__(self, dataframes):
         self.dataframes = dataframes
 
+    def __iter__(self):
+        return iter(self.dataframes)
+
     @property
     def last(self):
         return self.dataframes[-1]

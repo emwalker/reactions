@@ -9,8 +9,10 @@ from .helpers import MultiDataFrame
 
 
 class Channel(object):
-    def __init__(self, model, df):
+    def __init__(self, model, transition, name, df):
         self.model = model
+        self.transition = transition
+        self.name = name
         self.df = df
         self.photon_energy = df.photon_energy
 
@@ -27,7 +29,7 @@ class Channel(object):
     def _transmitted_fraction(self, materials, df_original):
         array = []
         for material in materials:
-            multi_df = material.transmitted_fraction_for(df_original.photon_energy)
+            multi_df = material.transmitted_fraction_for(df_original)
             array.append(multi_df.dataframes)
         combineds = []
         for dfs in array:
@@ -47,7 +49,11 @@ class Generation(object):
 
     def channel_for(self, transition, name):
         df = self.df[(self.df.transition == transition) & (self.df.channel == name)]
-        return Channel(self, df)
+        return Channel(self, transition, name, df)
+
+    @property
+    def channels(self):
+        return (Channel(self, t, n, g) for (t, n), g in self.df.groupby(['transition', 'channel']))
 
 
 class Model(object):

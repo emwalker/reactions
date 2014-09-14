@@ -1,39 +1,10 @@
 import math
+import logging
 
 import pandas as pd
 import numpy as np
 
 from .helpers import centimeters_to_float, MultiDataFrame
-
-
-class CompositeLayer(object):
-    def __init__(self, layers, **kwargs):
-        self.name = kwargs.get('name', '/'.join(map(lambda l: l.name, layers)))
-        self.layers = layers
-
-    def transmitted_fraction_for(self, photon_energies):
-        if self.layers:
-            dfs = []
-            fractions = []
-            thicknesses = []
-            result = None
-            for material in self.layers:
-                df = self._transmitted_fraction(material, photon_energies, fractions, thicknesses)
-                dfs.append(df)
-            multi_df = MultiDataFrame(dfs)
-        else:
-            multi_df = None
-        return multi_df
-
-    def _transmitted_fraction(self, material, photon_energies, fractions, thicknesses):
-        thicknesses.append(material.thickness)
-        result = material.transmitted_fraction_for(photon_energies).last
-        fractions.append(result.transmitted_fraction)
-        df = result.copy()
-        df['transmitted_fraction'] = reduce(lambda l,r: l * r, fractions)
-        df['material'] = self.name
-        df['material_thickness'] = '/'.join(thicknesses)
-        return df
 
 
 class Layer(object):
@@ -50,21 +21,41 @@ class Layer(object):
         self.photon_energy = df.photon_energy.values
         self.mu_over_rho = df.mu_over_rho.values
 
-    def transmitted_fraction_for(self, photon_energies):
-        energies = photon_energies.copy()
-        energies.sort()
-        idx = np.searchsorted(self.photon_energy, energies)
+    def __repr__(self):
+        return '{} ({})'.format(self.name, self.thickness)
+
+    def escaping_photons(self, model, photon_counts):
+        multi_df = self.transmitted_fraction_for(model.generations[-1].df)
+        views = []
+        for df in multi_df:
+            df = df.merge(photon_counts, on='transition')
+            df['escaping_photons'] = df.transmitted_fraction * df.photon_counts
+            view = df[['material', 'material_thickness', 'escaping_photons']]
+            views.append(view)
+        return MultiDataFrame(views)
+
+    def transmitted_fraction_for(self, df):
+        self._check_transmission_df(df)
+        df = df.copy().sort('photon_energy')
+        idx = np.searchsorted(self.photon_energy, df.photon_energy)
         mu_over_rho = self.mu_over_rho[idx]
         if np.isnan(mu_over_rho).any():
-            raise Exception('no suitable energy found for {}'.format(name))
-        df = pd.DataFrame({
+            logging.warn('do not know mu/rho for {}; energies:\n{}'.format(self.name, self.photon_energy))
+        # TODO - join df with df_material on df.transition
+        df_material = pd.DataFrame({
             'material': self.name,
             'mu_over_rho': mu_over_rho,
             'density': self.density,
             'material_thickness': self.thickness,
         })
-        df = self._transmitted_fraction(df)
-        return MultiDataFrame([df])
+        df_material = self._transmitted_fraction(df_material)
+        return MultiDataFrame([df_material])
+
+    def _check_transmission_df(self, df):
+        if type(df) != pd.DataFrame:
+            raise TypeError('a dataframe is required')
+        if np.isnan(df.photon_energy).any():
+            raise TypeError('null photon energies not permitted')
 
     def _transmitted_fraction(self, df):
         """Calculate the fraction of photons that escape through various materials.
@@ -75,6 +66,38 @@ class Layer(object):
         """
         thickness_cm = df.material_thickness.apply(centimeters_to_float)
         df['transmitted_fraction'] = np.exp(-df.mu_over_rho * df.density * thickness_cm)
+        return df
+
+
+class CompositeLayer(Layer):
+    def __init__(self, layers, **kwargs):
+        self.name = kwargs.get('name', '/'.join(map(lambda l: l.name, layers)))
+        self.layers = layers
+
+    def transmitted_fraction_for(self, df_original):
+        self._check_transmission_df(df_original)
+        if self.layers:
+            dfs = []
+            fractions = []
+            thicknesses = []
+            result = None
+            for material in self.layers:
+                df = self._transmitted_fraction(material, df_original.photon_energy, fractions, thicknesses)
+                dfs.append(df)
+            multi_df = MultiDataFrame(dfs)
+        else:
+            multi_df = None
+        return multi_df
+
+    def _transmitted_fraction(self, material, photon_energies, fractions, thicknesses):
+        thicknesses.append(material.thickness)
+        df = pd.DataFrame(photon_energies, columns=['photon_energy'])
+        result = material.transmitted_fraction_for(df).last
+        fractions.append(result.transmitted_fraction)
+        df = result.copy()
+        df['transmitted_fraction'] = reduce(lambda l,r: l * r, fractions)
+        df['material'] = self.name
+        df['material_thickness'] = '/'.join(thicknesses)
         return df
 
 
@@ -90,7 +113,8 @@ class DetectorLayer(Layer):
         self.relative_coverage = self.solid_angle / (4 * math.pi)
         self.transmitted_fraction = self.relative_coverage * self.efficiency
 
-    def transmitted_fraction_for(self, photon_energies):
+    def transmitted_fraction_for(self, df):
+        self._check_transmission_df(df)
         df = pd.DataFrame({
             'material': [self.name],
             'material_thickness': [self.thickness],

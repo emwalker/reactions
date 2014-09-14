@@ -7,7 +7,7 @@ from lenrmc.base import *
 from lenrmc.layer import DetectorLayer
 
 
-class ChannelsTest(unittest.TestCase):
+class ChannelTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         model = Model()
@@ -15,8 +15,8 @@ class ChannelsTest(unittest.TestCase):
         lead_1cm = model.layer_for('Lead', '1cm')
         air_20cm = model.layer_for('Air, Dry', '20cm')
         cls.detector = DetectorLayer('6150AD-b', diameter='10cm', distance='20cm', efficiency=0.26)
-        system1 = model.layer_of([nickel_1cm, lead_1cm, air_20cm], name='E-Cat')
-        system2 = model.layer_of([nickel_1cm, lead_1cm, air_20cm, cls.detector], name='E-Cat (6150AD-b)')
+        path1 = model.layer_of([nickel_1cm, lead_1cm, air_20cm], name='E-Cat')
+        path2 = model.layer_of([nickel_1cm, lead_1cm, air_20cm, cls.detector], name='E-Cat (6150AD-b)')
         cls.materials = [
             model.layer_for('Pyrex', '1cm'),
             nickel_1cm,
@@ -24,8 +24,8 @@ class ChannelsTest(unittest.TestCase):
             model.layer_for('Lead', '2cm'),
             model.layer_for('Lead', '5cm'),
             air_20cm,
-            system1,
-            system2,
+            path1,
+            path2,
         ]
         cls.model = model
 
@@ -50,7 +50,7 @@ class ChannelsTest(unittest.TestCase):
 
     def test_escaping_ep_annihilation_photons(self):
         "Test for slowly β+ decaying 59Ni → 59Co, a decay that has a half-life of ~ 7e4 years."
-        channel = self.model.generations[-1].channel_for('58Ni(d,p)59Ni', 'β-β+ annihilation photons')
+        channel = self.model.generations[-1].channel_for('58Ni(d,p)59Ni', 'β-β+ annihilation')
         values = channel.escaping_photons(self.materials, 41).values.tolist()
         self.assertEqual(values, [
             ['Pyrex',            '1cm',            34.27415483196742],
@@ -65,7 +65,7 @@ class ChannelsTest(unittest.TestCase):
 
     def test_compound_layer(self):
         "A compound layer should keep track of the photon transmission of each successive layer."
-        channel = self.model.generations[-1].channel_for('58Ni(d,p)59Ni', 'β-β+ annihilation photons')
+        channel = self.model.generations[-1].channel_for('58Ni(d,p)59Ni', 'β-β+ annihilation')
         compound = self.materials[-1]
         multi_df = channel.escaping_photons([compound], 41)
         self.assertEqual(multi_df.last.values.tolist(), [
