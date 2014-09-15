@@ -43,7 +43,7 @@ class LayerReport(Report):
 
     def _write_channel_to(self, io, table):
         material, thickness = table.unique_values_at(['material', 'material_thickness'])
-        df_view = table.df[['transition', 'channel', 'photon_energy', 'photons_per_event', 'photon_count', 'escaping_photons']]
+        df_view = table.df[['transition', 'channel', 'photon_energy', 'photons_per_event', 'events_per_second', 'photon_count', 'escaping_photons']]
         io.write("""
 Photons escaping through {} of {}:
 
@@ -58,7 +58,7 @@ class App(object):
         channels_by_layer = self._layers() * operator.transitions * self._channel_data()
         fractions = operator.transmitted_fraction() * channels_by_layer
         escaping = operator.escaping_photons() * operator.photon_counts(7e14) * fractions
-        for cls in (TransitionReport, LayerReport):
+        for cls in (LayerReport,):
             cls(escaping).write_to(sys.stdout)
 
     def _channel_data(self):
