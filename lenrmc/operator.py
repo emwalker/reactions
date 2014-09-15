@@ -247,10 +247,12 @@ def detector(name, **kwargs):
     efficiency = kwargs['efficiency']
     ratio = (1/2.) * diameter / float(distance)
     solid_angle = 2 * math.pi * (1 - math.cos(math.atan(ratio)))
+    relative_coverage = solid_angle / (4 * math.pi)
     def transmitted(table):
         df = table.df
-        relative_coverage = solid_angle / (4 * math.pi)
-        df['transmitted_fraction'] = df.transmitted_fraction * relative_coverage * efficiency
+        detected_fraction = relative_coverage * efficiency
+        df['{}_detected_fraction'.format(name)] = detected_fraction
+        df['{}_detected_photons'.format(name)] = detected_fraction * df.escaping_photons
         return table
     return Operator(name, [transmitted])
 
@@ -269,8 +271,8 @@ def photon_counts(events):
             0.693/df.half_life_seconds
         )
         df['combined_cross_section'] = df.cross_section_barns.sum()
-        df['fractional_cross_section'] = df.cross_section_barns / df.combined_cross_section
-        rate = df.fractional_cross_section * \
+        df['relative_cross_section'] = df.cross_section_barns / df.combined_cross_section
+        rate = df.relative_cross_section * \
             df.isotopic_abundance * df.events_per_transition_per_second
         df['events_per_second'] = events
         df['photons_per_second'] = rate * df.photons_per_event * df.events_per_second

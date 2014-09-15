@@ -39,11 +39,20 @@ class LayerReport(Report):
     report_columns = [
         'transition',
         'channel',
+        'relative_cross_section',
         'photon_energy',
         'photons_per_event',
         'events_per_transition_per_second',
         'photons_per_second',
         'escaping_photons',
+        '6150ADb_detected_photons',
+    ]
+
+    scalar_columns = [
+        'material',
+        'material_thickness',
+        'events_per_second',
+        '6150ADb_detected_fraction'
     ]
 
     def write_to(self, io):
@@ -52,7 +61,7 @@ class LayerReport(Report):
             self._write_channel_to(io, table)
 
     def _write_channel_to(self, io, table):
-        material, thickness, events = table.unique_values_at(['material', 'material_thickness', 'events_per_second'])
+        material, thickness, events, detected = table.unique_values_at(self.scalar_columns)
         df_view = table.df[self.report_columns]
         io.write("""
 Photons from a total of {} transitions per second, escaping through {} of {}:
@@ -68,18 +77,21 @@ class App(object):
         channels_by_layer = self._layers() * operator.transitions * self._channel_data()
         fractions = operator.transmitted_fraction() * channels_by_layer
         escaping = operator.escaping_photons() * operator.photon_counts(7e14) * fractions
+        detected = self._detected() * escaping
         for cls in (LayerReport,):
-            cls(escaping).write_to(sys.stdout)
+            cls(detected).write_to(sys.stdout)
 
     def _channel_data(self):
         system = operator.channels.merge(operator.materials, on=[operator.closest('photon_energy')])
         return system
 
+    def _detected(self):
+        return operator.detector('6150ADb', diameter='10cm', distance='20cm', efficiency=0.26)
+
     def _layers(self):
         nickel_1cm = operator.layer('Nickel (1cm)', 'Nickel', '1cm')
         lead_1cm = operator.layer('Lead (1cm)', 'Lead', '1cm')
         air_20cm = operator.layer('Air', 'Air, Dry', '20cm')
-        detector = operator.detector('6150AD-b', diameter='10cm', distance='20cm', efficiency=0.26)
         #path1 = operator.attenuation('E-Cat (6150AD-b)', [nickel_1cm, lead_1cm, air_20cm, detector])
         array = operator.Array('First system', [
             operator.layer('Pyrex (1cm)', 'Pyrex', '1cm'),
