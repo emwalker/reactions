@@ -13,6 +13,8 @@ Right now the functionality is basic and the results no doubt inaccurate or inco
 To get set up, run the following commands:
 
 ```
+% git clone https://github.com/emwalker/lenrmc.git
+% cd lenrmc
 % virtualenv .python
 New python executable in .python/bin/python
 Installing setuptools, pip...done.
