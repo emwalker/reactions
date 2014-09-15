@@ -28,6 +28,7 @@ class Table(object):
                 df = df_left.merge(df_right)
             except pd.tools.merge.MergeError:
                 df = self._cross_product(df_left, df_right)
+        df = df.drop_duplicates(take_last=True)
         table = Table('{} x {}'.format(self.name, o.name), df)
         return table
 
@@ -102,6 +103,12 @@ class Table(object):
         return merge_keys, merge_functions
 
 
+def read_csv(name, relpath, **kwargs):
+    basepath = os.path.dirname(__file__)
+    abspath = os.path.join(basepath, relpath)
+    return Table(name, pd.read_csv(abspath, header=0), **kwargs)
+
+
 class Array(object):
     def __init__(self, name, objects):
         self.name = name
@@ -142,9 +149,13 @@ class Array(object):
                 return False
         return True
 
+    @property
+    def combined(self):
+        df = pd.concat(map(lambda o: o.df, self.objects))
+        return Table(self.name, df)
+
     def partition_by(self, columns):
-        combined = pd.concat(map(lambda o: o.df, self.objects))
-        grouped = combined.groupby(columns)
+        grouped = self.combined.df.groupby(columns)
         tables = []
         for compound_key, group in grouped:
             table = Table(', '.join(compound_key), group)
@@ -194,21 +205,24 @@ class Operator(object):
         return Operator(name, operator.transformations + self.transformations)
 
 
-materials_path = os.path.join(os.path.dirname(__file__), '../db/materials.csv')
-materials = Table(
-    'Materials',
-    pd.read_csv(materials_path, header=0),
-    canonical=True,
-)
+##
+#  Helpers
+#
+
+def layer(name, *args):
+    if len(args) == 1:
+        layer = reduce(lambda l,r: l * r, reversed(args[0]))
+    elif len(args) == 2:
+        df = pd.DataFrame([args], columns=['material', 'material_thickness'])
+        layer = Table('{} (layer)'.format(name), df)
+    else:
+        raise ValueError('do not know how to handle arguments: {}'.format(args))
+    return layer
 
 
-channels_path  = os.path.join(os.path.dirname(__file__), '../db/channels.csv')
-channels = Table(
-    'Channels',
-    pd.read_csv(channels_path, header=0),
-    canonical=True,
-)
-
+##
+#  Operators
+#
 
 def escaping_photons():
     def photons(table):
@@ -227,17 +241,6 @@ def transmitted_fraction():
     return Operator('Transmitted fraction', [transmitted])
 
 
-def layer(name, *args):
-    if len(args) == 1:
-        layer = reduce(lambda l,r: l * r, reversed(args[0]))
-    elif len(args) == 2:
-        df = pd.DataFrame([args], columns=['material', 'material_thickness'])
-        layer = Table('{} (layer)'.format(name), df)
-    else:
-        raise ValueError('do not know how to handle arguments: {}'.format(args))
-    return layer
-
-
 def detector(name, **kwargs):
     diameter = centimeters_to_float(kwargs['diameter'])
     distance = centimeters_to_float(kwargs['distance'])
@@ -250,3 +253,27 @@ def detector(name, **kwargs):
         df['transmitted_fraction'] = df.transmitted_fraction * relative_coverage * efficiency
         return table
     return Operator(name, [transmitted])
+
+
+def photon_counts(events):
+    def counts(table):
+        df = table.df
+        df['photons_per_event'] = np.where(
+            df.photons_per_transition.isnull(),
+            df.q_max_mev / df.photon_energy,
+            df.photons_per_transition
+        )
+        df['combined_cross_section'] = df.cross_section_barns.sum()
+        df['fractional_cross_section'] = df.cross_section_barns / df.combined_cross_section
+        rate = df.fractional_cross_section * df.isotopic_abundance
+        df['photon_count'] = rate * df.photons_per_event * events
+        return table
+    return Operator('Photon counts', [counts])
+
+##
+#  Useful data sets
+#
+
+materials   = read_csv('Materials',   '../db/materials.csv',   canonical=True)
+channels    = read_csv('Channels',    '../db/channels.csv',    canonical=True)
+transitions = read_csv('Transitions', '../db/transitions.csv', canonical=True)

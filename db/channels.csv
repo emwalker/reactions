@@ -1,16 +1,16 @@
-transition,channel,photon_energy
-"58Ni(d,p)59Ni",bremsstrahlung,15e-3
-"58Ni(d,p)59Ni",β-β+ annihilation,0.511
-"60Ni(d,p)61Ni",bremsstrahlung,13e-3
-"61Ni(d,p)62Ni",bremsstrahlung,19e-3
-"62Ni(d,p)63Ni",bremsstrahlung,11e-3
-"64Ni(d,p)65Ni",bremsstrahlung,9.5e-3
-"58Ni(p,ɣ)59Cu",gamma,2.9
-"60Ni(p,ɣ)61Cu",gamma,4.3
-"60Ni(p,ɣ)61Cu",β-β+ annihilation,511e-3
-"61Ni(p,α)58Co",β- deexcitation gamma,53e-3
-"61Ni(p,α)58Co",β-β+ annihilation,511e-3
-"61Ni(p,ɣ)62Cu",gamma,5.4
-"62Ni(p,ɣ)63Cu",gamma,5.6
-"64Ni(p,ɣ)65Cu",gamma,6.9
-"d(p,ɣ)3He",gamma,4.9
+transition,channel,photon_energy,photons_per_transition
+"58Ni(d,p)59Ni",bremsstrahlung,15e-3,
+"58Ni(d,p)59Ni",β-β+ annihilation,0.511,2
+"60Ni(d,p)61Ni",bremsstrahlung,13e-3,
+"61Ni(d,p)62Ni",bremsstrahlung,19e-3,
+"62Ni(d,p)63Ni",bremsstrahlung,11e-3,
+"64Ni(d,p)65Ni",bremsstrahlung,9.5e-3,
+"58Ni(p,ɣ)59Cu",gamma,2.9,1
+"60Ni(p,ɣ)61Cu",gamma,4.3,1
+"60Ni(p,ɣ)61Cu",β-β+ annihilation,511e-3,2
+"61Ni(p,α)58Co",β- deexcitation gamma,53e-3,1
+"61Ni(p,α)58Co",β-β+ annihilation,511e-3,2
+"61Ni(p,ɣ)62Cu",gamma,5.4,1
+"62Ni(p,ɣ)63Cu",gamma,5.6,1
+"64Ni(p,ɣ)65Cu",gamma,6.9,1
+"d(p,ɣ)3He",gamma,4.9,1

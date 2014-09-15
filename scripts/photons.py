@@ -3,7 +3,12 @@ import argparse
 import os
 import sys
 
+import pandas as pd
+
 from lenrmc import operator
+
+
+pd.set_option('display.float_format', lambda f: '{:.2e}'.format(f))
 
 
 class Report(object):
@@ -38,7 +43,7 @@ class LayerReport(Report):
 
     def _write_channel_to(self, io, table):
         material, thickness = table.unique_values_at(['material', 'material_thickness'])
-        df_view = table.df[['transition', 'channel', 'photon_count', 'escaping_photons']]
+        df_view = table.df[['transition', 'channel', 'photon_energy', 'photons_per_event', 'photon_count', 'escaping_photons']]
         io.write("""
 Photons escaping through {} of {}:
 
@@ -50,25 +55,15 @@ Photons escaping through {} of {}:
 
 class App(object):
     def run(self):
-        channels_by_layer = self._layers() * self._photon_counts() * self._channel_data()
-        photons = operator.escaping_photons() * operator.transmitted_fraction() * channels_by_layer
+        channels_by_layer = self._layers() * operator.transitions * self._channel_data()
+        fractions = operator.transmitted_fraction() * channels_by_layer
+        escaping = operator.escaping_photons() * operator.photon_counts(7e14) * fractions
         for cls in (TransitionReport, LayerReport):
-            cls(photons).write_to(sys.stdout)
+            cls(escaping).write_to(sys.stdout)
 
     def _channel_data(self):
         system = operator.channels.merge(operator.materials, on=[operator.closest('photon_energy')])
         return system
-
-    def _photon_counts(self):
-        counts = operator.table(
-            'Photon counts',
-            values=[
-                ['58Ni(d,p)59Ni', 'bremsstrahlung', 6.3979e+16],
-                ['58Ni(d,p)59Ni', 'β-β+ annihilation', 41],
-            ],
-            columns=['transition', 'channel', 'photon_count']
-        )
-        return counts
 
     def _layers(self):
         nickel_1cm = operator.layer('Nickel (1cm)', 'Nickel', '1cm')
