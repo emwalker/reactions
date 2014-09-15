@@ -4,7 +4,7 @@ lenrmc
 A small set of scripts for simulating the transmission of photons of various energies
 through different media and their rate of detection by different types of detector.
 
-Right now the functionality is basic and the results no doubt inaccurate or incorrect.
+Right now the functionality is basic and the results are no doubt inaccurate or incorrect.
 
 # Setup
 
