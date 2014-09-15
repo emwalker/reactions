@@ -25,7 +25,7 @@ class TransitionReport(Report):
     def _write_channel_to(self, io, table):
         energy_mev, channel, transition = table.unique_values_at(['photon_energy', 'channel', 'transition'])
         energy_kev = energy_mev * 1000
-        df_view = table.df[['material', 'material_thickness', 'photon_count', 'escaping_photons']]
+        df_view = table.df[['material', 'material_thickness', 'photon_per_second', 'escaping_photons']]
         io.write("""
 Escaping {:.0f} keV {} photons from {} transitions:
 
@@ -36,21 +36,31 @@ Escaping {:.0f} keV {} photons from {} transitions:
 
 
 class LayerReport(Report):
+    report_columns = [
+        'transition',
+        'channel',
+        'photon_energy',
+        'photons_per_event',
+        'events_per_transition_per_second',
+        'photons_per_second',
+        'escaping_photons',
+    ]
+
     def write_to(self, io):
         tables = self.array.partition_by(['material', 'material_thickness'])
         for table in tables:
             self._write_channel_to(io, table)
 
     def _write_channel_to(self, io, table):
-        material, thickness = table.unique_values_at(['material', 'material_thickness'])
-        df_view = table.df[['transition', 'channel', 'photon_energy', 'photons_per_event', 'events_per_second', 'photon_count', 'escaping_photons']]
+        material, thickness, events = table.unique_values_at(['material', 'material_thickness', 'events_per_second'])
+        df_view = table.df[self.report_columns]
         io.write("""
-Photons escaping through {} of {}:
+Photons from a total of {} transitions per second, escaping through {} of {}:
 
 {}
 
 
-""".format(thickness, material, repr(df_view)))
+""".format(events, thickness, material, repr(df_view)))
 
 
 class App(object):

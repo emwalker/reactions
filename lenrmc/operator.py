@@ -227,7 +227,7 @@ def layer(name, *args):
 def escaping_photons():
     def photons(table):
         df = table.df
-        df['escaping_photons'] = df.transmitted_fraction * df.photon_count
+        df['escaping_photons'] = df.transmitted_fraction * df.photons_per_second
         return table
     return Operator('Escaping photons', [photons])
 
@@ -263,15 +263,17 @@ def photon_counts(events):
             df.q_max_mev / df.photon_energy,
             df.photons_per_transition
         )
-        df['events_per_second'] = np.where(
+        df['events_per_transition_per_second'] = np.where(
             df.half_life_seconds.isnull(),
             1,
             0.693/df.half_life_seconds
         )
         df['combined_cross_section'] = df.cross_section_barns.sum()
         df['fractional_cross_section'] = df.cross_section_barns / df.combined_cross_section
-        rate = df.fractional_cross_section * df.isotopic_abundance * df.events_per_second
-        df['photon_count'] = rate * df.photons_per_event * events
+        rate = df.fractional_cross_section * \
+            df.isotopic_abundance * df.events_per_transition_per_second
+        df['events_per_second'] = events
+        df['photons_per_second'] = rate * df.photons_per_event * df.events_per_second
         return table
     return Operator('Photon counts', [counts])
 

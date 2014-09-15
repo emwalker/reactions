@@ -17,13 +17,13 @@ layer_details = layers.merge(operator.materials)
 system1 = operator.table(
     'Photon energies x Photon counts',
     values=[[511e-3, 2], [67e-3, 2]],
-    columns=['photon_energy', 'photon_count'],
+    columns=['photon_energy', 'photons_per_second'],
 )
 
 system2 = operator.table(
     'Photon energies x Photon counts',
     values=[[8e-3, 2], [20e-3, 2]],
-    columns=['photon_energy', 'photon_count'],
+    columns=['photon_energy', 'photons_per_second'],
 )
 
 
@@ -81,7 +81,7 @@ class EscapingPhotonsTest(unittest.TestCase):
             'mu_over_rho',
             'mu_en_over_rho',
             'density',
-            'photon_count',
+            'photons_per_second',
         ])
 
     def test_application_of_an_operation(self):
@@ -128,7 +128,7 @@ class ArrayTest(unittest.TestCase):
                 'mu_over_rho',
                 'mu_en_over_rho',
                 'density',
-                'photon_count',
+                'photons_per_second',
             ])
 
     def test_initial_values(self):
