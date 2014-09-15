@@ -103,12 +103,6 @@ class Table(object):
         return merge_keys, merge_functions
 
 
-def read_csv(name, relpath, **kwargs):
-    basepath = os.path.dirname(__file__)
-    abspath = os.path.join(basepath, relpath)
-    return Table(name, pd.read_csv(abspath, header=0), **kwargs)
-
-
 class Array(object):
     def __init__(self, name, objects):
         self.name = name
@@ -169,25 +163,6 @@ class MergeFunction(object):
         self.prepare = prepare
 
 
-def table(name, **kwargs):
-    df = pd.DataFrame(kwargs['values'], columns=kwargs['columns'])
-    return Table(name, df)
-
-
-def closest(column):
-    def prepare(left, right, left_canonical, right_canonical):
-        if bool(left_canonical) != bool(right_canonical):
-            left, right = [left, right] if left_canonical else [right, left]
-        else:
-            left, right = [left, right] if len(left) >= len(right) else [right, left]
-        left = left.sort(column)
-        right = right.sort(column)
-        left_indexes = np.searchsorted(left[column].values, right[column])
-        right[column] = left[column].values[left_indexes]
-        return left, right
-    return MergeFunction(column, prepare)
-
-
 class Operator(object):
     def __init__(self, name, transformations):
         self.name = name
@@ -208,6 +183,31 @@ class Operator(object):
 ##
 #  Helpers
 #
+
+def table(name, **kwargs):
+    df = pd.DataFrame(kwargs['values'], columns=kwargs['columns'])
+    return Table(name, df)
+
+
+def closest(column):
+    def prepare(left, right, left_canonical, right_canonical):
+        if bool(left_canonical) != bool(right_canonical):
+            left, right = [left, right] if left_canonical else [right, left]
+        else:
+            left, right = [left, right] if len(left) >= len(right) else [right, left]
+        left = left.sort(column)
+        right = right.sort(column)
+        left_indexes = np.searchsorted(left[column].values, right[column])
+        right[column] = left[column].values[left_indexes]
+        return left, right
+    return MergeFunction(column, prepare)
+
+
+def read_csv(name, relpath, **kwargs):
+    basepath = os.path.dirname(__file__)
+    abspath = os.path.join(basepath, relpath)
+    return Table(name, pd.read_csv(abspath, header=0), **kwargs)
+
 
 def layer(name, *args):
     if len(args) == 1:
@@ -279,8 +279,9 @@ def photon_counts(events):
         return table
     return Operator('Photon counts', [counts])
 
+
 ##
-#  Useful data sets
+#  Useful datasets
 #
 
 materials   = read_csv('Materials',   '../db/materials.csv',   canonical=True)
