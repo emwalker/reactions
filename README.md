@@ -1,8 +1,6 @@
 lenrmc
 ======
 
-LENR Monte Carlo simulator
-
 A small set of scripts for simulating the transmission of photons of various energies
 through different media and their rate of detection by different types of detector.
 
@@ -25,7 +23,6 @@ Installing setuptools, pip...done.
 Ran 14 tests in 0.015s
 
 OK
-
 ```
 
 # Running
