@@ -50,7 +50,7 @@ Photons escaping through {} of {}:
 
 class App(object):
     def run(self):
-        channels_by_layer = self._attenuators() * self._photon_counts() * self._channel_data()
+        channels_by_layer = self._layers() * self._photon_counts() * self._channel_data()
         photons = operator.escaping_photons() * operator.transmitted_fraction() * channels_by_layer
         for cls in (TransitionReport, LayerReport):
             cls(photons).write_to(sys.stdout)
@@ -70,18 +70,18 @@ class App(object):
         )
         return counts
 
-    def _attenuators(self):
-        nickel_1cm = operator.attenuation('Nickel (1cm)', 'Nickel', '1cm')
-        lead_1cm = operator.attenuation('Lead (1cm)', 'Lead', '1cm')
-        air_20cm = operator.attenuation('Air', 'Air, Dry', '20cm')
-        detector = operator.detector_attenuation('6150AD-b', diameter='10cm', distance='20cm', efficiency=0.26)
+    def _layers(self):
+        nickel_1cm = operator.layer('Nickel (1cm)', 'Nickel', '1cm')
+        lead_1cm = operator.layer('Lead (1cm)', 'Lead', '1cm')
+        air_20cm = operator.layer('Air', 'Air, Dry', '20cm')
+        detector = operator.detector('6150AD-b', diameter='10cm', distance='20cm', efficiency=0.26)
         #path1 = operator.attenuation('E-Cat (6150AD-b)', [nickel_1cm, lead_1cm, air_20cm, detector])
         array = operator.Array('First system', [
-            operator.attenuation('Pyrex (1cm)', 'Pyrex', '1cm'),
+            operator.layer('Pyrex (1cm)', 'Pyrex', '1cm'),
             nickel_1cm,
             lead_1cm,
-            operator.attenuation('Lead (2cm)', 'Lead', '2cm'),
-            operator.attenuation('Lead (5cm)', 'Lead', '5cm'),
+            operator.layer('Lead (2cm)', 'Lead', '2cm'),
+            operator.layer('Lead (5cm)', 'Lead', '5cm'),
             air_20cm,
             #path1,
         ])

@@ -227,7 +227,7 @@ def transmitted_fraction():
     return Operator('Transmitted fraction', [transmitted])
 
 
-def attenuation(name, *args):
+def layer(name, *args):
     if len(args) == 1:
         layer = reduce(lambda l,r: l * r, reversed(args[0]))
     elif len(args) == 2:
@@ -238,7 +238,7 @@ def attenuation(name, *args):
     return layer
 
 
-def detector_attenuation(name, **kwargs):
+def detector(name, **kwargs):
     diameter = centimeters_to_float(kwargs['diameter'])
     distance = centimeters_to_float(kwargs['distance'])
     efficiency = kwargs['efficiency']
