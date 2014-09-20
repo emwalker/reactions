@@ -1,6 +1,6 @@
 transition,channel,photon_energy,photons_per_transition,half_life_seconds
 "58Ni(d,p)59Ni",bremsstrahlung,15e-3,
-"58Ni(d,p)59Ni",β-β+ annihilation,0.511,2,2.39833e12
+"58Ni(d,p)59Ni",β-β+ annihilation,0.511,2e-2,2.39833e12
 "60Ni(d,p)61Ni",bremsstrahlung,13e-3,,
 "61Ni(d,p)62Ni",bremsstrahlung,19e-3,,
 "62Ni(d,p)63Ni",bremsstrahlung,11e-3,,
