@@ -230,6 +230,7 @@ class Reaction(object):
     def __init__(self, lvalues, rvalues):
         self._lvalues = list(lvalues)
         self._rvalues = list(rvalues)
+        self.q_value_kev = self._q_value_kev()
 
     def _sort_key(self, a):
         return a[0].mass_number, a[0].label
@@ -252,15 +253,14 @@ class Reaction(object):
             return False
         return all(c == 1 for c in isotopes.values())
 
-    @property
-    def q_kev(self):
+    def _q_value_kev(self):
         lvalues = sum(num * i.mass_excess_kev for num, i in self._lvalues)
         rvalues = sum(num * i.mass_excess_kev for num, i in self._rvalues)
         return lvalues - rvalues
 
     @property
     def fancy(self):
-        kev = self.q_kev
+        kev = self.q_value_kev
         sign = '+' if kev >= 0 else '-'
         return '{} → {} {} {:.0f} keV'.format(
             self._fancy_side(self._lvalues),
@@ -303,5 +303,11 @@ class Combinations(object):
             rvalues = ((1, d) for d in daughters)
             yield Reaction(self._reactants, rvalues)
 
+    def _sort_key(self, reaction):
+        return reaction.q_value_kev
+
     def json(self):
-        return [r.fancy for r in self._reactions()]
+        return [
+            r.fancy
+            for r in sorted(self._reactions(), key=self._sort_key, reverse=True)
+        ]
