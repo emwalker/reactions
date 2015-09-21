@@ -252,7 +252,4 @@ class Combinations(object):
             yield Reaction(self._reactants, rvalues)
 
     def json(self):
-        projection = []
-        for r in self._reactions():
-            projection.append(r.fancy)
-        return projection
+        return [r.fancy for r in self._reactions()]
