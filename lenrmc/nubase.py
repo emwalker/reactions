@@ -190,6 +190,13 @@ def possible_daughters(totals):
             yield pairs
 
 
+class GammaPhoton(object):
+
+    def __init__(self):
+        self.mass_number = 0
+        self.full_label = self.label = 'ɣ'
+
+
 class Reaction(object):
 
     def __init__(self, lvalues, rvalues):
@@ -203,12 +210,19 @@ class Reaction(object):
         isotopes = defaultdict(lambda: 0)
         for c, i in side:
             isotopes[i] += c
+        if self._gamma(isotopes):
+            isotopes[GammaPhoton()] += 1
         values = [
             '{}×{}'.format(c, i.full_label) if c > 1 else i.full_label
             for i, c
             in sorted(isotopes.items(), key=self._sort_key)
         ]
         return ' + '.join(values)
+
+    def _gamma(self, isotopes):
+        if 1 < len(isotopes):
+            return False
+        return all(c == 1 for c in isotopes.values())
 
     @property
     def fancy(self):

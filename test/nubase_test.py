@@ -144,9 +144,6 @@ class CombinationsTest(unittest.TestCase):
              'p + 7Li → 3He + 5He',
              'p + 7Li → 3Li + 5H',
              'p + 7Li → 4H + 4Li',
-             'p + 7Li → 8Be',
-             'p + 7Li → 8Be (i)',
-             'p + 7Li → 8Be (j)',
              'p + 7Li → d + 3He + t',
              'p + 7Li → d + 6Li',
              'p + 7Li → d + 6Li (i)',
@@ -163,7 +160,10 @@ class CombinationsTest(unittest.TestCase):
              'p + 7Li → p + 7Li (i)',
              'p + 7Li → p + d + 5He',
              'p + 7Li → p + t + 4He',
-             'p + 7Li → t + 5Li']
+             'p + 7Li → t + 5Li',
+             'p + 7Li → ɣ + 8Be',
+             'p + 7Li → ɣ + 8Be (i)',
+             'p + 7Li → ɣ + 8Be (j)']
         , sorted(c.json()))
 
     def test_reactions_2(self):
