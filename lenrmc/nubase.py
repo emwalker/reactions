@@ -109,6 +109,41 @@ class Nuclides(object):
         return self._by_label.get(label)
 
 
+def vectors3(integer):
+    for i in range(integer):
+        j = integer - i
+        for k in range(j):
+            yield (j - k, k, i)
+
+
+class RejectCombination(RuntimeError):
+    pass
+
+
+def possible_daughters(totals):
+    mass_number, atomic_number = totals
+    seen = set()
+    for masses in vectors3(mass_number):
+        for protons in vectors3(atomic_number):
+            pairs = []
+            try:
+                for i, m in enumerate(masses):
+                    p = protons[i]
+                    if m < p:
+                        raise RejectCombination
+                    pair = (m, p)
+                    if (0, 0) == pair:
+                        continue
+                    pairs.append(pair)
+            except RejectCombination:
+                continue
+            pairs = tuple(sorted(pairs))
+            if pairs in seen:
+                continue
+            seen.add(pairs)
+            yield pairs
+
+
 class Combinations(object):
 
     @classmethod
@@ -123,9 +158,4 @@ class Combinations(object):
     def _outcomes(self):
         numbers = [num * n.numbers for num, n in self._reactants]
         mass_number, atomic_number = tuple(map(operator.add, *numbers))
-        for m in range(1, mass_number):
-            for a in range(0, atomic_number):
-                yield [
-                    (m, a),
-                    (mass_number - m, atomic_number - a),
-                ]
+        return possible_daughters((mass_number, atomic_number))

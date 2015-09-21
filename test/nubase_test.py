@@ -2,7 +2,14 @@ import unittest
 import os.path
 import sys
 
-from lenrmc.nubase import DB_PATH, Nuclide, Nuclides, Combinations
+from lenrmc.nubase import (
+    DB_PATH,
+    Nuclide,
+    Nuclides,
+    Combinations,
+    vectors3,
+    possible_daughters,
+)
 
 
 class NuclideTest(unittest.TestCase):
@@ -77,37 +84,42 @@ class NuclidesTest(unittest.TestCase):
         self.assertEqual(['7Li', '7Lii'], [n.label for n in ns])
 
 
+class ReactionCombinationsTest(unittest.TestCase):
+
+    def test_simple_case(self):
+        self.assertEqual([
+            (3, 0, 0),
+            (2, 1, 0),
+            (1, 2, 0),
+            (2, 0, 1),
+            (1, 1, 1),
+            (1, 0, 2),
+        ], list(vectors3(3)))
+
+    def test_sums(self):
+        sums = [sum(t) for t in vectors3(5)]
+        self.assertEqual(15, len(sums))
+        self.assertTrue(all(v == 5 for v in sums))
+
+    def test_triples(self):
+        it = possible_daughters((2, 1))
+        self.assertEqual([
+            ((2, 1),),
+            ((1, 0), (1, 1)),
+        ], list(it))
+
+    def test_possible_daughters(self):
+        ts = list(possible_daughters((6, 3)))
+        self.assertEqual(19, len(ts))
+        self.assertTrue(all(6 == sum(m for m,a in t) for t in ts))
+        self.assertTrue(all(3 == sum(a for m,a in t) for t in ts))
+
+
+
 class CombinationsTest(unittest.TestCase):
 
     def test_outcomes(self):
         c = Combinations.load(reactants=[(1, '7Li'), (1, '1H')])
-        self.assertEqual([
-            [(1, 0), (7, 4)],
-            [(1, 1), (7, 3)],
-            [(1, 2), (7, 2)],
-            [(1, 3), (7, 1)],
-            [(2, 0), (6, 4)],
-            [(2, 1), (6, 3)],
-            [(2, 2), (6, 2)],
-            [(2, 3), (6, 1)],
-            [(3, 0), (5, 4)],
-            [(3, 1), (5, 3)],
-            [(3, 2), (5, 2)],
-            [(3, 3), (5, 1)],
-            [(4, 0), (4, 4)],
-            [(4, 1), (4, 3)],
-            [(4, 2), (4, 2)],
-            [(4, 3), (4, 1)],
-            [(5, 0), (3, 4)],
-            [(5, 1), (3, 3)],
-            [(5, 2), (3, 2)],
-            [(5, 3), (3, 1)],
-            [(6, 0), (2, 4)],
-            [(6, 1), (2, 3)],
-            [(6, 2), (2, 2)],
-            [(6, 3), (2, 1)],
-            [(7, 0), (1, 4)],
-            [(7, 1), (1, 3)],
-            [(7, 2), (1, 2)],
-            [(7, 3), (1, 1)]]
-        , list(c._outcomes()))
+        outcomes = list(c._outcomes())
+        self.assertEqual(42, len(outcomes))
+        self.assertEqual(((8, 4),), outcomes[0])
