@@ -45,6 +45,8 @@ class Nuclide(object):
             endcol_prev = endcol
         self.atomic_number = int(re.search(r'\d+', self._raw['_atomicNumber']).group())
         self.mass_number = int(re.search(r'\d+', self._raw['_nuclide']).group())
+        g = re.search(r'IS=([\d\.]+)', self._raw['_decayModesAndIntensities'])
+        self.isotopic_abundance = float(g.group(1)) if g else 0.
 
     @property
     def half_life(self):

@@ -5,7 +5,7 @@ import sys
 from lenrmc.nubase import Nuclide
 
 
-class NubaseTest(unittest.TestCase):
+class NuclideTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -14,7 +14,7 @@ class NubaseTest(unittest.TestCase):
         with open(path) as fh:
             cls.lines = list(fh)
 
-    def test_basic_fieds(self):
+    def test_basic_fields(self):
         n = Nuclide(self.lines[0])
         self.assertEqual(0, n.atomic_number)
         self.assertEqual('613.9 s', str(n.half_life))
@@ -48,3 +48,15 @@ class NubaseTest(unittest.TestCase):
             'massNumber':   1,
             'halfLife':     613.9,
         }, n.json())
+
+    def test_isotopic_abundance_1(self):
+        "There should be an abundance for a stable isotope."
+        n = Nuclide(self.lines[1])
+        self.assertEqual(99.9885, n.isotopic_abundance)
+        n = Nuclide(self.lines[2])
+        self.assertEqual(0.0115, n.isotopic_abundance)
+
+    def test_isotopic_abundance_2(self):
+        "The abundance should be zero for unstable isotopes."
+        n = Nuclide(self.lines[3])
+        self.assertEqual(0., n.isotopic_abundance)
