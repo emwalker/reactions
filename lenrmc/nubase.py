@@ -3,6 +3,7 @@ import os
 import sys
 import re
 import operator
+import itertools
 from collections import defaultdict
 
 
@@ -172,17 +173,16 @@ class Combinations(object):
 
     def _daughters(self):
         nuclides = Nuclides.db()
-        for pairs in self._outcomes():
-            daughters = [nuclides.isomers[pair] for pair in pairs]
+        pairs = []
+        for _pairs in self._outcomes():
+            daughters = [nuclides.isomers[pair] for pair in _pairs]
             if not all(daughters):
                 continue
-            yield daughters
+            yield from itertools.product(*daughters)
 
     def json(self):
         projection = []
         for daughters in self._daughters():
-            row = []
-            for equivalents in daughters:
-                row.append([e.label for e in equivalents])
+            row = [d.label for d in daughters]
             projection.append(row)
         return projection

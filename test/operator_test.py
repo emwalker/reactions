@@ -133,7 +133,7 @@ class ArrayTest(unittest.TestCase):
 
     def test_initial_values(self):
         "Array.tolist() returns a multi-dimensional array with values for each operator."
-        self.assertEqual(self.ta1.tolist(),
+        self.assertEqual(list(self.ta1.tolist()),
             [[['Lead', '1cm', 0.08, 2.419, 1.916, 11.34, 2],
               ['Lead', '1cm', 0.6, 0.1248, 0.06819, 11.34, 2]],
              [['Lead', '1cm', 0.008, 228.7, 220.7, 11.34, 2],
