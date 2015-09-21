@@ -85,15 +85,18 @@ class Nuclide(object):
         g = re.search(r'IS=([\d\.]+)', self._row['decayModesAndIntensities'])
         self.isotopic_abundance = float(g.group(1)) if g else 0.
         self.numbers = (self.mass_number, self.atomic_number)
-        if self._excited:
+        if self.is_excited:
             label, self._excitation_level = self._label[:-1], self._label[-1]
+            self.label = ALTERNATE_LABELS.get(label, label)
+            self.full_label = '{} ({})'.format(self.label, self._excitation_level)
         else:
             label, self._excitation_level = self._label, '0'
-        self.label = ALTERNATE_LABELS.get(label, label)
+            self.label = ALTERNATE_LABELS.get(label, label)
+            self.full_label = self.label
         self.signature = (self.label, self._excitation_level)
 
     @property
-    def _excited(self):
+    def is_excited(self):
         if self.isotopic_abundance:
             return False
         if self._label in self._not_excited:
@@ -113,6 +116,12 @@ class Nuclide(object):
 
     def __iter__(self):
         return self.json().iteritems()
+
+    def __eq__(self, o):
+        return self.signature == o.signature
+
+    def __hash__(self):
+        return hash(self.signature)
 
 
 class Nuclides(object):
@@ -135,14 +144,15 @@ class Nuclides(object):
     def __init__(self, nuclides):
         self._nuclides = list(nuclides)
         self._by_label = {}
+        self._by_signature = {}
         self.isomers = defaultdict(list)
         for n in self._nuclides:
             self._by_label[n._label] = n
-            self._by_label[n.label] = n
+            self._by_signature[n.signature] = n
             self.isomers[n.numbers].append(n)
 
-    def get(self, label):
-        return self._by_label.get(label)
+    def get(self, signature):
+        return self._by_signature.get(signature)
 
 
 def vectors3(integer):
@@ -180,13 +190,44 @@ def possible_daughters(totals):
             yield pairs
 
 
+class Reaction(object):
+
+    def __init__(self, lvalues, rvalues):
+        self._lvalues = lvalues
+        self._rvalues = rvalues
+
+    def _sort_key(self, a):
+        return a[0].mass_number, a[0].label
+
+    def _fancy_side(self, side):
+        isotopes = defaultdict(lambda: 0)
+        for c, i in side:
+            isotopes[i] += c
+        values = [
+            '{}×{}'.format(c, i.full_label) if c > 1 else i.full_label
+            for i, c
+            in sorted(isotopes.items(), key=self._sort_key)
+        ]
+        return ' + '.join(values)
+
+    @property
+    def fancy(self):
+        return '{} → {}'.format(
+            self._fancy_side(self._lvalues),
+            self._fancy_side(self._rvalues),
+        )
+
+
 class Combinations(object):
 
     @classmethod
     def load(cls, **kwargs):
         nuclides = Nuclides.db()
-        reactants = kwargs['reactants']
-        return cls((num, nuclides.get(l)) for num,l in reactants)
+        reactants = [
+            (num, (s, '0')) if isinstance(s, str) else (num, s)
+            for num, s in kwargs['reactants']
+        ]
+        return cls((num, nuclides.get(s)) for num, s in reactants)
 
     def __init__(self, reactants):
         self._reactants = list(reactants)
@@ -205,9 +246,13 @@ class Combinations(object):
                 continue
             yield from itertools.product(*daughters)
 
+    def _reactions(self):
+        for daughters in self._daughters():
+            rvalues = ((1, d) for d in daughters)
+            yield Reaction(self._reactants, rvalues)
+
     def json(self):
         projection = []
-        for daughters in self._daughters():
-            row = [d.signature for d in daughters]
-            projection.append(row)
+        for r in self._reactions():
+            projection.append(r.fancy)
         return projection

@@ -82,10 +82,10 @@ class NuclidesTest(unittest.TestCase):
         cls.nuclides = Nuclides.db()
 
     def test_nuclide(self):
-        self.assertEqual('7Li', self.nuclides.get('7Li').label)
+        self.assertEqual('7Li', self.nuclides.get(('7Li', '0')).label)
 
     def test_isomers(self):
-        n = self.nuclides.get('7Li')
+        n = self.nuclides.get(('7Li', '0'))
         self.assertEqual((7, 3), n.numbers)
         ns = self.nuclides.isomers[n.numbers]
         self.assertEqual([('7Li', '0'), ('7Li', 'i')], [n.signature for n in ns])
@@ -134,34 +134,34 @@ class CombinationsTest(unittest.TestCase):
         self.assertEqual(42, len(outcomes))
         self.assertEqual(((8, 4),), outcomes[0])
 
-    def test_daughters(self):
+    def test_reactions(self):
         c = Combinations.load(reactants=[(1, '7Li'), (1, 'p')])
         self.assertEqual(
-            [[('8Be', '0')],
-             [('8Be', 'i')],
-             [('8Be', 'j')],
-             [('n', '0'), ('7Be', '0')],
-             [('n', '0'), ('7Be', 'i')],
-             [('p', '0'), ('7Li', '0')],
-             [('p', '0'), ('7Li', 'i')],
-             [('d', '0'), ('6Li', '0')],
-             [('d', '0'), ('6Li', 'i')],
-             [('t', '0'), ('5Li', '0')],
-             [('3He', '0'), ('5He', '0')],
-             [('3Li', '0'), ('5H', '0')],
-             [('4H', '0'), ('4Li', '0')],
-             [('4He', '0'), ('4He', '0')],
-             [('n', '0'), ('n', '0'), ('6Be', '0')],
-             [('n', '0'), ('p', '0'), ('6Li', '0')],
-             [('n', '0'), ('p', '0'), ('6Li', 'i')],
-             [('p', '0'), ('p', '0'), ('6He', '0')],
-             [('n', '0'), ('d', '0'), ('5Li', '0')],
-             [('p', '0'), ('d', '0'), ('5He', '0')],
-             [('n', '0'), ('t', '0'), ('4Li', '0')],
-             [('n', '0'), ('3He', '0'), ('4He', '0')],
-             [('n', '0'), ('3Li', '0'), ('4H', '0')],
-             [('p', '0'), ('t', '0'), ('4He', '0')],
-             [('p', '0'), ('3He', '0'), ('4H', '0')],
-             [('d', '0'), ('d', '0'), ('4He', '0')],
-             [('d', '0'), ('t', '0'), ('3He', '0')]]
+            ['p + 7Li → 8Be',
+             'p + 7Li → 8Be (i)',
+             'p + 7Li → 8Be (j)',
+             'p + 7Li → n + 7Be',
+             'p + 7Li → n + 7Be (i)',
+             'p + 7Li → p + 7Li',
+             'p + 7Li → p + 7Li (i)',
+             'p + 7Li → d + 6Li',
+             'p + 7Li → d + 6Li (i)',
+             'p + 7Li → t + 5Li',
+             'p + 7Li → 3He + 5He',
+             'p + 7Li → 3Li + 5H',
+             'p + 7Li → 4H + 4Li',
+             'p + 7Li → 2×4He',
+             'p + 7Li → 2×n + 6Be',
+             'p + 7Li → n + p + 6Li',
+             'p + 7Li → n + p + 6Li (i)',
+             'p + 7Li → 2×p + 6He',
+             'p + 7Li → n + d + 5Li',
+             'p + 7Li → p + d + 5He',
+             'p + 7Li → n + t + 4Li',
+             'p + 7Li → n + 3He + 4He',
+             'p + 7Li → n + 3Li + 4H',
+             'p + 7Li → p + t + 4He',
+             'p + 7Li → p + 3He + 4H',
+             'p + 7Li → 2×d + 4He',
+             'p + 7Li → d + 3He + t']
         , c.json())
