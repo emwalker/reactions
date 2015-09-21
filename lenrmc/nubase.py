@@ -43,10 +43,8 @@ class NubaseRow(object):
             text = line[endcol_prev:endcol]
             self._raw[field] = text.strip()
             endcol_prev = endcol
-
-    @property
-    def atomic_number(self):
-        return int(re.search(r'\d+', self._raw['_atomicNumber']).group())
+        self.atomic_number = int(re.search(r'\d+', self._raw['_atomicNumber']).group())
+        self.mass_number = int(re.search(r'\d+', self._raw['_nuclide']).group())
 
     @property
     def half_life(self):
@@ -56,6 +54,7 @@ class NubaseRow(object):
         return {
             'halfLife':     self.half_life.seconds,
             'atomicNumber': self.atomic_number,
+            'massNumber':   self.mass_number,
         }
 
     def __iter__(self):

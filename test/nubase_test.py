@@ -37,9 +37,14 @@ class NubaseTest(unittest.TestCase):
             '_yearOfDiscovery': '1981',
         }, r._raw)
 
+    def test_mass_number(self):
+        r = NubaseRow(self.lines[0])
+        self.assertEqual(1, r.mass_number)
+
     def test_json(self):
         r = NubaseRow(self.lines[0])
         self.assertEqual({
             'atomicNumber': 0,
+            'massNumber':   1,
             'halfLife':     613.9,
         }, r.json())
