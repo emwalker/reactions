@@ -165,3 +165,7 @@ class CombinationsTest(unittest.TestCase):
              'p + 7Li → 2×d + 4He',
              'p + 7Li → d + 3He + t']
         , c.json())
+
+    def test_reactions_2(self):
+        c = Combinations.load(reactants=[(1, '6Li'), (1, '6Li')])
+        self.assertIn('2×6Li → 3×4He', c.json())
