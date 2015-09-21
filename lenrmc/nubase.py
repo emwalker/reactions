@@ -17,7 +17,7 @@ class HalfLife(object):
         return '{} {}'.format(self.value, self.unit)
 
 
-class NubaseRow(object):
+class Nuclide(object):
 
     COLUMNS = (
         (  4, '_id'                      ),

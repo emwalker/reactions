@@ -2,7 +2,7 @@ import unittest
 import os.path
 import sys
 
-from lenrmc.nubase import NubaseRow
+from lenrmc.nubase import Nuclide
 
 
 class NubaseTest(unittest.TestCase):
@@ -15,12 +15,12 @@ class NubaseTest(unittest.TestCase):
             cls.lines = list(fh)
 
     def test_basic_fieds(self):
-        r = NubaseRow(self.lines[0])
-        self.assertEqual(0, r.atomic_number)
-        self.assertEqual('613.9 s', str(r.half_life))
+        n = Nuclide(self.lines[0])
+        self.assertEqual(0, n.atomic_number)
+        self.assertEqual('613.9 s', str(n.half_life))
 
     def test_column_widths(self):
-        r = NubaseRow(self.lines[16])
+        n = Nuclide(self.lines[16])
         self.assertEqual({
             '_atomicNumber': '0038W',
             '_decayModesAndIntensities': 'IT=100',
@@ -35,16 +35,16 @@ class NubaseTest(unittest.TestCase):
             '_spinAndParity': '0+      T=1',
             '_unknown': '14',
             '_yearOfDiscovery': '1981',
-        }, r._raw)
+        }, n._raw)
 
     def test_mass_number(self):
-        r = NubaseRow(self.lines[0])
-        self.assertEqual(1, r.mass_number)
+        n = Nuclide(self.lines[0])
+        self.assertEqual(1, n.mass_number)
 
     def test_json(self):
-        r = NubaseRow(self.lines[0])
+        n = Nuclide(self.lines[0])
         self.assertEqual({
             'atomicNumber': 0,
             'massNumber':   1,
             'halfLife':     613.9,
-        }, r.json())
+        }, n.json())
