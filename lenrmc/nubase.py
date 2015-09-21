@@ -20,19 +20,19 @@ class HalfLife(object):
 class Nuclide(object):
 
     COLUMNS = (
-        (  4, '_id'                      ),
-        (  9, '_atomicNumber'            ),
-        ( 19, '_nuclide'                 ),
-        ( 39, '_massExcess'              ),
-        ( 61, '_excitationEnergy'        ),
-        ( 69, '_halfLife'                ),
-        ( 71, '_halfLifeUnit'            ),
-        ( 79, '_unknown'                 ),
-        ( 93, '_spinAndParity'           ),
-        ( 96, '_ensdfArchiveFileYear'    ),
-        (105, '_reference'               ),
-        (110, '_yearOfDiscovery'         ),
-        ( -1, '_decayModesAndIntensities'),
+        (  4, 'id'                      ),
+        (  9, 'atomicNumber'            ),
+        ( 19, 'nuclide'                 ),
+        ( 39, 'massExcess'              ),
+        ( 61, 'excitationEnergy'        ),
+        ( 69, 'halfLife'                ),
+        ( 71, 'halfLifeUnit'            ),
+        ( 79, 'unknown'                 ),
+        ( 93, 'spinAndParity'           ),
+        ( 96, 'ensdfArchiveFileYear'    ),
+        (105, 'reference'               ),
+        (110, 'yearOfDiscovery'         ),
+        ( -1, 'decayModesAndIntensities'),
     )
 
     @classmethod
@@ -48,14 +48,14 @@ class Nuclide(object):
 
     def __init__(self, row):
         self._row = row
-        self.atomic_number = int(re.search(r'\d+', self._row['_atomicNumber']).group())
-        self.mass_number = int(re.search(r'\d+', self._row['_nuclide']).group())
-        g = re.search(r'IS=([\d\.]+)', self._row['_decayModesAndIntensities'])
+        self.atomic_number = int(re.search(r'\d+', self._row['atomicNumber']).group())
+        self.mass_number = int(re.search(r'\d+', self._row['nuclide']).group())
+        g = re.search(r'IS=([\d\.]+)', self._row['decayModesAndIntensities'])
         self.isotopic_abundance = float(g.group(1)) if g else 0.
 
     @property
     def half_life(self):
-        return HalfLife(self._row['_halfLife'], self._row['_halfLifeUnit'])
+        return HalfLife(self._row['halfLife'], self._row['halfLifeUnit'])
 
     def json(self):
         return {

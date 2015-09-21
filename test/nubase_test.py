@@ -22,19 +22,19 @@ class NuclideTest(unittest.TestCase):
     def test_column_widths(self):
         n = Nuclide.load(line=self.lines[16])
         self.assertEqual({
-            '_atomicNumber': '0038W',
-            '_decayModesAndIntensities': 'IT=100',
-            '_ensdfArchiveFileYear': '02',
-            '_excitationEnergy': '3562.88    0.10',
-            '_halfLife': '56',
-            '_halfLifeUnit': 'as',
-            '_id': '006',
-            '_massExcess': '17649.76     0.10',
-            '_nuclide': '6Lii',
-            '_reference': '81Ro02e',
-            '_spinAndParity': '0+      T=1',
-            '_unknown': '14',
-            '_yearOfDiscovery': '1981',
+            'atomicNumber':             '0038W',
+            'decayModesAndIntensities': 'IT=100',
+            'ensdfArchiveFileYear':     '02',
+            'excitationEnergy':         '3562.88    0.10',
+            'halfLife':                 '56',
+            'halfLifeUnit':             'as',
+            'id':                       '006',
+            'massExcess':               '17649.76     0.10',
+            'nuclide':                  '6Lii',
+            'reference':                '81Ro02e',
+            'spinAndParity':            '0+      T=1',
+            'unknown':                  '14',
+            'yearOfDiscovery':          '1981',
         }, n._row)
 
     def test_mass_number(self):
