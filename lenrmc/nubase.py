@@ -19,6 +19,14 @@ ALTERNATE_LABELS = {
 }
 
 
+class RejectCombination(RuntimeError):
+    pass
+
+
+class BadNubaseRow(RuntimeError):
+    pass
+
+
 class HalfLife(object):
 
     def __init__(self, value, unit):
@@ -33,6 +41,13 @@ class HalfLife(object):
 
     def __str__(self):
         return '{} {}'.format(self.value, self.unit)
+
+
+def first_match(pattern, string):
+    match = re.search(pattern, string)
+    if not match:
+        return None
+    return match.group()
 
 
 class Nuclide(object):
@@ -80,8 +95,8 @@ class Nuclide(object):
     def __init__(self, row):
         self._row = row
         self._label = row['nuclide']
-        self.atomic_number = int(re.search(r'\d+', self._row['atomicNumber']).group())
-        self.mass_number = int(re.search(r'\d+', self._row['nuclide']).group())
+        self.atomic_number = int(first_match(r'\d+', self._row['atomicNumber']))
+        self.mass_number = int(first_match(r'\d+', self._row['nuclide']))
         g = re.search(r'IS=([\d\.]+)', self._row['decayModesAndIntensities'])
         self.isotopic_abundance = float(g.group(1)) if g else 0.
         self.numbers = (self.mass_number, self.atomic_number)
@@ -94,6 +109,10 @@ class Nuclide(object):
             self.label = ALTERNATE_LABELS.get(label, label)
             self.full_label = self.label
         self.signature = (self.label, self._excitation_level)
+        kev = first_match(r'[\d\.]+', self._row['massExcess'])
+        if not kev:
+            raise BadNubaseRow('no mass excess: {}'.format(row))
+        self.mass_excess_kev = float(kev)
 
     @property
     def is_excited(self):
@@ -137,8 +156,14 @@ class Nuclides(object):
     @classmethod
     def load(cls, **kwargs):
         path = kwargs['path']
+        nuclides = []
         with open(path) as fh:
-            nuclides = [Nuclide.load(line=l) for l in fh]
+            for line in fh:
+                try:
+                    n = Nuclide.load(line=line)
+                    nuclides.append(n)
+                except BadNubaseRow:
+                    continue
         return cls(nuclides)
 
     def __init__(self, nuclides):
@@ -160,10 +185,6 @@ def vectors3(integer):
         j = integer - i
         for k in range(j):
             yield (j - k, k, i)
-
-
-class RejectCombination(RuntimeError):
-    pass
 
 
 def possible_daughters(totals):
@@ -199,9 +220,16 @@ class GammaPhoton(object):
 
 class Reaction(object):
 
+    @classmethod
+    def load(cls, **kwargs):
+        nuclides = Nuclides.db()
+        reactants = ((num, nuclides.get(s)) for num, s in kwargs['reactants'])
+        daughters = ((num, nuclides.get(s)) for num, s in kwargs['daughters'])
+        return cls(reactants, daughters)
+
     def __init__(self, lvalues, rvalues):
-        self._lvalues = lvalues
-        self._rvalues = rvalues
+        self._lvalues = list(lvalues)
+        self._rvalues = list(rvalues)
 
     def _sort_key(self, a):
         return a[0].mass_number, a[0].label
@@ -225,10 +253,20 @@ class Reaction(object):
         return all(c == 1 for c in isotopes.values())
 
     @property
+    def q_kev(self):
+        lvalues = sum(num * i.mass_excess_kev for num, i in self._lvalues)
+        rvalues = sum(num * i.mass_excess_kev for num, i in self._rvalues)
+        return lvalues - rvalues
+
+    @property
     def fancy(self):
-        return '{} → {}'.format(
+        kev = self.q_kev
+        sign = '+' if kev >= 0 else '-'
+        return '{} → {} {} {:.0f} keV'.format(
             self._fancy_side(self._lvalues),
             self._fancy_side(self._rvalues),
+            sign,
+            abs(kev),
         )
 
 
