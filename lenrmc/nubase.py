@@ -1,4 +1,10 @@
+import os
+import sys
 import re
+
+
+basepath = os.path.dirname(__file__)
+DB_PATH = os.path.abspath(os.path.join(basepath, "../db/nubtab12.asc"))
 
 
 class HalfLife(object):
@@ -48,6 +54,7 @@ class Nuclide(object):
 
     def __init__(self, row):
         self._row = row
+        self.label = row['nuclide']
         self.atomic_number = int(re.search(r'\d+', self._row['atomicNumber']).group())
         self.mass_number = int(re.search(r'\d+', self._row['nuclide']).group())
         g = re.search(r'IS=([\d\.]+)', self._row['decayModesAndIntensities'])
@@ -66,3 +73,30 @@ class Nuclide(object):
 
     def __iter__(self):
         return self.json().iteritems()
+
+
+class Nuclides(object):
+
+    _nuclides = None
+
+    @classmethod
+    def get(cls):
+        if cls._nuclides is None:
+            cls._nuclides = cls.load(path=DB_PATH)
+        return cls._nuclides
+
+    @classmethod
+    def load(cls, **kwargs):
+        path = kwargs['path']
+        with open(path) as fh:
+            nuclides = [Nuclide.load(line=l) for l in fh]
+        return cls(nuclides)
+
+    def __init__(self, nuclides):
+        self._nuclides = list(nuclides)
+        self._by_label = {}
+        for n in self._nuclides:
+            self._by_label[n.label] = n
+
+    def __getitem__(self, label):
+        return self._by_label[label]

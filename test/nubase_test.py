@@ -2,16 +2,14 @@ import unittest
 import os.path
 import sys
 
-from lenrmc.nubase import Nuclide
+from lenrmc.nubase import DB_PATH, Nuclide, Nuclides
 
 
 class NuclideTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        basepath = os.path.dirname(__file__)
-        path = os.path.abspath(os.path.join(basepath, "../db/nubtab12.asc"))
-        with open(path) as fh:
+        with open(DB_PATH) as fh:
             cls.lines = list(fh)
 
     def test_basic_fields(self):
@@ -60,3 +58,13 @@ class NuclideTest(unittest.TestCase):
         "The abundance should be zero for unstable isotopes."
         n = Nuclide.load(line=self.lines[3])
         self.assertEqual(0., n.isotopic_abundance)
+
+
+class NuclidesTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.nuclides = Nuclides.get()
+
+    def test_nuclide(self):
+        self.assertEqual('7Li', self.nuclides['7Li'].label)
