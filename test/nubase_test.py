@@ -36,3 +36,10 @@ class NubaseTest(unittest.TestCase):
             '_unknown': '14',
             '_yearOfDiscovery': '1981',
         }, r._raw)
+
+    def test_json(self):
+        r = NubaseRow(self.lines[0])
+        self.assertEqual({
+            'atomicNumber': 0,
+            'halfLife':     613.9,
+        }, r.json())

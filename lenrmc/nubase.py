@@ -7,6 +7,12 @@ class HalfLife(object):
         self.value = value
         self.unit = unit
 
+    @property
+    def seconds(self):
+        if 's' == self.unit:
+            return float(self.value)
+        raise ValueError('do not know how to convert unit: {}'.format(self.unit))
+
     def __str__(self):
         return '{} {}'.format(self.value, self.unit)
 
@@ -45,3 +51,12 @@ class NubaseRow(object):
     @property
     def half_life(self):
         return HalfLife(self._raw['_halfLife'], self._raw['_halfLifeUnit'])
+
+    def json(self):
+        return {
+            'halfLife':     self.half_life.seconds,
+            'atomicNumber': self.atomic_number,
+        }
+
+    def __iter__(self):
+        return self.json().iteritems()
