@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+from collections import defaultdict
 
 
 basepath = os.path.dirname(__file__)
@@ -27,7 +28,8 @@ class Nuclide(object):
 
     COLUMNS = (
         (  4, 'id'                      ),
-        (  9, 'atomicNumber'            ),
+        (  7, 'atomicNumber'            ),
+        (  9, 'atomicNumberExtra'       ),
         ( 19, 'nuclide'                 ),
         ( 39, 'massExcess'              ),
         ( 61, 'excitationEnergy'        ),
@@ -59,6 +61,7 @@ class Nuclide(object):
         self.mass_number = int(re.search(r'\d+', self._row['nuclide']).group())
         g = re.search(r'IS=([\d\.]+)', self._row['decayModesAndIntensities'])
         self.isotopic_abundance = float(g.group(1)) if g else 0.
+        self.numbers = (self.mass_number, self.atomic_number)
 
     @property
     def half_life(self):
@@ -95,8 +98,10 @@ class Nuclides(object):
     def __init__(self, nuclides):
         self._nuclides = list(nuclides)
         self._by_label = {}
+        self.isomers = defaultdict(list)
         for n in self._nuclides:
             self._by_label[n.label] = n
+            self.isomers[n.numbers].append(n)
 
     def __getitem__(self, label):
         return self._by_label[label]

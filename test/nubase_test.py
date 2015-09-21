@@ -20,7 +20,8 @@ class NuclideTest(unittest.TestCase):
     def test_column_widths(self):
         n = Nuclide.load(line=self.lines[16])
         self.assertEqual({
-            'atomicNumber':             '0038W',
+            'atomicNumber':             '003',
+            'atomicNumberExtra':        '8W',
             'decayModesAndIntensities': 'IT=100',
             'ensdfArchiveFileYear':     '02',
             'excitationEnergy':         '3562.88    0.10',
@@ -68,3 +69,9 @@ class NuclidesTest(unittest.TestCase):
 
     def test_nuclide(self):
         self.assertEqual('7Li', self.nuclides['7Li'].label)
+
+    def test_isomers(self):
+        n = self.nuclides['7Li']
+        self.assertEqual((7, 3), n.numbers)
+        ns = self.nuclides.isomers[n.numbers]
+        self.assertEqual(['7Li', '7Lii'], [n.label for n in ns])
