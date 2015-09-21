@@ -15,12 +15,12 @@ class NuclideTest(unittest.TestCase):
             cls.lines = list(fh)
 
     def test_basic_fields(self):
-        n = Nuclide(self.lines[0])
+        n = Nuclide.load(line=self.lines[0])
         self.assertEqual(0, n.atomic_number)
         self.assertEqual('613.9 s', str(n.half_life))
 
     def test_column_widths(self):
-        n = Nuclide(self.lines[16])
+        n = Nuclide.load(line=self.lines[16])
         self.assertEqual({
             '_atomicNumber': '0038W',
             '_decayModesAndIntensities': 'IT=100',
@@ -35,14 +35,14 @@ class NuclideTest(unittest.TestCase):
             '_spinAndParity': '0+      T=1',
             '_unknown': '14',
             '_yearOfDiscovery': '1981',
-        }, n._raw)
+        }, n._row)
 
     def test_mass_number(self):
-        n = Nuclide(self.lines[0])
+        n = Nuclide.load(line=self.lines[0])
         self.assertEqual(1, n.mass_number)
 
     def test_json(self):
-        n = Nuclide(self.lines[0])
+        n = Nuclide.load(line=self.lines[0])
         self.assertEqual({
             'atomicNumber': 0,
             'massNumber':   1,
@@ -51,12 +51,12 @@ class NuclideTest(unittest.TestCase):
 
     def test_isotopic_abundance_1(self):
         "There should be an abundance for a stable isotope."
-        n = Nuclide(self.lines[1])
+        n = Nuclide.load(line=self.lines[1])
         self.assertEqual(99.9885, n.isotopic_abundance)
-        n = Nuclide(self.lines[2])
+        n = Nuclide.load(line=self.lines[2])
         self.assertEqual(0.0115, n.isotopic_abundance)
 
     def test_isotopic_abundance_2(self):
         "The abundance should be zero for unstable isotopes."
-        n = Nuclide(self.lines[3])
+        n = Nuclide.load(line=self.lines[3])
         self.assertEqual(0., n.isotopic_abundance)

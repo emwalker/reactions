@@ -35,22 +35,27 @@ class Nuclide(object):
         ( -1, '_decayModesAndIntensities'),
     )
 
-    def __init__(self, line):
-        self.line = line
-        self._raw = {}
+    @classmethod
+    def load(cls, **kwargs):
+        line = kwargs['line']
+        row = {}
         endcol_prev = 0
-        for endcol, field in self.COLUMNS:
+        for endcol, field in cls.COLUMNS:
             text = line[endcol_prev:endcol]
-            self._raw[field] = text.strip()
+            row[field] = text.strip()
             endcol_prev = endcol
-        self.atomic_number = int(re.search(r'\d+', self._raw['_atomicNumber']).group())
-        self.mass_number = int(re.search(r'\d+', self._raw['_nuclide']).group())
-        g = re.search(r'IS=([\d\.]+)', self._raw['_decayModesAndIntensities'])
+        return cls(row)
+
+    def __init__(self, row):
+        self._row = row
+        self.atomic_number = int(re.search(r'\d+', self._row['_atomicNumber']).group())
+        self.mass_number = int(re.search(r'\d+', self._row['_nuclide']).group())
+        g = re.search(r'IS=([\d\.]+)', self._row['_decayModesAndIntensities'])
         self.isotopic_abundance = float(g.group(1)) if g else 0.
 
     @property
     def half_life(self):
-        return HalfLife(self._raw['_halfLife'], self._raw['_halfLifeUnit'])
+        return HalfLife(self._row['_halfLife'], self._row['_halfLifeUnit'])
 
     def json(self):
         return {
