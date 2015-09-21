@@ -67,6 +67,13 @@ class NuclideTest(unittest.TestCase):
         n = Nuclide.load(line=self.lines[3])
         self.assertEqual(0., n.isotopic_abundance)
 
+    def test_signature(self):
+        n = Nuclide.load(line=self.lines[15])
+        self.assertEqual(('6Li', '0'), n.signature)
+        n = Nuclide.load(line=self.lines[16])
+        self.assertEqual(('6Li', 'i'), n.signature)
+
+
 
 class NuclidesTest(unittest.TestCase):
 
@@ -81,7 +88,7 @@ class NuclidesTest(unittest.TestCase):
         n = self.nuclides.get('7Li')
         self.assertEqual((7, 3), n.numbers)
         ns = self.nuclides.isomers[n.numbers]
-        self.assertEqual(['7Li', '7Lii'], [n.label for n in ns])
+        self.assertEqual([('7Li', '0'), ('7Li', 'i')], [n.signature for n in ns])
 
 
 class ReactionCombinationsTest(unittest.TestCase):
@@ -117,6 +124,10 @@ class ReactionCombinationsTest(unittest.TestCase):
 
 class CombinationsTest(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
+
     def test_outcomes(self):
         c = Combinations.load(reactants=[(1, '7Li'), (1, 'p')])
         outcomes = list(c._outcomes())
@@ -125,32 +136,32 @@ class CombinationsTest(unittest.TestCase):
 
     def test_daughters(self):
         c = Combinations.load(reactants=[(1, '7Li'), (1, 'p')])
-        self.assertEqual([
-            ['8Be'],
-            ['8Bei'],
-            ['8Bej'],
-            ['n', '7Be'],
-            ['n', '7Bei'],
-            ['p', '7Li'],
-            ['p', '7Lii'],
-            ['d', '6Li'],
-            ['d', '6Lii'],
-            ['t', '5Li'],
-            ['3He', '5He'],
-            ['3Li', '5H'],
-            ['4H', '4Li'],
-            ['4He', '4He'],
-            ['n', 'n', '6Be'],
-            ['n', 'p', '6Li'],
-            ['n', 'p', '6Lii'],
-            ['p', 'p', '6He'],
-            ['n', 'd', '5Li'],
-            ['p', 'd', '5He'],
-            ['n', 't', '4Li'],
-            ['n', '3He', '4He'],
-            ['n', '3Li', '4H'],
-            ['p', 't', '4He'],
-            ['p', '3He', '4H'],
-            ['d', 'd', '4He'],
-            ['d', 't', '3He']]
+        self.assertEqual(
+            [[('8Be', '0')],
+             [('8Be', 'i')],
+             [('8Be', 'j')],
+             [('n', '0'), ('7Be', '0')],
+             [('n', '0'), ('7Be', 'i')],
+             [('p', '0'), ('7Li', '0')],
+             [('p', '0'), ('7Li', 'i')],
+             [('d', '0'), ('6Li', '0')],
+             [('d', '0'), ('6Li', 'i')],
+             [('t', '0'), ('5Li', '0')],
+             [('3He', '0'), ('5He', '0')],
+             [('3Li', '0'), ('5H', '0')],
+             [('4H', '0'), ('4Li', '0')],
+             [('4He', '0'), ('4He', '0')],
+             [('n', '0'), ('n', '0'), ('6Be', '0')],
+             [('n', '0'), ('p', '0'), ('6Li', '0')],
+             [('n', '0'), ('p', '0'), ('6Li', 'i')],
+             [('p', '0'), ('p', '0'), ('6He', '0')],
+             [('n', '0'), ('d', '0'), ('5Li', '0')],
+             [('p', '0'), ('d', '0'), ('5He', '0')],
+             [('n', '0'), ('t', '0'), ('4Li', '0')],
+             [('n', '0'), ('3He', '0'), ('4He', '0')],
+             [('n', '0'), ('3Li', '0'), ('4H', '0')],
+             [('p', '0'), ('t', '0'), ('4He', '0')],
+             [('p', '0'), ('3He', '0'), ('4H', '0')],
+             [('d', '0'), ('d', '0'), ('4He', '0')],
+             [('d', '0'), ('t', '0'), ('3He', '0')]]
         , c.json())

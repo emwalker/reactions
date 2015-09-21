@@ -37,7 +37,7 @@ class HalfLife(object):
 
 class Nuclide(object):
 
-    COLUMNS = (
+    _columns = (
         (  4, 'id'                      ),
         (  7, 'atomicNumber'            ),
         (  9, 'atomicNumberExtra'       ),
@@ -54,12 +54,24 @@ class Nuclide(object):
         ( -1, 'decayModesAndIntensities'),
     )
 
+    _not_excited = {
+        '1 n',
+        '3Li',
+        '4Li',
+        '4H',
+        '5H',
+        '5He',
+        '5Li',
+        '6He',
+        '8Be',
+    }
+
     @classmethod
     def load(cls, **kwargs):
         line = kwargs['line']
         row = {}
         endcol_prev = 0
-        for endcol, field in cls.COLUMNS:
+        for endcol, field in cls._columns:
             text = line[endcol_prev:endcol]
             row[field] = text.strip()
             endcol_prev = endcol
@@ -68,12 +80,25 @@ class Nuclide(object):
     def __init__(self, row):
         self._row = row
         self._label = row['nuclide']
-        self.label = ALTERNATE_LABELS.get(self._label, self._label)
         self.atomic_number = int(re.search(r'\d+', self._row['atomicNumber']).group())
         self.mass_number = int(re.search(r'\d+', self._row['nuclide']).group())
         g = re.search(r'IS=([\d\.]+)', self._row['decayModesAndIntensities'])
         self.isotopic_abundance = float(g.group(1)) if g else 0.
         self.numbers = (self.mass_number, self.atomic_number)
+        if self._excited:
+            label, self._excitation_level = self._label[:-1], self._label[-1]
+        else:
+            label, self._excitation_level = self._label, '0'
+        self.label = ALTERNATE_LABELS.get(label, label)
+        self.signature = (self.label, self._excitation_level)
+
+    @property
+    def _excited(self):
+        if self.isotopic_abundance:
+            return False
+        if self._label in self._not_excited:
+            return False
+        return any(self._label.endswith(s) for s in 'ijmnpqrx')
 
     @property
     def half_life(self):
@@ -183,6 +208,6 @@ class Combinations(object):
     def json(self):
         projection = []
         for daughters in self._daughters():
-            row = [d.label for d in daughters]
+            row = [d.signature for d in daughters]
             projection.append(row)
         return projection
