@@ -15,9 +15,9 @@ class NubaseRow(object):
 
     COLUMNS = (
         (  4, '_id'                      ),
-        (  8, '_atomicNumber'            ),
-        ( 20, '_nuclide'                 ),
-        ( 40, '_massExcess'              ),
+        (  9, '_atomicNumber'            ),
+        ( 19, '_nuclide'                 ),
+        ( 39, '_massExcess'              ),
         ( 61, '_excitationEnergy'        ),
         ( 69, '_halfLife'                ),
         ( 71, '_halfLifeUnit'            ),
