@@ -10,6 +10,14 @@ basepath = os.path.dirname(__file__)
 DB_PATH = os.path.abspath(os.path.join(basepath, "../db/nubtab12.asc"))
 
 
+ALTERNATE_LABELS = {
+    '1 n': 'n',
+    '1H':  'p',
+    '2H':  'd',
+    '3H':  't',
+}
+
+
 class HalfLife(object):
 
     def __init__(self, value, unit):
@@ -58,7 +66,8 @@ class Nuclide(object):
 
     def __init__(self, row):
         self._row = row
-        self.label = row['nuclide']
+        self._label = row['nuclide']
+        self.label = ALTERNATE_LABELS.get(self._label, self._label)
         self.atomic_number = int(re.search(r'\d+', self._row['atomicNumber']).group())
         self.mass_number = int(re.search(r'\d+', self._row['nuclide']).group())
         g = re.search(r'IS=([\d\.]+)', self._row['decayModesAndIntensities'])
@@ -102,6 +111,7 @@ class Nuclides(object):
         self._by_label = {}
         self.isomers = defaultdict(list)
         for n in self._nuclides:
+            self._by_label[n._label] = n
             self._by_label[n.label] = n
             self.isomers[n.numbers].append(n)
 
@@ -159,3 +169,20 @@ class Combinations(object):
         numbers = [num * n.numbers for num, n in self._reactants]
         mass_number, atomic_number = tuple(map(operator.add, *numbers))
         return possible_daughters((mass_number, atomic_number))
+
+    def _daughters(self):
+        nuclides = Nuclides.db()
+        for pairs in self._outcomes():
+            daughters = [nuclides.isomers[pair] for pair in pairs]
+            if not all(daughters):
+                continue
+            yield daughters
+
+    def json(self):
+        projection = []
+        for daughters in self._daughters():
+            row = []
+            for equivalents in daughters:
+                row.append([e.label for e in equivalents])
+            projection.append(row)
+        return projection

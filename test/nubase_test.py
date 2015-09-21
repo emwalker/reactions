@@ -115,11 +115,36 @@ class ReactionCombinationsTest(unittest.TestCase):
         self.assertTrue(all(3 == sum(a for m,a in t) for t in ts))
 
 
-
 class CombinationsTest(unittest.TestCase):
 
     def test_outcomes(self):
-        c = Combinations.load(reactants=[(1, '7Li'), (1, '1H')])
+        c = Combinations.load(reactants=[(1, '7Li'), (1, 'p')])
         outcomes = list(c._outcomes())
         self.assertEqual(42, len(outcomes))
         self.assertEqual(((8, 4),), outcomes[0])
+
+    def test_daughters(self):
+        c = Combinations.load(reactants=[(1, '7Li'), (1, 'p')])
+        self.assertEqual([
+            [['8Be',   '8Bei', '8Bej']],
+            [['n'],   ['7Be',  '7Bei']],
+            [['p'],   ['7Li',  '7Lii']],
+            [['d'],   ['6Li',  '6Lii']],
+            [['t'],   ['5Li']],
+            [['3He'], ['5He']],
+            [['3Li'], ['5H']],
+            [['4H'],  ['4Li']],
+            [['4He'], ['4He']],
+            [['n'],   ['n'],    ['6Be']],
+            [['n'],   ['p'],    ['6Li', '6Lii']],
+            [['p'],   ['p'],    ['6He']],
+            [['n'],   ['d'],    ['5Li']],
+            [['p'],   ['d'],    ['5He']],
+            [['n'],   ['t'],    ['4Li']],
+            [['n'],   ['3He'],  ['4He']],
+            [['n'],   ['3Li'],  ['4H']],
+            [['p'],   ['t'],    ['4He']],
+            [['p'],   ['3He'],  ['4H']],
+            [['d'],   ['d'],    ['4He']],
+            [['d'],   ['t'],    ['3He']],
+        ], c.json())
