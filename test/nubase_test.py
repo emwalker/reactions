@@ -2,7 +2,7 @@ import unittest
 import os.path
 import sys
 
-from lenrmc.nubase import DB_PATH, Nuclide, Nuclides
+from lenrmc.nubase import DB_PATH, Nuclide, Nuclides, Combinations
 
 
 class NuclideTest(unittest.TestCase):
@@ -65,13 +65,49 @@ class NuclidesTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.nuclides = Nuclides.get()
+        cls.nuclides = Nuclides.db()
 
     def test_nuclide(self):
-        self.assertEqual('7Li', self.nuclides['7Li'].label)
+        self.assertEqual('7Li', self.nuclides.get('7Li').label)
 
     def test_isomers(self):
-        n = self.nuclides['7Li']
+        n = self.nuclides.get('7Li')
         self.assertEqual((7, 3), n.numbers)
         ns = self.nuclides.isomers[n.numbers]
         self.assertEqual(['7Li', '7Lii'], [n.label for n in ns])
+
+
+class CombinationsTest(unittest.TestCase):
+
+    def test_outcomes(self):
+        c = Combinations.load(reactants=[(1, '7Li'), (1, '1H')])
+        self.assertEqual([
+            [(1, 0), (7, 4)],
+            [(1, 1), (7, 3)],
+            [(1, 2), (7, 2)],
+            [(1, 3), (7, 1)],
+            [(2, 0), (6, 4)],
+            [(2, 1), (6, 3)],
+            [(2, 2), (6, 2)],
+            [(2, 3), (6, 1)],
+            [(3, 0), (5, 4)],
+            [(3, 1), (5, 3)],
+            [(3, 2), (5, 2)],
+            [(3, 3), (5, 1)],
+            [(4, 0), (4, 4)],
+            [(4, 1), (4, 3)],
+            [(4, 2), (4, 2)],
+            [(4, 3), (4, 1)],
+            [(5, 0), (3, 4)],
+            [(5, 1), (3, 3)],
+            [(5, 2), (3, 2)],
+            [(5, 3), (3, 1)],
+            [(6, 0), (2, 4)],
+            [(6, 1), (2, 3)],
+            [(6, 2), (2, 2)],
+            [(6, 3), (2, 1)],
+            [(7, 0), (1, 4)],
+            [(7, 1), (1, 3)],
+            [(7, 2), (1, 2)],
+            [(7, 3), (1, 1)]]
+        , list(c._outcomes()))

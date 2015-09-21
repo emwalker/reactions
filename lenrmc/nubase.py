@@ -1,6 +1,8 @@
+from __future__ import absolute_import
 import os
 import sys
 import re
+import operator
 from collections import defaultdict
 
 
@@ -83,7 +85,7 @@ class Nuclides(object):
     _nuclides = None
 
     @classmethod
-    def get(cls):
+    def db(cls):
         if cls._nuclides is None:
             cls._nuclides = cls.load(path=DB_PATH)
         return cls._nuclides
@@ -103,5 +105,27 @@ class Nuclides(object):
             self._by_label[n.label] = n
             self.isomers[n.numbers].append(n)
 
-    def __getitem__(self, label):
-        return self._by_label[label]
+    def get(self, label):
+        return self._by_label.get(label)
+
+
+class Combinations(object):
+
+    @classmethod
+    def load(cls, **kwargs):
+        nuclides = Nuclides.db()
+        reactants = kwargs['reactants']
+        return cls((num, nuclides.get(l)) for num,l in reactants)
+
+    def __init__(self, reactants):
+        self._reactants = list(reactants)
+
+    def _outcomes(self):
+        numbers = [num * n.numbers for num, n in self._reactants]
+        mass_number, atomic_number = tuple(map(operator.add, *numbers))
+        for m in range(1, mass_number):
+            for a in range(0, atomic_number):
+                yield [
+                    (m, a),
+                    (mass_number - m, atomic_number - a),
+                ]
