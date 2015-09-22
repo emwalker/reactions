@@ -12,10 +12,11 @@ DB_PATH = os.path.abspath(os.path.join(basepath, "../db/nubtab12.asc"))
 
 
 ALTERNATE_LABELS = {
-    '1 n': 'n',
-    '1H':  'p',
-    '2H':  'd',
-    '3H':  't',
+    '1 n':  'n',
+    '1H':   'p',
+    '2H':   'd',
+    '3H':   't',
+    '12Cx': '12C',
 }
 
 
