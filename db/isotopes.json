@@ -18,6 +18,7 @@
             "shortDescription": "2004 ICMNS Iwamura isotope study",
             "label": "04I",
             "system": "d + Ba + Pd/CaO/Pd, d + Cs + Pd/CaO/Pd",
+            "notes": "Barium as the sources seems like conjecture, so entries for 137Ba, e.g., have been omitted.",
             "isotopes": [
                 {"label": "149Sm", "change": "increase"},
                 {"label": "150Sm", "change": "increase"}
