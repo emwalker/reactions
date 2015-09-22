@@ -242,9 +242,10 @@ class Reaction(object):
 
     _noteworthy = {'4He', 'n'}
 
-    def __init__(self, lvalues, rvalues):
+    def __init__(self, lvalues, rvalues, **kwargs):
         self._lvalues = list(lvalues)
         self._rvalues = list(rvalues)
+        self._kwargs = kwargs
         self.q_value_kev = self._q_value_kev()
         self.is_stable = self._is_stable()
         self.notes = self._notes()
@@ -306,8 +307,9 @@ class Reaction(object):
             kev,
         )
         string = '{:<45} {:<25}'.format(string, ', '.join(sorted(self.notes)))
-        string = self._spin_and_parity(string, self._lvalues)
-        string = self._spin_and_parity(string, self._rvalues)
+        if self._kwargs.get('spins'):
+            string = self._spin_and_parity(string, self._lvalues)
+            string = self._spin_and_parity(string, self._rvalues)
         return string.strip()
 
     def _spin_and_parity(self, string, values):
@@ -351,7 +353,7 @@ class Combinations(object):
     def reactions(self):
         for daughters in self._daughters():
             rvalues = ((1, d) for d in daughters)
-            r = Reaction(self._reactants, rvalues)
+            r = Reaction(self._reactants, rvalues, **self._kwargs)
             if not self._allowed(r):
                 continue
             yield r

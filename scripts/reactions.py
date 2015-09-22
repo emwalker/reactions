@@ -18,8 +18,9 @@ class App(object):
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('system', type=str)
-    parser.add_argument('--lb', dest='lower_bound', help='lower bound in keV')
-    parser.set_defaults(lower_bound=0)
+    parser.add_argument('--lb', dest='lower_bound')
+    parser.add_argument('--spins', dest='spins', action='store_true')
+    parser.set_defaults(lower_bound=0, spins=False)
     return parser.parse_args()
 
 

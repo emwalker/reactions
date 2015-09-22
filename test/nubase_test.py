@@ -192,7 +192,7 @@ class SystemTest(unittest.TestCase):
         self.assertEqual(((8, 4),), outcomes[0])
 
     def test_system(self):
-        s = System.parse('p+7Li')
+        s = System.parse('p+7Li', spins=True)
         self.assertEqual(
             ['p + 7Li → 2·4He + 17346 keV                   4He, stable               1/2+, 3/2-           0+, 0+',
              'p + 7Li → ɣ + 8Be + 17254 keV                 ɣ                         1/2+, 3/2-           0+, 1-',
