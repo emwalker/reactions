@@ -242,7 +242,7 @@ class Reaction(object):
         daughters = ((num, nuclides[s]) for num, s in kwargs['daughters'])
         return cls(reactants, daughters)
 
-    _noteworthy = {'4He', 'n'}
+    _noteworthy = {'4He', 'n', 't'}
 
     def __init__(self, lvalues, rvalues, **kwargs):
         self._lvalues = list(lvalues)
