@@ -194,9 +194,11 @@ class SystemTest(unittest.TestCase):
     def test_system(self):
         s = System.parse('p+7Li')
         self.assertEqual(
-            ['p + 7Li → 2·d + 4He - 6500 keV                  4He, n-transfer, stable',
+            ['p + 7Li → 2·4He + 17346 keV                                 4He, stable',
+             'p + 7Li → ɣ + 8Be + 17254 keV                                         ɣ',
+             'p + 7Li → ɣ + 8Be (i) + 628 keV                                       ɣ',
+             'p + 7Li → 2·d + 4He - 6500 keV                  4He, n-transfer, stable',
              'p + 7Li → d + 6Li - 5027 keV                         n-transfer, stable',
-             'p + 7Li → 2·4He + 17346 keV                                 4He, stable',
              'p + 7Li → p + 7Li + 0 keV                                        stable',
              'p + 7Li → d + 6Li (i) - 8589 keV                             n-transfer',
              'p + 7Li → p + d + 5He - 9460 keV                             n-transfer',
@@ -210,8 +212,6 @@ class SystemTest(unittest.TestCase):
              'p + 7Li → 4H + 4Li - 27744 keV',
              'p + 7Li → 3Li + 5H - 39364 keV',
              'p + 7Li → n + d + 5Li - 10691 keV                         n, n-transfer',
-             'p + 7Li → ɣ + 8Be + 17254 keV                                         ɣ',
-             'p + 7Li → ɣ + 8Be (i) + 628 keV                                       ɣ',
              'p + 7Li → n + 3He + 4He - 3231 keV                               4He, n',
              'p + 7Li → ɣ + 8Be (j) - 10240 keV                                     ɣ',
              'p + 7Li → n + 7Be - 1644 keV                                          n',

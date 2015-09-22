@@ -368,8 +368,8 @@ class System(object):
         'n-transfer': 2,
         'stable':     3,
         '4He':        1,
-        'ɣ':         -3,
-        'n':         -4,
+        'ɣ':         -4,
+        'n':         -5,
     }
 
     def reactions(self):
@@ -378,7 +378,7 @@ class System(object):
 
     def _sort_key(self, reaction):
         desirable = sum(self._desirable.get(n, 0) for n in reaction.notes)
-        return desirable, reaction.q_value_kev
+        return reaction.q_value_kev > 0, desirable, reaction.q_value_kev
 
     def terminal(self):
         return [
