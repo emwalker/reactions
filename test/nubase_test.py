@@ -153,7 +153,7 @@ class CombinationsTest(unittest.TestCase):
     def test_reactions(self):
         c = Combinations.load(reactants=[(1, '7Li'), (1, 'p')])
         self.assertEqual(
-            ['p + 7Li → 2×4He + 17346 keV',
+            ['p + 7Li → 2·4He + 17346 keV',
              'p + 7Li → ɣ + 8Be + 17254 keV',
              'p + 7Li → ɣ + 8Be (i) + 628 keV',
              'p + 7Li → p + 7Li + 0 keV',
@@ -163,16 +163,16 @@ class CombinationsTest(unittest.TestCase):
              'p + 7Li → 3He + 5He - 3966 keV',
              'p + 7Li → t + 5Li - 4434 keV',
              'p + 7Li → d + 6Li - 5027 keV',
-             'p + 7Li → 2×d + 4He - 6500 keV',
+             'p + 7Li → 2·d + 4He - 6500 keV',
              'p + 7Li → n + p + 6Li - 7251 keV',
              'p + 7Li → d + 6Li (i) - 8589 keV',
              'p + 7Li → p + d + 5He - 9460 keV',
-             'p + 7Li → 2×p + 6He - 9974 keV',
+             'p + 7Li → 2·p + 6He - 9974 keV',
              'p + 7Li → ɣ + 8Be (j) - 10240 keV',
              'p + 7Li → n + d + 5Li - 10691 keV',
              'p + 7Li → n + p + 6Li (i) - 10814 keV',
              'p + 7Li → p + 7Li (i) - 11243 keV',
-             'p + 7Li → 2×n + 6Be - 12322 keV',
+             'p + 7Li → 2·n + 6Be - 12322 keV',
              'p + 7Li → n + 7Be (i) - 12625 keV',
              'p + 7Li → d + 3He + t - 20821 keV',
              'p + 7Li → p + 3He + 4H - 24644 keV',
@@ -184,4 +184,4 @@ class CombinationsTest(unittest.TestCase):
 
     def test_reactions_2(self):
         c = Combinations.load(reactants=[(1, '6Li'), (1, '6Li')])
-        self.assertIn('2×6Li → 3×4He + 20899 keV', c.json())
+        self.assertIn('2·6Li → 3·4He + 20899 keV', c.json())

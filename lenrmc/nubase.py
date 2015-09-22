@@ -17,6 +17,7 @@ ALTERNATE_LABELS = {
     '2H':   'd',
     '3H':   't',
     '12Cx': '12C',
+    '10Bx': '10B',
 }
 
 
@@ -243,7 +244,7 @@ class Reaction(object):
         if self._gamma(isotopes):
             isotopes[GammaPhoton()] += 1
         values = [
-            '{}×{}'.format(c, i.full_label) if c > 1 else i.full_label
+            '{}·{}'.format(c, i.full_label) if c > 1 else i.full_label
             for i, c
             in sorted(isotopes.items(), key=self._sort_key)
         ]
