@@ -276,13 +276,16 @@ class Combinations(object):
     def load(cls, **kwargs):
         nuclides = Nuclides.db()
         reactants = [
-            (num, (s, '0')) if isinstance(s, str) else (num, s)
+            (num, nuclides.get((s, '0'))) if isinstance(s, str) else (num, nuclides.get(s))
             for num, s in kwargs['reactants']
         ]
-        return cls((num, nuclides.get(s)) for num, s in reactants)
+        del kwargs['reactants']
+        return cls(reactants, **kwargs)
 
-    def __init__(self, reactants):
+    def __init__(self, reactants, **kwargs):
         self._reactants = list(reactants)
+        self._kwargs = kwargs
+        self._lower_bound = float(kwargs['lower_bound']) if 'lower_bound' in kwargs else None
 
     def _outcomes(self):
         numbers = [num * n.numbers for num, n in self._reactants]
@@ -301,7 +304,13 @@ class Combinations(object):
     def _reactions(self):
         for daughters in self._daughters():
             rvalues = ((1, d) for d in daughters)
-            yield Reaction(self._reactants, rvalues)
+            r = Reaction(self._reactants, rvalues)
+            if not self._allowed(r):
+                continue
+            yield r
+
+    def _allowed(self, r):
+        return self._lower_bound is None or r.q_value_kev > self._lower_bound
 
     def _sort_key(self, reaction):
         return reaction.q_value_kev
