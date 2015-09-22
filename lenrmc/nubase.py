@@ -90,17 +90,20 @@ class Nuclide(object):
         row = {}
         endcol_prev = 0
         for endcol, field in cls._columns:
-            text = line[endcol_prev:endcol]
-            row[field] = text.strip()
+            text = line[endcol_prev:endcol].strip()
+            if text:
+                row[field] = text
             endcol_prev = endcol
         return cls(row)
 
     def __init__(self, row):
+        if not 'massExcess' in row:
+            raise BadNubaseRow('no mass excess: {}'.format(row))
         self._row = row
         self._label = row['nuclide']
         self.atomic_number = int(first_match(r'\d+', self._row['atomicNumber']))
         self.mass_number = int(self._row['massNumber'])
-        g = re.search(r'IS=([\d\.]+)', self._row['decayModesAndIntensities'])
+        g = re.search(r'IS=([\d\.]+)', self._row.get('decayModesAndIntensities', ''))
         self.isotopic_abundance = float(g.group(1)) if g else 0.
         self.is_stable = g is not None
         self.numbers = (self.mass_number, self.atomic_number)
@@ -114,9 +117,10 @@ class Nuclide(object):
             self.full_label = self.label
         self.signature = (self.label, self._excitation_level)
         kev = first_match(r'[\d\.\-]+', self._row['massExcess'])
-        if not kev:
-            raise BadNubaseRow('no mass excess: {}'.format(row))
         self.mass_excess_kev = float(kev)
+        self.spin_and_parity = None
+        if 'spinAndParity' in self._row:
+            self.spin_and_parity = ' '.join(self._row['spinAndParity'].split())
 
     @property
     def is_excited(self):
@@ -224,6 +228,7 @@ class GammaPhoton(object):
         self.mass_number = 0
         self.full_label = self.label = 'ɣ'
         self.is_stable = False
+        self.spin_and_parity = '1-'
 
 
 class Reaction(object):
@@ -263,17 +268,17 @@ class Reaction(object):
         return d.numbers == tuple(map(operator.add, p.numbers, (1, 0)))
 
     def _sort_key(self, pair):
-        n, _ = pair
+        num, n = pair
         return n.mass_number, n.label
 
     def _fancy_side(self, side):
         isotopes = defaultdict(lambda: 0)
-        for c, i in side:
-            isotopes[i] += c
+        for num, n in side:
+            isotopes[n] += num
         values = [
-            '{}·{}'.format(c, i.full_label) if c > 1 else i.full_label
-            for i, c
-            in sorted(isotopes.items(), key=self._sort_key)
+            '{}·{}'.format(num, n.full_label) if num > 1 else n.full_label
+            for num, n
+            in sorted(((num, n) for n, num in isotopes.items()), key=self._sort_key)
         ]
         return ' + '.join(values)
 
@@ -292,17 +297,23 @@ class Reaction(object):
         return lvalues - rvalues
 
     @property
-    def fancy(self):
+    def terminal(self):
         kev = self.q_value_kev
         sign = '+' if kev >= 0 else '-'
-        string = '{} → {} {} {:.0f} keV'.format(
+        string = '{} → {} + {:.0f} keV'.format(
             self._fancy_side(self._lvalues),
             self._fancy_side(self._rvalues),
-            sign,
-            abs(kev),
+            kev,
         )
-        if self.notes:
-            string = '{:<45} {:>25}'.format(string, ', '.join(sorted(self.notes)))
+        string = '{:<45} {:<25}'.format(string, ', '.join(sorted(self.notes)))
+        string = self._spin_and_parity(string, self._lvalues)
+        string = self._spin_and_parity(string, self._rvalues)
+        return string.strip()
+
+    def _spin_and_parity(self, string, values):
+        spins_and_parities = (n.spin_and_parity for num, n in sorted(values, key=self._sort_key))
+        spins_and_parities = filter(None, spins_and_parities)
+        string = '{} {:<20}'.format(string, ', '.join(sorted(spins_and_parities)))
         return string
 
 
@@ -382,6 +393,6 @@ class System(object):
 
     def terminal(self):
         return [
-            r.fancy
+            r.terminal
             for r in sorted(self.reactions(), key=self._sort_key, reverse=True)
         ]
