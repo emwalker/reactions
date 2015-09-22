@@ -2,15 +2,21 @@ from __future__ import absolute_import
 import os
 import sys
 import re
+import json
 import operator
 import itertools
+import sqlite3
+import pickle
+import logging
 from collections import defaultdict
+from os.path import expanduser
 
 from .studies import Studies
 
 
 basepath = os.path.dirname(__file__)
-DB_PATH = os.path.abspath(os.path.join(basepath, "../db/nubtab12.asc"))
+NUBASE_PATH = os.path.abspath(os.path.join(basepath, "../db/nubtab12.asc"))
+LENRMC_DIR = os.path.join(expanduser('~'), '.lenrmc')
 
 
 ALTERNATE_LABELS = {
@@ -21,6 +27,21 @@ ALTERNATE_LABELS = {
     '12Cx': '12C',
     '10Bx': '10B',
 }
+
+
+def make_connection():
+    try:
+        os.mkdir(LENRMC_DIR, 0o755)
+    except OSError:
+        pass
+    conn = sqlite3.connect('{}/lenrmc.db'.format(LENRMC_DIR))
+    try:
+        conn.execute("""
+        create table reactions (parents text, reaction text, q_value_kev real)
+        """)
+    except sqlite3.OperationalError:
+        pass
+    return conn
 
 
 class RejectCombination(RuntimeError):
@@ -160,7 +181,7 @@ class Nuclides(object):
     @classmethod
     def db(cls):
         if cls._nuclides is None:
-            cls._nuclides = cls.load(path=DB_PATH)
+            cls._nuclides = cls.load(path=NUBASE_PATH)
         return cls._nuclides
 
     @classmethod
@@ -342,6 +363,8 @@ class Reaction(object):
 
 class Combinations(object):
 
+    _connection = None
+
     @classmethod
     def load(cls, **kwargs):
         nuclides = Nuclides.db()
@@ -356,6 +379,11 @@ class Combinations(object):
         self._reactants = list(reactants)
         self._kwargs = kwargs
         self._lower_bound = float(kwargs['lower_bound']) if 'lower_bound' in kwargs else None
+        self.cache_key = self._cache_key()
+
+    def _cache_key(self):
+        parents = [(num, n.signature) for num, n in sorted(self._reactants, key=self._sort_key)]
+        return json.dumps(parents, sort_keys=True)
 
     def _outcomes(self):
         numbers = [num * n.numbers for num, n in self._reactants]
@@ -372,15 +400,48 @@ class Combinations(object):
             yield from itertools.product(*daughters)
 
     def reactions(self):
-        for daughters in self._daughters():
-            rvalues = ((1, d) for d in daughters)
-            r = Reaction(self._reactants, rvalues, **self._kwargs)
-            if not self._allowed(r):
-                continue
-            yield r
+        results = self._cached_results()
+        if results:
+            yield from results
+        else:
+            results = []
+            for daughters in self._daughters():
+                rvalues = ((1, d) for d in daughters)
+                r = Reaction(self._reactants, rvalues, **self._kwargs)
+                if not self._allowed(r):
+                    continue
+                yield r
+                results.append(r)
+            self._cache_results(results)
 
     def _allowed(self, r):
         return self._lower_bound is None or r.q_value_kev > self._lower_bound
+
+    def _sort_key(self, pair):
+        num, nuclide = pair
+        return nuclide.signature
+
+    @property
+    def connection(self):
+        if self._connection is None:
+            self._connection = make_connection()
+        return self._connection
+
+    def _cached_results(self):
+        cursor = self.connection.execute(
+            "select reaction from reactions where parents = ?",
+            (self.cache_key,))
+        array = list(cursor)
+        if array:
+            logging.info('reading previously computed values from cache')
+            return (pickle.loads(r[0]) for r in array)
+        return None
+
+    def _cache_results(self, results):
+        self.connection.executemany("""
+        insert into reactions (parents, reaction) values (?, ?)
+        """, ((self.cache_key, pickle.dumps(r)) for r in results))
+        self.connection.commit()
 
 
 class System(object):

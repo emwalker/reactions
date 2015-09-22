@@ -4,7 +4,7 @@ import sys
 
 from lenrmc.nubase import (
     Combinations,
-    DB_PATH,
+    NUBASE_PATH,
     Nuclide,
     Nuclides,
     possible_daughters,
@@ -18,7 +18,7 @@ class NuclideTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        with open(DB_PATH) as fh:
+        with open(NUBASE_PATH) as fh:
             cls.lines = list(fh)
 
     def test_basic_fields(self):
