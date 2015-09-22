@@ -20,7 +20,8 @@ def parse_arguments():
     parser.add_argument('system', type=str)
     parser.add_argument('--lb', dest='lower_bound')
     parser.add_argument('--spins', dest='spins', action='store_true')
-    parser.set_defaults(lower_bound=0, spins=False)
+    parser.add_argument('--references', dest='references', action='store_true')
+    parser.set_defaults(lower_bound=0, spins=False, references=True)
     return parser.parse_args()
 
 

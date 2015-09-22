@@ -6,6 +6,8 @@ import operator
 import itertools
 from collections import defaultdict
 
+from .studies import Studies
+
 
 basepath = os.path.dirname(__file__)
 DB_PATH = os.path.abspath(os.path.join(basepath, "../db/nubtab12.asc"))
@@ -249,6 +251,7 @@ class Reaction(object):
         self.q_value_kev = self._q_value_kev()
         self.is_stable = self._is_stable()
         self.notes = self._notes()
+        self._studies = Studies.db()
 
     def _notes(self):
         notes = set()
@@ -310,13 +313,26 @@ class Reaction(object):
         if self._kwargs.get('spins'):
             string = self._spin_and_parity(string, self._lvalues)
             string = self._spin_and_parity(string, self._rvalues)
-        return string.strip()
+        refs = []
+        if self._kwargs.get('references'):
+            string, refs = self._references(string, self._rvalues)
+        return string.strip(), refs
 
     def _spin_and_parity(self, string, values):
         spins_and_parities = (n.spin_and_parity for num, n in sorted(values, key=self._sort_key))
         spins_and_parities = filter(None, spins_and_parities)
         string = '{} {:<20}'.format(string, ', '.join(sorted(spins_and_parities)))
         return string
+
+    def _references(self, string, values):
+        marks = []
+        refs = []
+        for result in self._studies.isotopes(n.label for num, n in values):
+            marks.append(result.reference_mark)
+            refs.append(result.reference_line)
+        if marks:
+            string += '   {}'.format(', '.join(marks))
+        return string, refs
 
 
 class Combinations(object):
@@ -394,7 +410,12 @@ class System(object):
         return reaction.q_value_kev > 0, desirable, reaction.q_value_kev
 
     def terminal(self):
-        return [
-            r.terminal
-            for r in sorted(self.reactions(), key=self._sort_key, reverse=True)
-        ]
+        refs = set()
+        lines = []
+        for r in sorted(self.reactions(), key=self._sort_key, reverse=True):
+            line, _refs = r.terminal
+            lines.append(line)
+            refs |= set(_refs)
+        if refs:
+            lines.extend([''] + sorted(refs))
+        return lines
