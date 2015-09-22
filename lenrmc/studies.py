@@ -24,16 +24,10 @@ class Result(object):
         row['shortDescription'] = self.description
         return row
 
-    @property
-    def reference_mark(self):
-        change = self._row['change']
-        if 'increase' == change:
-            glyph = '↑'
-        elif 'decrease' == change:
-            glyph = '↓'
-        else:
-            raise BadResult('do not recognize change: {}'.format(change))
-        return '{} {} [{}]'.format(glyph, self.nuclide, self.label)
+    def reference_mark(self, expected, **kwargs):
+        agreement = self._row['change'] == expected
+        glyph = '✓' if agreement else '✗'
+        return agreement, '{} {} [{}]'.format(glyph, self.nuclide, self.label)
 
 
 class Results(object):

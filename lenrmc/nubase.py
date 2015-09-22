@@ -313,9 +313,11 @@ class Reaction(object):
         if self._kwargs.get('spins'):
             string = self._spin_and_parity(string, self._lvalues)
             string = self._spin_and_parity(string, self._rvalues)
-        refs = []
+        refs, marks = [], []
         if self._kwargs.get('references'):
-            string, refs = self._references(string, self._rvalues)
+            self._references(refs, marks, self._lvalues, 'decrease', selective=True)
+            self._references(refs, marks, self._rvalues, 'increase')
+            string = self._add_marks(string, marks)
         return string.strip(), refs
 
     def _spin_and_parity(self, string, values):
@@ -324,15 +326,18 @@ class Reaction(object):
         string = '{} {:<20}'.format(string, ', '.join(sorted(spins_and_parities)))
         return string
 
-    def _references(self, string, values):
-        marks = []
-        refs = []
+    def _references(self, refs, marks, values, expected, **kwargs):
+        selective = kwargs.get('selective')
         for result in self._studies.isotopes(n.label for num, n in values):
-            marks.append(result.reference_mark)
+            agreement, mark = result.reference_mark(expected)
+            if selective and agreement:
+                continue
+            marks.append(mark)
             refs.append(result.reference_line)
-        if marks:
-            string += '   {}'.format(', '.join(marks))
-        return string, refs
+
+    def _add_marks(self, string, marks):
+        string += '   {}'.format(', '.join(marks))
+        return string
 
 
 class Combinations(object):
