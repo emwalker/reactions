@@ -2,11 +2,9 @@
     "studies": [
         {
             "citation": "Lugano",
-            "isotopes": {
-                "increased": [
-                    {"label": "6Li"}
-                ]
-            }
+            "isotopes": [
+                {"label": "6Li", "change": "increase"}
+            ]
         }
     ]
 }
