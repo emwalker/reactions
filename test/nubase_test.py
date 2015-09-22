@@ -35,7 +35,7 @@ class NuclideTest(unittest.TestCase):
             'excitationEnergy':         '3562.88    0.10',
             'halfLife':                 '56',
             'halfLifeUnit':             'as',
-            'id':                       '006',
+            'massNumber':               '006',
             'massExcess':               '17649.76     0.10',
             'nuclide':                  '6Lii',
             'reference':                '81Ro02e',
@@ -74,6 +74,10 @@ class NuclideTest(unittest.TestCase):
         n = Nuclide.load(line=self.lines[16])
         self.assertEqual(('6Li', 'i'), n.signature)
 
+    def test_60Ni(self):
+        n = Nuclide.load(line=self.lines[781])
+        self.assertEqual('60Ni', n.label)
+        self.assertEqual(-64472.5, n.mass_excess_kev)
 
 
 class NuclidesTest(unittest.TestCase):

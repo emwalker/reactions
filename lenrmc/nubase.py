@@ -53,10 +53,10 @@ def first_match(pattern, string):
 class Nuclide(object):
 
     _columns = (
-        (  4, 'id'                      ),
+        (  4, 'massNumber'              ),
         (  7, 'atomicNumber'            ),
         (  9, 'atomicNumberExtra'       ),
-        ( 19, 'nuclide'                 ),
+        ( 18, 'nuclide'                 ),
         ( 39, 'massExcess'              ),
         ( 61, 'excitationEnergy'        ),
         ( 69, 'halfLife'                ),
@@ -96,7 +96,7 @@ class Nuclide(object):
         self._row = row
         self._label = row['nuclide']
         self.atomic_number = int(first_match(r'\d+', self._row['atomicNumber']))
-        self.mass_number = int(first_match(r'\d+', self._row['nuclide']))
+        self.mass_number = int(self._row['massNumber'])
         g = re.search(r'IS=([\d\.]+)', self._row['decayModesAndIntensities'])
         self.isotopic_abundance = float(g.group(1)) if g else 0.
         self.numbers = (self.mass_number, self.atomic_number)
@@ -109,7 +109,7 @@ class Nuclide(object):
             self.label = ALTERNATE_LABELS.get(label, label)
             self.full_label = self.label
         self.signature = (self.label, self._excitation_level)
-        kev = first_match(r'[\d\.]+', self._row['massExcess'])
+        kev = first_match(r'[\d\.\-]+', self._row['massExcess'])
         if not kev:
             raise BadNubaseRow('no mass excess: {}'.format(row))
         self.mass_excess_kev = float(kev)
