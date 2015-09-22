@@ -81,6 +81,7 @@ class Nuclide(object):
         '5Li',
         '6He',
         '8Be',
+        '59Ni',
     }
 
     @classmethod
@@ -182,6 +183,9 @@ class Nuclides(object):
     def get(self, signature):
         return self._by_signature.get(signature)
 
+    def __getitem__(self, signature):
+        return self._by_signature[signature]
+
 
 def vectors3(integer):
     for i in range(integer):
@@ -227,8 +231,8 @@ class Reaction(object):
     @classmethod
     def load(cls, **kwargs):
         nuclides = Nuclides.db()
-        reactants = ((num, nuclides.get(s)) for num, s in kwargs['reactants'])
-        daughters = ((num, nuclides.get(s)) for num, s in kwargs['daughters'])
+        reactants = ((num, nuclides[s]) for num, s in kwargs['reactants'])
+        daughters = ((num, nuclides[s]) for num, s in kwargs['daughters'])
         return cls(reactants, daughters)
 
     _noteworthy = {'4He', 'n'}
@@ -298,7 +302,7 @@ class Reaction(object):
             abs(kev),
         )
         if self.notes:
-            string = '{:<40} {:>30}'.format(string, ', '.join(sorted(self.notes)))
+            string = '{:<45} {:>25}'.format(string, ', '.join(sorted(self.notes)))
         return string
 
 
@@ -308,7 +312,7 @@ class Combinations(object):
     def load(cls, **kwargs):
         nuclides = Nuclides.db()
         reactants = [
-            (num, nuclides.get((s, '0'))) if isinstance(s, str) else (num, nuclides.get(s))
+            (num, nuclides[(s, '0')]) if isinstance(s, str) else (num, nuclides[s])
             for num, s in kwargs['reactants']
         ]
         del kwargs['reactants']

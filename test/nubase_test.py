@@ -79,6 +79,11 @@ class NuclideTest(unittest.TestCase):
         self.assertEqual('60Ni', n.label)
         self.assertEqual(-64472.5, n.mass_excess_kev)
 
+    def test_59Ni(self):
+        n = Nuclide.load(line=self.lines[763])
+        self.assertEqual('59Ni', n.label)
+        self.assertEqual(-61156.1, n.mass_excess_kev)
+
 
 class NuclidesTest(unittest.TestCase):
 
