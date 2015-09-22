@@ -142,21 +142,35 @@ class ReactionsTest(unittest.TestCase):
             reactants=[(1, ('6Li', '0')), (1, ('6Li', '0'))],
             daughters=[(3, ('4He', '0'))],
         )
-        self.assertEqual({'4He'}, r.notes)
+        self.assertIn('4He', r.notes)
 
     def test_n_note(self):
         r = Reaction.load(
             reactants=[(1, ('p', '0')), (1, ('7Li', '0'))],
             daughters=[(1, ('n', '0')), (1, ('7Be', '0'))],
         )
-        self.assertEqual({'n'}, r.notes)
+        self.assertIn('n', r.notes)
 
     def test_n_transfer_note(self):
         r = Reaction.load(
             reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
             daughters=[(1, ('6Li', '0')), (1, ('61Ni', '0'))],
         )
-        self.assertEqual({'n-transfer'}, r.notes)
+        self.assertIn('n-transfer', r.notes)
+
+    def test_stable_note(self):
+        r = Reaction.load(
+            reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
+            daughters=[(1, ('6Li', '0')), (1, ('61Ni', '0'))],
+        )
+        self.assertIn('stable', r.notes)
+
+    def test_no_stable_note(self):
+        r = Reaction.load(
+            reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
+            daughters=[(1, ('8Be', '0')), (1, ('59Co', '0'))],
+        )
+        self.assertEqual(set(), r.notes)
 
 
 class CombinationsTest(unittest.TestCase):
@@ -174,17 +188,17 @@ class CombinationsTest(unittest.TestCase):
     def test_reactions(self):
         c = Combinations.load(reactants=[(1, '7Li'), (1, 'p')])
         self.assertEqual(
-            ['p + 7Li → 2·4He + 17346 keV                                         4He',
+            ['p + 7Li → 2·4He + 17346 keV                                 4He, stable',
              'p + 7Li → ɣ + 8Be + 17254 keV                                         ɣ',
              'p + 7Li → ɣ + 8Be (i) + 628 keV                                       ɣ',
-             'p + 7Li → p + 7Li + 0 keV',
+             'p + 7Li → p + 7Li + 0 keV                                        stable',
              'p + 7Li → n + 7Be - 1644 keV                                          n',
              'p + 7Li → p + t + 4He - 2468 keV                                    4He',
              'p + 7Li → n + 3He + 4He - 3231 keV                               4He, n',
              'p + 7Li → 3He + 5He - 3966 keV',
              'p + 7Li → t + 5Li - 4434 keV',
-             'p + 7Li → d + 6Li - 5027 keV                                 n-transfer',
-             'p + 7Li → 2·d + 4He - 6500 keV                          4He, n-transfer',
+             'p + 7Li → d + 6Li - 5027 keV                         n-transfer, stable',
+             'p + 7Li → 2·d + 4He - 6500 keV                  4He, n-transfer, stable',
              'p + 7Li → n + p + 6Li - 7251 keV                                      n',
              'p + 7Li → d + 6Li (i) - 8589 keV                             n-transfer',
              'p + 7Li → p + d + 5He - 9460 keV                             n-transfer',

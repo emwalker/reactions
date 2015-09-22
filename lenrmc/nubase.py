@@ -101,6 +101,7 @@ class Nuclide(object):
         self.mass_number = int(self._row['massNumber'])
         g = re.search(r'IS=([\d\.]+)', self._row['decayModesAndIntensities'])
         self.isotopic_abundance = float(g.group(1)) if g else 0.
+        self.is_stable = g is not None
         self.numbers = (self.mass_number, self.atomic_number)
         if self.is_excited:
             label, self._excitation_level = self._label[:-1], self._label[-1]
@@ -245,7 +246,9 @@ class Reaction(object):
             for _, p in self._lvalues:
                 if self._neutron_transfer(d, p):
                     notes.add('n-transfer')
-        if self._has_gamma:
+        if self.is_stable:
+            notes.add('stable')
+        if self.has_gamma:
             notes.add('ɣ')
             self._rvalues.append((1, GammaPhoton()))
         return notes
@@ -268,7 +271,11 @@ class Reaction(object):
         return ' + '.join(values)
 
     @property
-    def _has_gamma(self):
+    def is_stable(self):
+        return all(d.is_stable for num, d in self._rvalues)
+
+    @property
+    def has_gamma(self):
         if 1 < len(self._rvalues):
             return False
         return all(num == 1 for num, c in self._rvalues)
@@ -289,7 +296,7 @@ class Reaction(object):
             abs(kev),
         )
         if self.notes:
-            string = '{:<50} {:>20}'.format(string, ', '.join(sorted(self.notes)))
+            string = '{:<40} {:>30}'.format(string, ', '.join(sorted(self.notes)))
         return string
 
 
