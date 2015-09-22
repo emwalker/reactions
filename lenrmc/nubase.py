@@ -229,10 +229,29 @@ class Reaction(object):
         daughters = ((num, nuclides.get(s)) for num, s in kwargs['daughters'])
         return cls(reactants, daughters)
 
+    _noteworthy = {'4He', 'n'}
+
     def __init__(self, lvalues, rvalues):
         self._lvalues = list(lvalues)
         self._rvalues = list(rvalues)
         self.q_value_kev = self._q_value_kev()
+        self.notes = self._notes()
+
+    def _notes(self):
+        notes = set()
+        for _, d in self._rvalues:
+            if d.label in self._noteworthy:
+                notes.add(d.label)
+            for _, p in self._lvalues:
+                if self._neutron_transfer(d, p):
+                    notes.add('n-transfer')
+        if self._has_gamma:
+            notes.add('ɣ')
+            self._rvalues.append((1, GammaPhoton()))
+        return notes
+
+    def _neutron_transfer(self, d, p):
+        return d.numbers == tuple(map(operator.add, p.numbers, (1, 0)))
 
     def _sort_key(self, a):
         return a[0].mass_number, a[0].label
@@ -241,8 +260,6 @@ class Reaction(object):
         isotopes = defaultdict(lambda: 0)
         for c, i in side:
             isotopes[i] += c
-        if self._gamma(isotopes):
-            isotopes[GammaPhoton()] += 1
         values = [
             '{}·{}'.format(c, i.full_label) if c > 1 else i.full_label
             for i, c
@@ -250,10 +267,11 @@ class Reaction(object):
         ]
         return ' + '.join(values)
 
-    def _gamma(self, isotopes):
-        if 1 < len(isotopes):
+    @property
+    def _has_gamma(self):
+        if 1 < len(self._rvalues):
             return False
-        return all(c == 1 for c in isotopes.values())
+        return all(num == 1 for num, c in self._rvalues)
 
     def _q_value_kev(self):
         lvalues = sum(num * i.mass_excess_kev for num, i in self._lvalues)
@@ -264,12 +282,15 @@ class Reaction(object):
     def fancy(self):
         kev = self.q_value_kev
         sign = '+' if kev >= 0 else '-'
-        return '{} → {} {} {:.0f} keV'.format(
+        string = '{} → {} {} {:.0f} keV'.format(
             self._fancy_side(self._lvalues),
             self._fancy_side(self._rvalues),
             sign,
             abs(kev),
         )
+        if self.notes:
+            string = '{:<50} {:>20}'.format(string, ', '.join(sorted(self.notes)))
+        return string
 
 
 class Combinations(object):
@@ -317,7 +338,7 @@ class Combinations(object):
     def _sort_key(self, reaction):
         return reaction.q_value_kev
 
-    def json(self):
+    def terminal(self):
         return [
             r.fancy
             for r in sorted(self._reactions(), key=self._sort_key, reverse=True)

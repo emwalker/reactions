@@ -14,7 +14,7 @@ class App(object):
         if 'reactants' in kwargs:
             del kwargs['reactants']
         c = Combinations.load(reactants=self._reactants, **kwargs)
-        for reaction in c.json():
+        for reaction in c.terminal():
             print(reaction)
 
     @property

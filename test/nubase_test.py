@@ -137,6 +137,27 @@ class ReactionsTest(unittest.TestCase):
         self.assertEqual(17346.2443, r.q_value_kev)
         self.assertIn('17346 keV', r.fancy)
 
+    def test_4He_note(self):
+        r = Reaction.load(
+            reactants=[(1, ('6Li', '0')), (1, ('6Li', '0'))],
+            daughters=[(3, ('4He', '0'))],
+        )
+        self.assertEqual({'4He'}, r.notes)
+
+    def test_n_note(self):
+        r = Reaction.load(
+            reactants=[(1, ('p', '0')), (1, ('7Li', '0'))],
+            daughters=[(1, ('n', '0')), (1, ('7Be', '0'))],
+        )
+        self.assertEqual({'n'}, r.notes)
+
+    def test_n_transfer_note(self):
+        r = Reaction.load(
+            reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
+            daughters=[(1, ('6Li', '0')), (1, ('61Ni', '0'))],
+        )
+        self.assertEqual({'n-transfer'}, r.notes)
+
 
 class CombinationsTest(unittest.TestCase):
 
@@ -153,35 +174,35 @@ class CombinationsTest(unittest.TestCase):
     def test_reactions(self):
         c = Combinations.load(reactants=[(1, '7Li'), (1, 'p')])
         self.assertEqual(
-            ['p + 7Li → 2·4He + 17346 keV',
-             'p + 7Li → ɣ + 8Be + 17254 keV',
-             'p + 7Li → ɣ + 8Be (i) + 628 keV',
+            ['p + 7Li → 2·4He + 17346 keV                                         4He',
+             'p + 7Li → ɣ + 8Be + 17254 keV                                         ɣ',
+             'p + 7Li → ɣ + 8Be (i) + 628 keV                                       ɣ',
              'p + 7Li → p + 7Li + 0 keV',
-             'p + 7Li → n + 7Be - 1644 keV',
-             'p + 7Li → p + t + 4He - 2468 keV',
-             'p + 7Li → n + 3He + 4He - 3231 keV',
+             'p + 7Li → n + 7Be - 1644 keV                                          n',
+             'p + 7Li → p + t + 4He - 2468 keV                                    4He',
+             'p + 7Li → n + 3He + 4He - 3231 keV                               4He, n',
              'p + 7Li → 3He + 5He - 3966 keV',
              'p + 7Li → t + 5Li - 4434 keV',
-             'p + 7Li → d + 6Li - 5027 keV',
-             'p + 7Li → 2·d + 4He - 6500 keV',
-             'p + 7Li → n + p + 6Li - 7251 keV',
-             'p + 7Li → d + 6Li (i) - 8589 keV',
-             'p + 7Li → p + d + 5He - 9460 keV',
+             'p + 7Li → d + 6Li - 5027 keV                                 n-transfer',
+             'p + 7Li → 2·d + 4He - 6500 keV                          4He, n-transfer',
+             'p + 7Li → n + p + 6Li - 7251 keV                                      n',
+             'p + 7Li → d + 6Li (i) - 8589 keV                             n-transfer',
+             'p + 7Li → p + d + 5He - 9460 keV                             n-transfer',
              'p + 7Li → 2·p + 6He - 9974 keV',
-             'p + 7Li → ɣ + 8Be (j) - 10240 keV',
-             'p + 7Li → n + d + 5Li - 10691 keV',
-             'p + 7Li → n + p + 6Li (i) - 10814 keV',
+             'p + 7Li → ɣ + 8Be (j) - 10240 keV                                     ɣ',
+             'p + 7Li → n + d + 5Li - 10691 keV                         n, n-transfer',
+             'p + 7Li → n + p + 6Li (i) - 10814 keV                                 n',
              'p + 7Li → p + 7Li (i) - 11243 keV',
-             'p + 7Li → 2·n + 6Be - 12322 keV',
-             'p + 7Li → n + 7Be (i) - 12625 keV',
-             'p + 7Li → d + 3He + t - 20821 keV',
+             'p + 7Li → 2·n + 6Be - 12322 keV                                       n',
+             'p + 7Li → n + 7Be (i) - 12625 keV                                     n',
+             'p + 7Li → d + 3He + t - 20821 keV                            n-transfer',
              'p + 7Li → p + 3He + 4H - 24644 keV',
-             'p + 7Li → n + t + 4Li - 26145 keV',
+             'p + 7Li → n + t + 4Li - 26145 keV                                     n',
              'p + 7Li → 4H + 4Li - 27744 keV',
-             'p + 7Li → n + 3Li + 4H - 39165 keV',
+             'p + 7Li → n + 3Li + 4H - 39165 keV                                    n',
              'p + 7Li → 3Li + 5H - 39364 keV']
-        , c.json())
+        , c.terminal())
 
     def test_reactions_2(self):
         c = Combinations.load(reactants=[(1, '6Li'), (1, '6Li')])
-        self.assertIn('2·6Li → 3·4He + 20899 keV', c.json())
+        self.assertTrue(any('2·6Li → 3·4He + 20899 keV' in l for l in c.terminal()))
