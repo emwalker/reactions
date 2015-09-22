@@ -219,6 +219,7 @@ class GammaPhoton(object):
     def __init__(self):
         self.mass_number = 0
         self.full_label = self.label = 'ɣ'
+        self.is_stable = False
 
 
 class Reaction(object):
@@ -236,6 +237,7 @@ class Reaction(object):
         self._lvalues = list(lvalues)
         self._rvalues = list(rvalues)
         self.q_value_kev = self._q_value_kev()
+        self.is_stable = self._is_stable()
         self.notes = self._notes()
 
     def _notes(self):
@@ -256,8 +258,9 @@ class Reaction(object):
     def _neutron_transfer(self, d, p):
         return d.numbers == tuple(map(operator.add, p.numbers, (1, 0)))
 
-    def _sort_key(self, a):
-        return a[0].mass_number, a[0].label
+    def _sort_key(self, pair):
+        n, _ = pair
+        return n.mass_number, n.label
 
     def _fancy_side(self, side):
         isotopes = defaultdict(lambda: 0)
@@ -270,8 +273,7 @@ class Reaction(object):
         ]
         return ' + '.join(values)
 
-    @property
-    def is_stable(self):
+    def _is_stable(self):
         return all(d.is_stable for num, d in self._rvalues)
 
     @property
@@ -342,8 +344,17 @@ class Combinations(object):
     def _allowed(self, r):
         return self._lower_bound is None or r.q_value_kev > self._lower_bound
 
+    _desirable = {
+        'n-transfer': 2,
+        'stable':     3,
+        '4He':        1,
+        'ɣ':         -3,
+        'n':         -4,
+    }
+
     def _sort_key(self, reaction):
-        return reaction.q_value_kev
+        desirable = sum(self._desirable.get(n, 0) for n in reaction.notes)
+        return desirable, reaction.q_value_kev
 
     def terminal(self):
         return [
