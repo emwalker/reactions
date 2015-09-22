@@ -309,7 +309,7 @@ class Reaction(object):
             self._fancy_side(self._rvalues),
             kev,
         )
-        string = '{:<45} {:<25}'.format(string, ', '.join(sorted(self.notes)))
+        string = '{:<55} {:<25}'.format(string, ', '.join(sorted(self.notes)))
         if self._kwargs.get('spins'):
             string = self._spin_and_parity(string, self._lvalues)
             string = self._spin_and_parity(string, self._rvalues)
