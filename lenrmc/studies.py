@@ -9,15 +9,15 @@ DB_PATH = os.path.abspath(os.path.join(basepath, "../db/isotopes.json"))
 
 class Result(object):
 
-    def __init__(self, label, citation, row):
+    def __init__(self, label, desc, row):
         self.label = label
-        self.citation = citation
+        self.desc = desc
         self._row = row
 
     @property
     def json(self):
         row = self._row.copy()
-        row['citation'] = self.citation
+        row['shortDescription'] = self.desc
         return row
 
 
@@ -47,10 +47,10 @@ class Studies(object):
         self._config = config
         self._isotopes = defaultdict(list)
         for study in config.get('studies', []):
-            citation = study['citation']
+            desc = study['shortDescription']
             for row in study['isotopes']:
                 label = row['label']
-                result = Result(label, citation, row)
+                result = Result(label, desc, row)
                 self._isotopes[label].append(result)
 
     def isotopes(self, array):

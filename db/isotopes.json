@@ -1,9 +1,16 @@
 {
     "studies": [
         {
-            "citation": "Lugano",
+            "citation": "Levi, G., et al., \"Observation of abundant heat production from a reactor device and of isotopic changes in the fuel\", 2015, http://www.elforsk.se/Global/Omv%C3%A4rld_system/filer/LuganoReportSubmit.pdf",
+            "shortDescription": "2015 Lugano E-Cat test by Levi et al.",
+            "label": "15L",
             "isotopes": [
-                {"label": "6Li", "change": "increase"}
+                {"label": "6Li", "change": "increase"},
+                {"label": "7Li", "change": "decrease"},
+                {"label": "58Ni", "change": "decrease"},
+                {"label": "60Ni", "change": "decrease"},
+                {"label": "61Ni", "change": "decrease"},
+                {"label": "62Ni", "change": "increase"}
             ]
         }
     ]
