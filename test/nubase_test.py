@@ -9,6 +9,7 @@ from lenrmc.nubase import (
     Nuclides,
     possible_daughters,
     Reaction,
+    System,
     vectors3,
 )
 
@@ -178,7 +179,7 @@ class ReactionsTest(unittest.TestCase):
         self.assertEqual(set(), r.notes)
 
 
-class CombinationsTest(unittest.TestCase):
+class SystemTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -190,8 +191,8 @@ class CombinationsTest(unittest.TestCase):
         self.assertEqual(42, len(outcomes))
         self.assertEqual(((8, 4),), outcomes[0])
 
-    def test_reactions(self):
-        c = Combinations.load(reactants=[(1, '7Li'), (1, 'p')])
+    def test_system(self):
+        s = System.parse('p+7Li')
         self.assertEqual(
             ['p + 7Li → 2·d + 4He - 6500 keV                  4He, n-transfer, stable',
              'p + 7Li → d + 6Li - 5027 keV                         n-transfer, stable',
@@ -220,8 +221,8 @@ class CombinationsTest(unittest.TestCase):
              'p + 7Li → n + 7Be (i) - 12625 keV                                     n',
              'p + 7Li → n + t + 4Li - 26145 keV                                     n',
              'p + 7Li → n + 3Li + 4H - 39165 keV                                    n']
-        , c.terminal())
+        , s.terminal())
 
     def test_reactions_2(self):
         c = Combinations.load(reactants=[(1, '6Li'), (1, '6Li')])
-        self.assertTrue(any('2·6Li → 3·4He + 20899 keV' in l for l in c.terminal()))
+        self.assertTrue(any('2·6Li → 3·4He + 20899 keV' in r.fancy for r in c.reactions()))

@@ -337,7 +337,7 @@ class Combinations(object):
                 continue
             yield from itertools.product(*daughters)
 
-    def _reactions(self):
+    def reactions(self):
         for daughters in self._daughters():
             rvalues = ((1, d) for d in daughters)
             r = Reaction(self._reactants, rvalues)
@@ -348,6 +348,22 @@ class Combinations(object):
     def _allowed(self, r):
         return self._lower_bound is None or r.q_value_kev > self._lower_bound
 
+
+class System(object):
+
+    @classmethod
+    def parse(cls, string, **kwargs):
+        system = (rs.strip() for rs in string.split(','))
+        combinations = []
+        for reactants in system:
+            reactants = ((1, n.strip()) for n in reactants.split('+'))
+            c = Combinations.load(reactants=reactants, **kwargs)
+            combinations.append(c)
+        return cls(combinations)
+
+    def __init__(self, combinations):
+        self._combinations = list(combinations)
+
     _desirable = {
         'n-transfer': 2,
         'stable':     3,
@@ -356,6 +372,10 @@ class Combinations(object):
         'n':         -4,
     }
 
+    def reactions(self):
+        for c in self._combinations:
+            yield from c.reactions()
+
     def _sort_key(self, reaction):
         desirable = sum(self._desirable.get(n, 0) for n in reaction.notes)
         return desirable, reaction.q_value_kev
@@ -363,5 +383,5 @@ class Combinations(object):
     def terminal(self):
         return [
             r.fancy
-            for r in sorted(self._reactions(), key=self._sort_key, reverse=True)
+            for r in sorted(self.reactions(), key=self._sort_key, reverse=True)
         ]
