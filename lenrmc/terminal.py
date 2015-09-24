@@ -23,27 +23,49 @@ class TerminalView(object):
         desirable = sum(self._desirable.get(n, 0) for n in reaction.notes)
         return reaction.q_value_kev > 0, desirable, reaction.q_value_kev
 
+    def _reactions(self):
+        reactions = (TerminalLine(r) for r in self._system.reactions())
+        return sorted(self._filter(reactions), key=self._sort_key, reverse=True)
+
+    def _filter(self, reactions):
+        return reactions
+
     def lines(self, **kwargs):
         refs = set()
         lines = []
-        for r in sorted(self._system.reactions(), key=self._sort_key, reverse=True):
-            t = TerminalLine(r)
-            line, _refs = t.terminal(**kwargs)
+        for r in self._reactions():
+            line, _refs = r.terminal(**kwargs)
             lines.append(line)
             refs |= set(_refs)
-        if refs:
+        if refs and kwargs.get('references'):
             lines.extend([''] + sorted(refs))
         return lines
 
 
+class StudiesTerminalView(TerminalView):
+
+    def _sort_key(self, reaction):
+        desirable = sum(self._desirable.get(n, 0) for n in reaction.notes)
+        return reaction.agreement
+
+    def _filter(self, reactions):
+        return (r for r in reactions if r.agreement is not None)
+
+
 class TerminalLine(object):
 
-    def __init__(self, reaction):
+    def __init__(self, reaction, **kwargs):
         self._reaction = reaction
         self.q_value_kev = reaction.q_value_kev
         self.notes = reaction.notes
         self._lvalues = reaction._lvalues
         self._rvalues = reaction._rvalues
+        self.references = []
+        self.marks = []
+        self._agreements = []
+        self._add_references(self._lvalues, 'decrease', selective=True)
+        self._add_references(self._rvalues, 'increase')
+        self.agreement = sum(self._agreements) if self._agreements else None
 
     def terminal(self, **kwargs):
         kev = self.q_value_kev
@@ -57,12 +79,9 @@ class TerminalLine(object):
         if kwargs.get('spins'):
             string = self._spin_and_parity(string, self._lvalues)
             string = self._spin_and_parity(string, self._rvalues)
-        refs, marks = [], []
         if kwargs.get('references'):
-            self._references(refs, marks, self._lvalues, 'decrease', selective=True)
-            self._references(refs, marks, self._rvalues, 'increase')
-            string = self._add_marks(string, marks)
-        return string.strip(), refs
+            string = self._add_marks(string)
+        return string.strip(), self.references
 
     def _spin_and_parity(self, string, values):
         spins_and_parities = (n.spin_and_parity for num, n in sorted(values, key=self._sort_key))
@@ -70,17 +89,18 @@ class TerminalLine(object):
         string = '{} {:<20}'.format(string, ', '.join(sorted(spins_and_parities)))
         return string
 
-    def _references(self, refs, marks, values, expected, **kwargs):
+    def _add_references(self, values, expected, **kwargs):
         selective = kwargs.get('selective')
         for result in _studies.isotopes(n.label for num, n in values):
             agreement, mark = result.reference_mark(expected)
+            self._agreements.append(1 if agreement else -1)
             if selective and agreement:
                 continue
-            marks.append(mark)
-            refs.append(result.reference_line)
+            self.marks.append(mark)
+            self.references.append(result.reference_line)
 
-    def _add_marks(self, string, marks):
-        string += '   {}'.format(', '.join(marks))
+    def _add_marks(self, string):
+        string += '   {}'.format(', '.join(self.marks))
         return string
 
     def _sort_key(self, pair):
