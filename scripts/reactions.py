@@ -1,7 +1,7 @@
 import argparse
 
-
-from lenrmc.nubase import System, TerminalView
+from lenrmc.nubase import System
+from lenrmc.terminal import TerminalView
 
 
 class App(object):
