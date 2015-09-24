@@ -10,6 +10,8 @@ from lenrmc.nubase import (
     possible_daughters,
     Reaction,
     System,
+    TerminalLine,
+    TerminalView,
     vectors3,
 )
 
@@ -141,7 +143,7 @@ class ReactionsTest(unittest.TestCase):
             daughters=[(2, ('4He', '0'))],
         )
         self.assertEqual(17346.2443, r.q_value_kev)
-        line, refs = r.terminal()
+        line, refs = TerminalLine(r).terminal()
         self.assertIn('17346 keV', line)
 
     def test_4He_note(self):
@@ -193,7 +195,7 @@ class SystemTest(unittest.TestCase):
         self.assertEqual(((8, 4),), outcomes[0])
 
     def test_spins(self):
-        s = System.parse('p+7Li', spins=True)
+        s = System.parse('p+7Li')
         self.assertEqual(
             ['p + 7Li → 2·4He + 17346 keV                             4He, stable               1/2+, 3/2-           0+, 0+',
              'p + 7Li → ɣ + 8Be + 17254 keV                           ɣ                         1/2+, 3/2-           0+, 1-',
@@ -222,10 +224,10 @@ class SystemTest(unittest.TestCase):
              'p + 7Li → n + 7Be (i) + -12625 keV                      n                         1/2+, 3/2-           1/2+, 3/2- T=3/2',
              'p + 7Li → n + t + 4Li + -26145 keV                      n, t                      1/2+, 3/2-           1/2+, 1/2+, 2-',
              'p + 7Li → n + 3Li + 4H + -39165 keV                     n                         1/2+, 3/2-           1/2+, 2-']
-        , s.terminal())
+        , TerminalView(s).lines(spins=True))
 
     def test_references(self):
-        s = System.parse('p+7Li', references=True)
+        s = System.parse('p+7Li')
         self.assertEqual(
             ['p + 7Li → 2·4He + 17346 keV                             4He, stable',
              'p + 7Li → ɣ + 8Be + 17254 keV                           ɣ',
@@ -256,11 +258,12 @@ class SystemTest(unittest.TestCase):
              'p + 7Li → n + 3Li + 4H + -39165 keV                     n',
              '',
              '[L15] 2015 Lugano E-Cat test by Levi et al.']
-        , s.terminal())
+        , TerminalView(s).lines(references=True))
 
     def test_reactions_2(self):
-        c = System.parse('6Li+6Li')._combinations[0]
-        self.assertTrue(any('2·6Li → 3·4He + 20899 keV' in r.terminal()[0] for r in c.reactions()))
+        s = System.parse('6Li+6Li')
+        t = TerminalView(s)
+        self.assertTrue(any('2·6Li → 3·4He + 20899 keV' in l for l in t.lines()))
 
     def test_element_shorthand(self):
         s = System.parse('H+Li')

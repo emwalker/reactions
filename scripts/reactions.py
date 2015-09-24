@@ -1,7 +1,7 @@
 import argparse
 
 
-from lenrmc.nubase import System
+from lenrmc.nubase import System, TerminalView
 
 
 class App(object):
@@ -11,8 +11,8 @@ class App(object):
 
     def run(self):
         s = System.parse(self.kwargs['system'], **self.kwargs)
-        for reaction in s.terminal():
-            print(reaction)
+        for line in TerminalView(s).lines(**self.kwargs):
+            print(line)
 
 
 def parse_arguments():
