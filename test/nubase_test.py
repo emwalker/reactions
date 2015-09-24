@@ -101,6 +101,10 @@ class NuclideTest(unittest.TestCase):
         n = Nuclide.load(line=self.lines[23])
         self.assertIn('→ε', n.notes)
 
+    def test_internal_transition_note(self):
+        n = Nuclide.load(line=self.lines[62])
+        self.assertIn('→IT', n.notes)
+
 
 class NuclidesTest(unittest.TestCase):
 
