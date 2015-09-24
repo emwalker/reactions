@@ -85,6 +85,10 @@ class NuclideTest(unittest.TestCase):
         self.assertEqual('59Ni', n.label)
         self.assertEqual(-61156.1, n.mass_excess_kev)
 
+    def test_beta_decay_note(self):
+        n = Nuclide.load(line=self.lines[0])
+        self.assertIn('→β-', n.notes)
+
 
 class NuclidesTest(unittest.TestCase):
 
@@ -147,7 +151,7 @@ class ReactionsTest(unittest.TestCase):
             reactants=[(1, ('6Li', '0')), (1, ('6Li', '0'))],
             daughters=[(3, ('4He', '0'))],
         )
-        self.assertIn('4He', r.notes)
+        self.assertIn('α', r.notes)
 
     def test_n_note(self):
         r = Reaction.load(
@@ -176,3 +180,11 @@ class ReactionsTest(unittest.TestCase):
             daughters=[(1, ('8Be', '0')), (1, ('59Co', '0'))],
         )
         self.assertEqual(set(), r.notes)
+
+    def test_beta_decay_note(self):
+        # Reaction is fictional
+        r = Reaction.load(
+            reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
+            daughters=[(1, ('t', '0')), (1, ('t', '0'))],
+        )
+        self.assertEqual({'→β-', 't'}, r.notes)

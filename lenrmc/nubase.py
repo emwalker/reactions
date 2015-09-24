@@ -117,6 +117,11 @@ class Nuclide(object):
         '59Ni',
     }
 
+    _noteworthy = {
+        'B-': '→β-',
+        'B+': '→β+',
+    }
+
     @classmethod
     def load(cls, **kwargs):
         line = kwargs['line']
@@ -136,9 +141,14 @@ class Nuclide(object):
         self._label = row['nuclide']
         self.atomic_number = int(first_match(r'\d+', self._row['atomicNumber']))
         self.mass_number = int(self._row['massNumber'])
-        g = re.search(r'IS=([\d\.]+)', self._row.get('decayModesAndIntensities', ''))
+        decays = self._row.get('decayModesAndIntensities', '')
+        g = re.search(r'IS=([\d\.]+)', decays)
         self.isotopic_abundance = float(g.group(1)) if g else 0.
         self.is_stable = g is not None
+        self.notes = set()
+        for lvalue, note in self._noteworthy.items():
+            if lvalue in decays:
+                self.notes.add(note)
         self.numbers = (self.mass_number, self.atomic_number)
         if self.is_excited:
             label, self._excitation_level = self._label[:-1], self._label[-1]
@@ -270,6 +280,8 @@ class GammaPhoton(object):
         self.full_label = self.label = 'ɣ'
         self.is_stable = False
         self.spin_and_parity = '1-'
+        self.numbers = (0, 0)
+        self.notes = {'ɣ'}
 
 
 class Reaction(object):
@@ -281,20 +293,25 @@ class Reaction(object):
         daughters = ((num, nuclides[s]) for num, s in kwargs['daughters'])
         return cls(reactants, daughters)
 
-    _noteworthy = {'4He', 'n', 't'}
+    _noteworthy = {
+        '4He': 'α',
+        'n':   'n',
+        't':   't',
+    }
 
     def __init__(self, lvalues, rvalues):
         self._lvalues = list(lvalues)
         self._rvalues = list(rvalues)
         self.q_value_kev = self._q_value_kev()
         self.is_stable = self._is_stable()
-        self.notes = self._notes()
 
-    def _notes(self):
+    @property
+    def notes(self):
         notes = set()
         for _, d in self._rvalues:
-            if d.label in self._noteworthy:
-                notes.add(d.label)
+            note = self._noteworthy.get(d.label)
+            if note:
+                notes.add(note)
             for _, p in self._lvalues:
                 if self._neutron_transfer(d, p):
                     notes.add('n-transfer')
@@ -303,6 +320,8 @@ class Reaction(object):
         if self.has_gamma:
             notes.add('ɣ')
             self._rvalues.append((1, GammaPhoton()))
+        for num, d in self._rvalues:
+            notes |= d.notes
         return notes
 
     def _neutron_transfer(self, d, p):
