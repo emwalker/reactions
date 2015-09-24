@@ -40,6 +40,17 @@
                 {"label": "63Cu", "change": "increase"},
                 {"label": "65Cu", "change": "decrease"}
             ]
+        },
+        {
+            "citation": "Ohmori, T., et al., Transmutation in the electrolysis of lightwater - excess energy and iron production in a gold electrode. Fusion Technol., 1997. 31: p. 210.",
+            "shortDescription": "1997 Ohmori Fusion Technology transmutation study",
+            "label": "97O",
+            "excessHeat": "low",
+            "system": "light-water electrolysis with a gold electrode",
+            "isotopes": [
+                {"label": "57Fe", "change": "increase"},
+                {"label": "56Fe", "change": "decrease"}
+            ]
         }
     ]
 }
