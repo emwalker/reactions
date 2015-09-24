@@ -89,6 +89,14 @@ class NuclideTest(unittest.TestCase):
         n = Nuclide.load(line=self.lines[0])
         self.assertIn('→β-', n.notes)
 
+    def test_neutron_decay_note(self):
+        n = Nuclide.load(line=self.lines[6])
+        self.assertIn('→n', n.notes)
+
+    def test_proton_decay_note(self):
+        n = Nuclide.load(line=self.lines[11])
+        self.assertIn('→p', n.notes)
+
 
 class NuclidesTest(unittest.TestCase):
 

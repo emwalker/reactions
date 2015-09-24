@@ -118,8 +118,10 @@ class Nuclide(object):
     }
 
     _noteworthy = {
-        'B-': '→β-',
-        'B+': '→β+',
+        'B-=': '→β-',
+        'B+=': '→β+',
+        'n=':  '→n',
+        'p=':  '→p',
     }
 
     @classmethod
@@ -145,10 +147,6 @@ class Nuclide(object):
         g = re.search(r'IS=([\d\.]+)', decays)
         self.isotopic_abundance = float(g.group(1)) if g else 0.
         self.is_stable = g is not None
-        self.notes = set()
-        for lvalue, note in self._noteworthy.items():
-            if lvalue in decays:
-                self.notes.add(note)
         self.numbers = (self.mass_number, self.atomic_number)
         if self.is_excited:
             label, self._excitation_level = self._label[:-1], self._label[-1]
@@ -164,6 +162,15 @@ class Nuclide(object):
         self.spin_and_parity = None
         if 'spinAndParity' in self._row:
             self.spin_and_parity = ' '.join(self._row['spinAndParity'].split())
+
+    @property
+    def notes(self):
+        decays = self._row.get('decayModesAndIntensities', '')
+        notes = set()
+        for lvalue, note in self._noteworthy.items():
+            if lvalue in decays:
+                notes.add(note)
+        return notes
 
     @property
     def is_excited(self):
