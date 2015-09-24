@@ -44,18 +44,18 @@ class TerminalView(object):
 
 class StudiesTerminalView(TerminalView):
 
-    _general_agreement = {
-        't': -5,
-        'ɣ': -10,
-        'n': -11,
-    }
+    _not_observed = {'ɣ', 'n'}
 
     def _sort_key(self, reaction):
-        general = sum(self._general_agreement.get(n, 0) for n in reaction.notes)
-        return general, reaction.agreement
+        return reaction.agreement
 
     def _filter(self, reactions):
-        return (r for r in reactions if r.agreement is not None)
+        for r in reactions:
+            if r.agreement is None:
+                continue
+            if any(n in self._not_observed for n in r.notes):
+                continue
+            yield r
 
 
 class TerminalLine(object):
