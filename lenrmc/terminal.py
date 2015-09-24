@@ -111,7 +111,7 @@ class TerminalLine(object):
             self.references.append(result.reference_line)
 
     def _add_marks(self, string):
-        string += '   {}'.format(', '.join(self.marks))
+        string += '   {}'.format(', '.join('{:>13}'.format(m) for m in self.marks))
         return string
 
     def _sort_key(self, pair):
