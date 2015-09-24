@@ -8,6 +8,7 @@ import itertools
 import sqlite3
 import pickle
 import logging
+import hashlib
 from collections import defaultdict
 from os.path import expanduser
 
@@ -381,7 +382,12 @@ class Combinations(object):
 
     def _cache_key(self):
         parents = [(num, n.signature) for num, n in sorted(self._reactants, key=self._sort_key)]
-        return json.dumps(parents, sort_keys=True)
+        signature = {'parents': parents}
+        for field in ('lower_bound',):
+            signature['lower_bound'] = self._kwargs.get('lower_bound')
+        string = json.dumps(signature, sort_keys=True).encode('utf-8')
+        key = hashlib.sha1(string).hexdigest()
+        return key
 
     def _outcomes(self):
         numbers = [num * n.numbers for num, n in self._reactants]
