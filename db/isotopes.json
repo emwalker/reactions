@@ -55,6 +55,19 @@
                 {"label": "57Fe", "change": "increase"},
                 {"label": "56Fe", "change": "decrease"}
             ]
+        },
+        {
+            "citation": "Violante, V., et al. Analysis Of Ni-Hydride Thin Film After Surface Plasmons Generation By Laser Technique. in Tenth International Conference on Cold Fusion. 2003. Cambridge, MA: LENR-CANR.org.",
+            "shortDescription": "2003 Violante et al. Ni-hydride plasmon study",
+            "url": "http://lenr-canr.org/acrobat/ViolanteVanalysisof.pdf",
+            "label": "V03",
+            "excessHeat": "unknown",
+            "system": "Li2SO4 electrolyte, ni-hydride",
+            "isotopes": [
+                {"label": "63Cu", "change": "decrease"},
+                {"label": "65Cu", "change": "increase"}
+            ],
+            "notes": "Storms ref. 463"
         }
     ]
 }
