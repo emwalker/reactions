@@ -68,6 +68,18 @@
                 {"label": "65Cu", "change": "increase"}
             ],
             "notes": "Storms ref. 463"
+        },
+        {
+            "citation": "Savvatimova, I. and D. Gavritenkov. Results Of Analysis Of Ti Foil After Glow Discharge With Deuterium. in Eleventh International Conference on Condensed Matter Nuclear Science. 2004. Marseille, France.",
+            "shortDescription": "2004 Savvatimova Ti isotope study",
+            "url": "http://lenr-canr.org/acrobat/Savvatimovresultsofa.pdf",
+            "label": "S04",
+            "excessHeat": "unknown",
+            "system": "Glow discharge on Ti thin foils",
+            "isotopes": [
+                {"label": "56Fe", "change": "decrease"},
+                {"label": "55Fe", "change": "increase"}
+            ]
         }
     ]
 }
