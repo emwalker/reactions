@@ -50,7 +50,9 @@ class StudiesTerminalView(TerminalView):
     _kwargs = {}
 
     def _sort_key(self, reaction):
-        return reaction.agreement
+        length = len(reaction._agreements)
+        sign = 1 if reaction.agreement > 0 else -1
+        return reaction.agreement, sign * length
 
     def _filter(self, reactions):
         for r in reactions:
