@@ -105,6 +105,50 @@ class NuclideTest(unittest.TestCase):
         n = Nuclide.load(line=self.lines[62])
         self.assertIn('→IT', n.notes)
 
+    def test_internal_transition_note2(self):
+        n = Nuclide.load(line=self.lines[16])
+        self.assertIn('→IT', n.notes)
+
+    def test_2n_note(self):
+        n = Nuclide.load(line=self.lines[9])
+        self.assertIn('→2n', n.notes)
+
+    def test_2p_note(self):
+        n = Nuclide.load(line=self.lines[17])
+        self.assertIn('→2p', n.notes)
+
+    def test_alpha_decay_note(self):
+        n = Nuclide.load(line=self.lines[29])
+        self.assertIn('→α', n.notes)
+
+    def test_B_p_note(self):
+        n = Nuclide.load(line=self.lines[41])
+        self.assertIn('→β+p', n.notes)
+
+    def test_B_A_note(self):
+        n = Nuclide.load(line=self.lines[41])
+        self.assertIn('→β+α', n.notes)
+
+    def test_B_2n_note(self):
+        n = Nuclide.load(line=self.lines[89])
+        self.assertIn('→β-2n', n.notes)
+
+    def test_B_d_note(self):
+        n = Nuclide.load(line=self.lines[14])
+        self.assertIn('→β-d', n.notes)
+
+    def test_B_3n_note(self):
+        n = Nuclide.load(line=self.lines[126])
+        self.assertIn('→β-3n', n.notes)
+
+    def test_B_n_note2(self):
+        n = Nuclide.load(line=self.lines[478])
+        self.assertIn('→β-n', n.notes)
+
+    def test_SF_note(self):
+        n = Nuclide.load(line=self.lines[4901])
+        self.assertIn('→SF', n.notes)
+
 
 class NuclidesTest(unittest.TestCase):
 
@@ -195,7 +239,7 @@ class ReactionsTest(unittest.TestCase):
             reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
             daughters=[(1, ('8Be', '0')), (1, ('59Co', '0'))],
         )
-        self.assertEqual(set(), r.notes)
+        self.assertNotIn('stable', r.notes)
 
     def test_beta_decay_note(self):
         # Reaction is fictional

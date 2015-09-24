@@ -25,6 +25,7 @@ ALTERNATE_LABELS = {
     '3H':   't',
     '12Cx': '12C',
     '10Bx': '10B',
+    '30Px': '30P',
 }
 
 ELEMENTS = {
@@ -117,15 +118,6 @@ class Nuclide(object):
         '59Ni',
     }
 
-    _noteworthy = {
-        'B-=':   '→β-',
-        'B+=':   '→β+',
-        'n=':    '→n',
-        'p=':    '→p',
-        'EC=':   '→ε',
-        'IT=':   '→IT',
-    }
-
     @classmethod
     def load(cls, **kwargs):
         line = kwargs['line']
@@ -165,14 +157,32 @@ class Nuclide(object):
         if 'spinAndParity' in self._row:
             self.spin_and_parity = ' '.join(self._row['spinAndParity'].split())
 
+    _noteworthy = {
+        'A':    '→α',
+        'B-':   '→β-',
+        'B+':   '→β+',
+        'B+p':  '→β+p',
+        'B+A':  '→β+α',
+        'B-n':  '→β-n',
+        'B-2n': '→β-2n',
+        'B-3n': '→β-3n',
+        'B+SF': '→β+SF',
+        'B-SF': '→β-SF',
+        'B-A':  '→β-α',
+        'B-d':  '→β-d',
+        'n':    '→n',
+        '2n':   '→2n',
+        'p':    '→p',
+        '2p':   '→2p',
+        'EC':   '→ε',
+        'IT':   '→IT',
+        'SF':   '→SF',
+    }
+
     @property
     def notes(self):
-        decays = self._row.get('decayModesAndIntensities', '')
-        notes = set()
-        for lvalue, note in self._noteworthy.items():
-            if lvalue in decays:
-                notes.add(note)
-        return notes
+        it = re.split(r'[;=~<]', self._row.get('decayModesAndIntensities', ''))
+        return {self._noteworthy.get(token) for token in filter(None, it)} - {None}
 
     @property
     def is_excited(self):
