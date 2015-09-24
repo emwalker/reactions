@@ -119,5 +119,4 @@ class TestStudiesView(unittest.TestCase):
              'p + 7Li → p + 7Li (i) + -11243 keV                                                  ✓ 7Li [L15], ✗ 7Li [L15]',
              '',
              '[L15] 2015 Lugano E-Cat test by Levi et al.']
-
         , v.lines(references=True))
