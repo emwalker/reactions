@@ -265,10 +265,9 @@ class Reaction(object):
 
     _noteworthy = {'4He', 'n', 't'}
 
-    def __init__(self, lvalues, rvalues, **kwargs):
+    def __init__(self, lvalues, rvalues):
         self._lvalues = list(lvalues)
         self._rvalues = list(rvalues)
-        self._kwargs = kwargs
         self.q_value_kev = self._q_value_kev()
         self.is_stable = self._is_stable()
         self.notes = self._notes()
@@ -321,8 +320,7 @@ class Reaction(object):
         rvalues = sum(num * i.mass_excess_kev for num, i in self._rvalues)
         return lvalues - rvalues
 
-    @property
-    def terminal(self):
+    def terminal(self, **kwargs):
         kev = self.q_value_kev
         sign = '+' if kev >= 0 else '-'
         string = '{} → {} + {:.0f} keV'.format(
@@ -331,11 +329,11 @@ class Reaction(object):
             kev,
         )
         string = '{:<55} {:<25}'.format(string, ', '.join(sorted(self.notes)))
-        if self._kwargs.get('spins'):
+        if kwargs.get('spins'):
             string = self._spin_and_parity(string, self._lvalues)
             string = self._spin_and_parity(string, self._rvalues)
         refs, marks = [], []
-        if self._kwargs.get('references'):
+        if kwargs.get('references'):
             self._references(refs, marks, self._lvalues, 'decrease', selective=True)
             self._references(refs, marks, self._rvalues, 'increase')
             string = self._add_marks(string, marks)
@@ -407,7 +405,7 @@ class Combinations(object):
             results = []
             for daughters in self._daughters():
                 rvalues = ((1, d) for d in daughters)
-                r = Reaction(self._reactants, rvalues, **self._kwargs)
+                r = Reaction(self._reactants, rvalues)
                 if not self._allowed(r):
                     continue
                 yield r
@@ -454,10 +452,11 @@ class System(object):
             reactants = ((1, n.strip()) for n in reactants.split('+'))
             c = Combinations.load(reactants=reactants, **kwargs)
             combinations.append(c)
-        return cls(combinations)
+        return cls(combinations, **kwargs)
 
-    def __init__(self, combinations):
+    def __init__(self, combinations, **kwargs):
         self._combinations = list(combinations)
+        self._kwargs = kwargs
 
     _desirable = {
         'n-transfer': 2,
@@ -479,7 +478,7 @@ class System(object):
         refs = set()
         lines = []
         for r in sorted(self.reactions(), key=self._sort_key, reverse=True):
-            line, _refs = r.terminal
+            line, _refs = r.terminal(**self._kwargs)
             lines.append(line)
             refs |= set(_refs)
         if refs:

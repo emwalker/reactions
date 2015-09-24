@@ -141,7 +141,7 @@ class ReactionsTest(unittest.TestCase):
             daughters=[(2, ('4He', '0'))],
         )
         self.assertEqual(17346.2443, r.q_value_kev)
-        line, refs = r.terminal
+        line, refs = r.terminal()
         self.assertIn('17346 keV', line)
 
     def test_4He_note(self):
@@ -260,4 +260,4 @@ class SystemTest(unittest.TestCase):
 
     def test_reactions_2(self):
         c = Combinations.load(reactants=[(1, '6Li'), (1, '6Li')])
-        self.assertTrue(any('2·6Li → 3·4He + 20899 keV' in r.terminal[0] for r in c.reactions()))
+        self.assertTrue(any('2·6Li → 3·4He + 20899 keV' in r.terminal()[0] for r in c.reactions()))
