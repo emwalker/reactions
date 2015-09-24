@@ -102,21 +102,22 @@ class TestStudiesView(unittest.TestCase):
         s = System.parse('p+7Li')
         v = StudiesTerminalView(s)
         self.assertEqual(
-            ['p + 7Li → d + 6Li + -5027 keV                           n-transfer, stable          ✓ 6Li [L15]',
-             'p + 7Li → d + 6Li (i) + -8589 keV                       n-transfer                  ✓ 6Li [L15]',
-             'p + 7Li → t + 5Li + -4434 keV                           t',
-             'p + 7Li → 3He + 5He + -3966 keV',
-             'p + 7Li → 3Li + 5H + -39364 keV',
-             'p + 7Li → 4H + 4Li + -27744 keV',
-             'p + 7Li → 2·4He + 17346 keV                             4He, stable',
-             'p + 7Li → 2·p + 6He + -9974 keV',
-             'p + 7Li → p + d + 5He + -9460 keV                       n-transfer',
-             'p + 7Li → p + t + 4He + -2468 keV                       4He, t',
-             'p + 7Li → p + 3He + 4H + -24644 keV',
-             'p + 7Li → 2·d + 4He + -6500 keV                         4He, n-transfer, stable',
-             'p + 7Li → d + 3He + t + -20821 keV                      n-transfer, t',
-             'p + 7Li → p + 7Li + 0 keV                               stable                      ✗ 7Li [L15]',
-             'p + 7Li → p + 7Li (i) + -11243 keV                                                  ✗ 7Li [L15]',
+            ['p + 7Li → d + 6Li + -5027 keV                           n-transfer, stable          ✓ 7Li [L15], ✓ 6Li [L15]',
+             'p + 7Li → d + 6Li (i) + -8589 keV                       n-transfer                  ✓ 7Li [L15], ✓ 6Li [L15]',
+             'p + 7Li → t + 5Li + -4434 keV                           t                           ✓ 7Li [L15]',
+             'p + 7Li → 3He + 5He + -3966 keV                                                     ✓ 7Li [L15]',
+             'p + 7Li → 3Li + 5H + -39364 keV                                                     ✓ 7Li [L15]',
+             'p + 7Li → 4H + 4Li + -27744 keV                                                     ✓ 7Li [L15]',
+             'p + 7Li → 2·4He + 17346 keV                             4He, stable                 ✓ 7Li [L15]',
+             'p + 7Li → 2·p + 6He + -9974 keV                                                     ✓ 7Li [L15]',
+             'p + 7Li → p + d + 5He + -9460 keV                       n-transfer                  ✓ 7Li [L15]',
+             'p + 7Li → p + t + 4He + -2468 keV                       4He, t                      ✓ 7Li [L15]',
+             'p + 7Li → p + 3He + 4H + -24644 keV                                                 ✓ 7Li [L15]',
+             'p + 7Li → 2·d + 4He + -6500 keV                         4He, n-transfer, stable     ✓ 7Li [L15]',
+             'p + 7Li → d + 3He + t + -20821 keV                      n-transfer, t               ✓ 7Li [L15]',
+             'p + 7Li → p + 7Li + 0 keV                               stable                      ✓ 7Li [L15], ✗ 7Li [L15]',
+             'p + 7Li → p + 7Li (i) + -11243 keV                                                  ✓ 7Li [L15], ✗ 7Li [L15]',
              '',
              '[L15] 2015 Lugano E-Cat test by Levi et al.']
+
         , v.lines(references=True))

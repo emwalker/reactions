@@ -19,12 +19,14 @@ class TerminalView(object):
         'n':         -5,
     }
 
+    _kwargs = {'selective': True}
+
     def _sort_key(self, reaction):
         desirable = sum(self._desirable.get(n, 0) for n in reaction.notes)
         return reaction.q_value_kev > 0, desirable, reaction.q_value_kev
 
     def _reactions(self):
-        reactions = (TerminalLine(r) for r in self._system.reactions())
+        reactions = (TerminalLine(r, **self._kwargs) for r in self._system.reactions())
         return sorted(self._filter(reactions), key=self._sort_key, reverse=True)
 
     def _filter(self, reactions):
@@ -45,6 +47,7 @@ class TerminalView(object):
 class StudiesTerminalView(TerminalView):
 
     _not_observed = {'ɣ', 'n'}
+    _kwargs = {}
 
     def _sort_key(self, reaction):
         return reaction.agreement
@@ -69,7 +72,7 @@ class TerminalLine(object):
         self.references = []
         self.marks = []
         self._agreements = []
-        self._add_references(self._lvalues, 'decrease', selective=True)
+        self._add_references(self._lvalues, 'decrease', **kwargs)
         self._add_references(self._rvalues, 'increase')
         self.agreement = sum(self._agreements) if self._agreements else None
 
