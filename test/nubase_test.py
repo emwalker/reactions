@@ -187,8 +187,8 @@ class SystemTest(unittest.TestCase):
         cls.maxDiff = None
 
     def test_outcomes(self):
-        c = Combinations.load(reactants=[(1, '7Li'), (1, 'p')])
-        outcomes = list(c._outcomes())
+        s = System.parse('p+7Li')
+        outcomes = list(s._combinations[0]._outcomes())
         self.assertEqual(42, len(outcomes))
         self.assertEqual(((8, 4),), outcomes[0])
 
@@ -259,5 +259,9 @@ class SystemTest(unittest.TestCase):
         , s.terminal())
 
     def test_reactions_2(self):
-        c = Combinations.load(reactants=[(1, '6Li'), (1, '6Li')])
+        c = System.parse('6Li+6Li')._combinations[0]
         self.assertTrue(any('2·6Li → 3·4He + 20899 keV' in r.terminal()[0] for r in c.reactions()))
+
+    def test_element_shorthand(self):
+        s = System.parse('H+Li')
+        self.assertEqual(4, len(s._combinations))

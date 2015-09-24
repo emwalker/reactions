@@ -29,6 +29,17 @@ ALTERNATE_LABELS = {
     '10Bx': '10B',
 }
 
+ELEMENTS = {
+    'n':  0,
+    'H':  1,
+    'He': 2,
+    'Li': 3,
+    'C':  6,
+    'Fe': 26,
+    'Ni': 28,
+    'Pd': 46,
+}
+
 
 def make_connection():
     try:
@@ -174,6 +185,9 @@ class Nuclide(object):
     def __hash__(self):
         return hash(self.signature)
 
+    def __repr__(self):
+        return 'Nuclide({})'.format(self.full_label)
+
 
 class Nuclides(object):
 
@@ -202,11 +216,16 @@ class Nuclides(object):
         self._nuclides = list(nuclides)
         self._by_label = {}
         self._by_signature = {}
+        self._by_atomic_number = defaultdict(list)
         self.isomers = defaultdict(list)
         for n in self._nuclides:
             self._by_label[n._label] = n
             self._by_signature[n.signature] = n
+            self._by_atomic_number[n.atomic_number].append(n)
             self.isomers[n.numbers].append(n)
+
+    def atomic_number(self, number):
+        return self._by_atomic_number[number]
 
     def get(self, signature):
         return self._by_signature.get(signature)
@@ -366,11 +385,7 @@ class Combinations(object):
 
     @classmethod
     def load(cls, **kwargs):
-        nuclides = Nuclides.db()
-        reactants = [
-            (num, nuclides[(s, '0')]) if isinstance(s, str) else (num, nuclides[s])
-            for num, s in kwargs['reactants']
-        ]
+        reactants = kwargs['reactants']
         del kwargs['reactants']
         return cls(reactants, **kwargs)
 
@@ -447,18 +462,35 @@ class Combinations(object):
         """, ((self.cache_key, pickle.dumps(r)) for r in results))
         self.connection.commit()
 
+    def __repr__(self):
+        return 'Combinations({})'.format(self._reactants)
+
 
 class System(object):
 
     @classmethod
     def parse(cls, string, **kwargs):
-        system = (rs.strip() for rs in string.split(','))
+        system = filter(None, (rs.strip() for rs in string.split(',')))
         combinations = []
-        for reactants in system:
-            reactants = ((1, n.strip()) for n in reactants.split('+'))
-            c = Combinations.load(reactants=reactants, **kwargs)
-            combinations.append(c)
+        for spec in system:
+            for reactants in cls._parse_spec(spec):
+                c = Combinations.load(reactants=reactants, **kwargs)
+                combinations.append(c)
         return cls(combinations, **kwargs)
+
+    @classmethod
+    def _parse_spec(cls, spec):
+        nuclides = Nuclides.db()
+        reactants = []
+        for label in (l.strip() for l in spec.split('+')):
+            n = nuclides.get((label, '0'))
+            if n:
+                reactants.append([(1, n)])
+            else:
+                number = ELEMENTS[label]
+                ns = nuclides.atomic_number(number)
+                reactants.append((1, n) for n in ns if n.is_stable)
+        return itertools.product(*reactants)
 
     def __init__(self, combinations, **kwargs):
         self._combinations = list(combinations)
