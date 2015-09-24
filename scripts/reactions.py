@@ -8,7 +8,7 @@ class App(object):
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs
-        if 'studies' == self.kwargs.get('view'):
+        if 'studies' == self.kwargs.get('view') or kwargs.get('studies'):
             self.view_cls = StudiesTerminalView
         else:
             self.view_cls = TerminalView
@@ -26,6 +26,7 @@ def parse_arguments():
     parser.add_argument('--spins', dest='spins', action='store_true')
     parser.add_argument('--references', dest='references', action='store_true')
     parser.add_argument('--view', type=str, dest='view')
+    parser.add_argument('--studies', dest='studies', action='store_true')
     parser.set_defaults(
         lower_bound = 0,
         spins       = False,
