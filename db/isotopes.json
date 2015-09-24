@@ -3,7 +3,7 @@
         {
             "citation": "Levi, G., et al., \"Observation of abundant heat production from a reactor device and of isotopic changes in the fuel\", 2015, http://www.elforsk.se/Global/Omv%C3%A4rld_system/filer/LuganoReportSubmit.pdf",
             "shortDescription": "2015 Lugano E-Cat test by Levi et al.",
-            "label": "15L",
+            "label": "L15",
             "excessHeat": "high",
             "isotopes": [
                 {"label": "6Li", "change": "increase"},
@@ -17,7 +17,7 @@
         {
             "citation": "Iwamura, Y. Observation of Nuclear Transmutation Reactions induced by D2 Gas Permeation through Pd Complexes. in Eleventh International Conference on Condensed Matter Nuclear Science. 2004. Marseille, France. http://lenr-canr.org/acrobat/IwamuraYobservatiob.pdf.",
             "shortDescription": "2004 ICMNS Iwamura isotope study",
-            "label": "04I",
+            "label": "I04",
             "system": "d + Ba + Pd/CaO/Pd, d + Cs + Pd/CaO/Pd",
             "notes": "Barium as the sources seems like conjecture, so entries for 137Ba, e.g., have been omitted.",
             "excessHeat": "unknown",
@@ -29,7 +29,7 @@
         {
             "citation": "Mizuno, T., T. Ohmori, and M. Enyo, Anomalous Isotopic Distribution in Palladium Cathode After Electrolysis. J. New Energy, 1996. 1(2): p. 37. http://www.lenr-canr.org/acrobat/MizunoTanomalousia.pdf",
             "shortDescription": "1996 Miley and Patternson Infinite Energy reprint",
-            "label": "96M",
+            "label": "M96",
             "excessHeat": "unknown",
             "system": "Ni, Pd, p, d",
             "isotopes": [
@@ -44,7 +44,7 @@
         {
             "citation": "Ohmori, T., et al., Transmutation in the electrolysis of lightwater - excess energy and iron production in a gold electrode. Fusion Technol., 1997. 31: p. 210.",
             "shortDescription": "1997 Ohmori Fusion Technology transmutation study",
-            "label": "97O",
+            "label": "O97",
             "excessHeat": "low",
             "system": "light-water electrolysis with a gold electrode",
             "isotopes": [
