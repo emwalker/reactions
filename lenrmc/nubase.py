@@ -122,6 +122,7 @@ class Nuclide(object):
         'B+=': '→β+',
         'n=':  '→n',
         'p=':  '→p',
+        'EC=': '→ε',
     }
 
     @classmethod

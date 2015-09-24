@@ -97,6 +97,10 @@ class NuclideTest(unittest.TestCase):
         n = Nuclide.load(line=self.lines[11])
         self.assertIn('→p', n.notes)
 
+    def test_electron_capture_note(self):
+        n = Nuclide.load(line=self.lines[23])
+        self.assertIn('→ε', n.notes)
+
 
 class NuclidesTest(unittest.TestCase):
 
