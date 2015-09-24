@@ -18,7 +18,7 @@ from .studies import Studies
 basepath = os.path.dirname(__file__)
 NUBASE_PATH = os.path.abspath(os.path.join(basepath, "../db/nubtab12.asc"))
 LENRMC_DIR = os.path.join(expanduser('~'), '.lenrmc')
-STUDIES = Studies.db()
+_studies = Studies.db()
 
 
 ALTERNATE_LABELS = {
@@ -367,7 +367,7 @@ class Reaction(object):
 
     def _references(self, refs, marks, values, expected, **kwargs):
         selective = kwargs.get('selective')
-        for result in STUDIES.isotopes(n.label for num, n in values):
+        for result in _studies.isotopes(n.label for num, n in values):
             agreement, mark = result.reference_mark(expected)
             if selective and agreement:
                 continue
