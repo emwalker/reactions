@@ -80,6 +80,28 @@
                 {"label": "56Fe", "change": "decrease"},
                 {"label": "55Fe", "change": "increase"}
             ]
+        },
+        {
+            "citation": "Savvatimova, I.B. and D.V. Gavritenkov. Influence of Parameters of the Glow Discharge on Change of Structure and the Isotope Composition of the Cathode Materials. in Twelfth International Conference on Cold Fusion. 2005. Yokohama, Japan.",
+            "shortDescription": "2005 Savvatimova isotope study",
+            "label": "S05",
+            "excessHeat": "unknown",
+            "system": "Glow discharge",
+            "isotopes": [
+                {"label": "11B", "change": "increase"},
+                {"label": "51V", "change": "increase"},
+                {"label": "53Cr", "change": "increase"},
+                {"label": "56Fe", "change": "increase"},
+                {"label": "57Fe", "change": "increase"},
+                {"label": "60Ni", "change": "increase"},
+                {"label": "61Ni", "change": "increase"},
+                {"label": "63Cu", "change": "increase"},
+                {"label": "87Sr", "change": "increase"},
+                {"label": "88Sr", "change": "decrease"},
+                {"label": "90Zr", "change": "increase"},
+                {"label": "91Zr", "change": "increase"},
+                {"label": "24Mg", "change": "increase"}
+            ]
         }
     ]
 }
