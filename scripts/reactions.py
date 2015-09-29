@@ -28,12 +28,14 @@ def parse_arguments():
     parser.add_argument('--view', type=str, dest='view')
     parser.add_argument('--studies', dest='studies', action='store_true')
     parser.add_argument('--model', dest='model')
+    parser.add_argument('--unstable', dest='unstable', action='store_true')
     parser.set_defaults(
         lower_bound = 0,
         spins       = False,
         references  = True,
         view        = 'default',
         model       = 'regular',
+        unstable    = False,
     )
     return parser.parse_args()
 

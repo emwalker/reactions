@@ -9,7 +9,7 @@ class System(object):
         system = filter(None, (rs.strip() for rs in string.split(',')))
         combinations = []
         for spec in system:
-            for reactants in parse_spec(spec):
+            for reactants in parse_spec(spec, **kwargs):
                 c = Combinations.load(reactants=reactants, **kwargs)
                 combinations.append(c)
         return cls(combinations, **kwargs)

@@ -267,7 +267,7 @@ class Nuclides(object):
         return self._by_signature[signature]
 
 
-def parse_spec(spec):
+def parse_spec(spec, **kwargs):
     nuclides = Nuclides.db()
     reactants = []
     for label in (l.strip() for l in spec.split('+')):
@@ -277,5 +277,9 @@ def parse_spec(spec):
         else:
             number = ELEMENTS[label]
             ns = nuclides.atomic_number(number)
-            reactants.append((1, n) for n in ns if n.is_stable)
+            if kwargs.get('unstable'):
+                it = ((1, n) for n in ns)
+            else:
+                it = ((1, n) for n in ns if n.is_stable)
+            reactants.append(it)
     return itertools.product(*reactants)
