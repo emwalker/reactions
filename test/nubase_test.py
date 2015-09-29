@@ -2,16 +2,8 @@ import unittest
 import os.path
 import sys
 
-from lenrmc.nubase import (
-    Combinations,
-    NUBASE_PATH,
-    Nuclide,
-    Nuclides,
-    possible_daughters,
-    Reaction,
-    System,
-    vectors3,
-)
+from lenrmc.nubase import NUBASE_PATH, Nuclide, Nuclides, Reaction
+from lenrmc.system import System
 
 
 class NuclideTest(unittest.TestCase):
@@ -164,37 +156,6 @@ class NuclidesTest(unittest.TestCase):
         self.assertEqual((7, 3), n.numbers)
         ns = self.nuclides.isomers[n.numbers]
         self.assertEqual([('7Li', '0'), ('7Li', 'i')], [n.signature for n in ns])
-
-
-class PossibleDaughtersTest(unittest.TestCase):
-
-    def test_simple_case(self):
-        self.assertEqual([
-            (3, 0, 0),
-            (2, 1, 0),
-            (1, 2, 0),
-            (2, 0, 1),
-            (1, 1, 1),
-            (1, 0, 2),
-        ], list(vectors3(3)))
-
-    def test_sums(self):
-        sums = [sum(t) for t in vectors3(5)]
-        self.assertEqual(15, len(sums))
-        self.assertTrue(all(v == 5 for v in sums))
-
-    def test_triples(self):
-        it = possible_daughters((2, 1))
-        self.assertEqual([
-            ((2, 1),),
-            ((1, 0), (1, 1)),
-        ], list(it))
-
-    def test_possible_daughters(self):
-        ts = list(possible_daughters((6, 3)))
-        self.assertEqual(19, len(ts))
-        self.assertTrue(all(6 == sum(m for m,a in t) for t in ts))
-        self.assertTrue(all(3 == sum(a for m,a in t) for t in ts))
 
 
 class ReactionsTest(unittest.TestCase):

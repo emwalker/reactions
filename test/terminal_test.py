@@ -1,6 +1,6 @@
 import unittest
 
-from lenrmc.nubase import System
+from lenrmc.system import System
 from lenrmc.terminal import TerminalView, TerminalLine, StudiesTerminalView
 
 
@@ -9,12 +9,6 @@ class SystemTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
-
-    def test_outcomes(self):
-        s = System.parse('p+7Li')
-        outcomes = list(s._combinations[0]._outcomes())
-        self.assertEqual(42, len(outcomes))
-        self.assertEqual(((8, 4),), outcomes[0])
 
     def test_spins(self):
         s = System.parse('p+7Li')

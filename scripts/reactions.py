@@ -1,6 +1,6 @@
 import argparse
 
-from lenrmc.nubase import System
+from lenrmc.system import System
 from lenrmc.terminal import TerminalView, StudiesTerminalView
 
 
