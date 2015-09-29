@@ -1,11 +1,66 @@
 import unittest
 
 from lenrmc.nubase import parse_spec
-from lenrmc.combinations import vectors3, regular_combinations, regular_outcomes
+from lenrmc.combinations import (
+    pion_exchange_outcomes,
+    Reaction,
+    regular_combinations,
+    regular_outcomes,
+    vectors3,
+)
 
 
-def pion_exchange_combinations(total):
-    pass
+class ReactionsTest(unittest.TestCase):
+
+    def test_q_value(self):
+        r = Reaction.load(
+            reactants=[(1, ('p', '0')), (1, ('7Li', '0'))],
+            daughters=[(2, ('4He', '0'))],
+        )
+        self.assertEqual(17346.2443, r.q_value_kev)
+
+    def test_4He_note(self):
+        r = Reaction.load(
+            reactants=[(1, ('6Li', '0')), (1, ('6Li', '0'))],
+            daughters=[(3, ('4He', '0'))],
+        )
+        self.assertIn('α', r.notes)
+
+    def test_n_note(self):
+        r = Reaction.load(
+            reactants=[(1, ('p', '0')), (1, ('7Li', '0'))],
+            daughters=[(1, ('n', '0')), (1, ('7Be', '0'))],
+        )
+        self.assertIn('n', r.notes)
+
+    def test_n_transfer_note(self):
+        r = Reaction.load(
+            reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
+            daughters=[(1, ('6Li', '0')), (1, ('61Ni', '0'))],
+        )
+        self.assertIn('n-transfer', r.notes)
+
+    def test_stable_note(self):
+        r = Reaction.load(
+            reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
+            daughters=[(1, ('6Li', '0')), (1, ('61Ni', '0'))],
+        )
+        self.assertIn('stable', r.notes)
+
+    def test_no_stable_note(self):
+        r = Reaction.load(
+            reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
+            daughters=[(1, ('8Be', '0')), (1, ('59Co', '0'))],
+        )
+        self.assertNotIn('stable', r.notes)
+
+    def test_beta_decay_note(self):
+        # Reaction is fictional
+        r = Reaction.load(
+            reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
+            daughters=[(1, ('t', '0')), (1, ('t', '0'))],
+        )
+        self.assertEqual({'→β-', 't'}, r.notes)
 
 
 class PossibleDaughtersTest(unittest.TestCase):
@@ -47,8 +102,18 @@ class PossibleDaughtersTest(unittest.TestCase):
 
 class PionExchangeAndSimultaneousDecayTest(unittest.TestCase):
 
-    def test_simple_case(self):
-        possibilities = parse_spec('p+d')
-        # c = pion_exchange_and_simultaneous_decay
-        # self.assertEqual([],
-        #     list(c._outcomes()))
+    def test_p_d(self):
+        reactants = list(parse_spec('p+d'))[0]
+        self.assertEqual([], list(pion_exchange_outcomes(reactants)))
+
+    def test_d_d(self):
+        reactants = list(parse_spec('d+d'))[0]
+        self.assertEqual([
+            ((1, 1), (1, 1), (3, 1)),
+        ], list(pion_exchange_outcomes(reactants)))
+
+    def test_d_3He(self):
+        reactants = list(parse_spec('d+3He'))[0]
+        self.assertEqual([
+            ((1, 1), (1, 1), (4, 2)),
+        ], list(pion_exchange_outcomes(reactants)))

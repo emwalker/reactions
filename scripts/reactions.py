@@ -27,11 +27,13 @@ def parse_arguments():
     parser.add_argument('--references', dest='references', action='store_true')
     parser.add_argument('--view', type=str, dest='view')
     parser.add_argument('--studies', dest='studies', action='store_true')
+    parser.add_argument('--model', dest='model')
     parser.set_defaults(
         lower_bound = 0,
         spins       = False,
         references  = True,
         view        = 'default',
+        model       = 'regular',
     )
     return parser.parse_args()
 

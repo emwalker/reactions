@@ -2,7 +2,7 @@ import unittest
 import os.path
 import sys
 
-from lenrmc.nubase import NUBASE_PATH, Nuclide, Nuclides, Reaction
+from lenrmc.nubase import NUBASE_PATH, Nuclide, Nuclides
 from lenrmc.system import System
 
 
@@ -156,56 +156,3 @@ class NuclidesTest(unittest.TestCase):
         self.assertEqual((7, 3), n.numbers)
         ns = self.nuclides.isomers[n.numbers]
         self.assertEqual([('7Li', '0'), ('7Li', 'i')], [n.signature for n in ns])
-
-
-class ReactionsTest(unittest.TestCase):
-
-    def test_q_value(self):
-        r = Reaction.load(
-            reactants=[(1, ('p', '0')), (1, ('7Li', '0'))],
-            daughters=[(2, ('4He', '0'))],
-        )
-        self.assertEqual(17346.2443, r.q_value_kev)
-
-    def test_4He_note(self):
-        r = Reaction.load(
-            reactants=[(1, ('6Li', '0')), (1, ('6Li', '0'))],
-            daughters=[(3, ('4He', '0'))],
-        )
-        self.assertIn('α', r.notes)
-
-    def test_n_note(self):
-        r = Reaction.load(
-            reactants=[(1, ('p', '0')), (1, ('7Li', '0'))],
-            daughters=[(1, ('n', '0')), (1, ('7Be', '0'))],
-        )
-        self.assertIn('n', r.notes)
-
-    def test_n_transfer_note(self):
-        r = Reaction.load(
-            reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
-            daughters=[(1, ('6Li', '0')), (1, ('61Ni', '0'))],
-        )
-        self.assertIn('n-transfer', r.notes)
-
-    def test_stable_note(self):
-        r = Reaction.load(
-            reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
-            daughters=[(1, ('6Li', '0')), (1, ('61Ni', '0'))],
-        )
-        self.assertIn('stable', r.notes)
-
-    def test_no_stable_note(self):
-        r = Reaction.load(
-            reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
-            daughters=[(1, ('8Be', '0')), (1, ('59Co', '0'))],
-        )
-        self.assertNotIn('stable', r.notes)
-
-    def test_beta_decay_note(self):
-        # Reaction is fictional
-        r = Reaction.load(
-            reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
-            daughters=[(1, ('t', '0')), (1, ('t', '0'))],
-        )
-        self.assertEqual({'→β-', 't'}, r.notes)
