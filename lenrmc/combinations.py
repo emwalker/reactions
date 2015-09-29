@@ -217,6 +217,12 @@ class Combinations(object):
         del kwargs['reactants']
         return cls(reactants, **kwargs)
 
+    @classmethod
+    def connection(cls):
+        if cls._connection is None:
+            cls._connection = make_connection()
+        return cls._connection
+
     def __init__(self, reactants, **kwargs):
         self._reactants = list(reactants)
         self.model_name = kwargs.get('model') or 'regular'
@@ -225,14 +231,8 @@ class Combinations(object):
         self._lower_bound = float(kwargs['lower_bound']) if 'lower_bound' in kwargs else None
         self.cache_key = self._cache_key()
 
-    @property
-    def connection(self):
-        if self._connection is None:
-            self._connection = make_connection()
-        return self._connection
-
     def _cached_results(self):
-        cursor = self.connection.execute(
+        cursor = self.connection().execute(
             "select reaction from reactions where parents = ?",
             (self.cache_key,))
         array = list(cursor)
@@ -242,10 +242,10 @@ class Combinations(object):
         return None
 
     def _cache_results(self, results):
-        self.connection.executemany("""
+        self.connection().executemany("""
         insert into reactions (parents, reaction) values (?, ?)
         """, ((self.cache_key, pickle.dumps(r)) for r in results))
-        self.connection.commit()
+        self.connection().commit()
 
     def _cache_key(self):
         parents = [(num, n.signature) for num, n in sorted(self._reactants, key=self._sort_key)]
