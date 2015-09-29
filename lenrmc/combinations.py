@@ -154,15 +154,23 @@ def normalize(pair):
     return daughters
 
 
-def pion_exchange_outcomes(reactants):
-    num0, smaller = min(reactants, key=lambda t: t[1].mass_number)
-    num1, larger  = max(reactants, key=lambda t: t[1].mass_number)
-    assert 1 == num0 == num1
-    s_mass, s_atomic = smaller.numbers
-    if s_mass > 1:
-        seen = set()
-        p_add = add_numbers(smaller.numbers, (0, 1))
-        p_sub = add_numbers(larger.numbers,  (1, 0))
+class PionExchangeModel(object):
+
+    def __call__(self, reactants):
+        num0, smaller = min(reactants, key=lambda t: t[1].mass_number)
+        num1, larger  = max(reactants, key=lambda t: t[1].mass_number)
+        assert 1 == num0 == num1
+        s_mass, s_atomic = smaller.numbers
+        if s_mass > 1:
+            seen = set()
+            p_add = add_numbers(smaller.numbers, (0, 1))
+            p_sub = add_numbers(larger.numbers,  (1, 0))
+            yield from self._combinations(seen, p_add, p_sub)
+
+
+class PionExchangeAndDecayModel(PionExchangeModel):
+
+    def _combinations(self, seen, p_add, p_sub):
         outcomes = regular_combinations(p_add)
         for pairs in outcomes:
             daughters = normalize(p_sub)
@@ -173,6 +181,22 @@ def pion_exchange_outcomes(reactants):
                 continue
             seen.add(daughters)
             yield daughters
+
+
+class StrictPionExchangeModel(PionExchangeModel):
+
+    def _combinations(self, seen, p_add, p_sub):
+        daughters = tuple(sorted(normalize(p_add) + normalize(p_sub)))
+        if daughters not in seen:
+            yield daughters
+        seen.add(daughters)
+
+
+MODELS = {
+    'regular':              regular_outcomes,
+    'pion-exchange':        PionExchangeAndDecayModel(),
+    'strict-pion-exchange': StrictPionExchangeModel(),
+}
 
 
 class Combinations(object):
@@ -188,7 +212,7 @@ class Combinations(object):
     def __init__(self, reactants, **kwargs):
         self._reactants = list(reactants)
         self.model_name = kwargs.get('model') or 'regular'
-        self._model = pion_exchange_outcomes if 'pion-exchange' == self.model_name else regular_outcomes
+        self._model = MODELS[self.model_name]
         self._kwargs = kwargs
         self._lower_bound = float(kwargs['lower_bound']) if 'lower_bound' in kwargs else None
         self.cache_key = self._cache_key()

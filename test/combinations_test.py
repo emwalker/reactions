@@ -2,10 +2,11 @@ import unittest
 
 from lenrmc.nubase import parse_spec
 from lenrmc.combinations import (
-    pion_exchange_outcomes,
+    PionExchangeAndDecayModel,
     Reaction,
     regular_combinations,
     regular_outcomes,
+    StrictPionExchangeModel,
     vectors3,
 )
 
@@ -102,18 +103,45 @@ class PossibleDaughtersTest(unittest.TestCase):
 
 class PionExchangeAndSimultaneousDecayTest(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.model = PionExchangeAndDecayModel()
+
     def test_p_d(self):
         reactants = list(parse_spec('p+d'))[0]
-        self.assertEqual([], list(pion_exchange_outcomes(reactants)))
+        self.assertEqual([], list(self.model(reactants)))
 
     def test_d_d(self):
         reactants = list(parse_spec('d+d'))[0]
         self.assertEqual([
             ((1, 1), (1, 1), (3, 1)),
-        ], list(pion_exchange_outcomes(reactants)))
+        ], list(self.model(reactants)))
 
     def test_d_3He(self):
         reactants = list(parse_spec('d+3He'))[0]
         self.assertEqual([
             ((1, 1), (1, 1), (4, 2)),
-        ], list(pion_exchange_outcomes(reactants)))
+        ], list(self.model(reactants)))
+
+
+class StrictPionExchangeTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.model = StrictPionExchangeModel()
+
+    def test_p_d(self):
+        reactants = list(parse_spec('p+d'))[0]
+        self.assertEqual([], list(self.model(reactants)))
+
+    def test_d_d(self):
+        reactants = list(parse_spec('d+d'))[0]
+        self.assertEqual([
+            ((1, 1), (1, 1), (3, 1)),
+        ], list(self.model(reactants)))
+
+    def test_d_3He(self):
+        reactants = list(parse_spec('d+3He'))[0]
+        self.assertEqual([
+            ((1, 1), (1, 1), (4, 2)),
+        ], list(self.model(reactants)))
