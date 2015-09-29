@@ -156,24 +156,32 @@ def normalize(pair):
 
 class PionExchangeModel(object):
 
+    # Careful!
+    # 7Li  -> 7Be
+    # 51Ni -> 52Co
+    _transformations = [
+        [(0,  1), (0, -1)],
+        [(0, -1), (0,  1)],
+    ]
+
     def __call__(self, reactants):
         num0, smaller = min(reactants, key=lambda t: t[1].mass_number)
         num1, larger  = max(reactants, key=lambda t: t[1].mass_number)
         assert 1 == num0 == num1
         s_mass, s_atomic = smaller.numbers
-        if s_mass > 1:
-            seen = set()
-            p_add = add_numbers(smaller.numbers, (0, 1))
-            p_sub = add_numbers(larger.numbers,  (1, 0))
-            yield from self._combinations(seen, p_add, p_sub)
+        seen = set()
+        for adj_left, adj_right in self._transformations:
+            p_left = add_numbers(smaller.numbers, adj_left)
+            p_right = add_numbers(larger.numbers, adj_right)
+            yield from self._combinations(seen, p_left, p_right)
 
 
 class PionExchangeAndDecayModel(PionExchangeModel):
 
-    def _combinations(self, seen, p_add, p_sub):
-        outcomes = regular_combinations(p_add)
+    def _combinations(self, seen, p_left, p_right):
+        outcomes = regular_combinations(p_left)
         for pairs in outcomes:
-            daughters = normalize(p_sub)
+            daughters = normalize(p_right)
             for pair in pairs:
                 daughters.extend(normalize(pair))
             daughters = tuple(sorted(daughters))
@@ -185,8 +193,8 @@ class PionExchangeAndDecayModel(PionExchangeModel):
 
 class StrictPionExchangeModel(PionExchangeModel):
 
-    def _combinations(self, seen, p_add, p_sub):
-        daughters = tuple(sorted(normalize(p_add) + normalize(p_sub)))
+    def _combinations(self, seen, p_left, p_right):
+        daughters = tuple(sorted(normalize(p_left) + normalize(p_right)))
         if daughters not in seen:
             yield daughters
         seen.add(daughters)

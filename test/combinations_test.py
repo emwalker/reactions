@@ -114,13 +114,13 @@ class PionExchangeAndSimultaneousDecayTest(unittest.TestCase):
     def test_d_d(self):
         reactants = list(parse_spec('d+d'))[0]
         self.assertEqual([
-            ((1, 1), (1, 1), (3, 1)),
+            ((1, 0), (1, 0), (1, 1), (1, 1)),
         ], list(self.model(reactants)))
 
     def test_d_3He(self):
         reactants = list(parse_spec('d+3He'))[0]
         self.assertEqual([
-            ((1, 1), (1, 1), (4, 2)),
+            ((1, 1), (1, 1), (3, 1)),
         ], list(self.model(reactants)))
 
 
@@ -132,16 +132,20 @@ class StrictPionExchangeTest(unittest.TestCase):
 
     def test_p_d(self):
         reactants = list(parse_spec('p+d'))[0]
-        self.assertEqual([], list(self.model(reactants)))
+        self.assertEqual(
+            [((1, 0), (1, 0), (1, 2)),
+             ((1, 0), (1, 1), (1, 1)),
+        ], list(self.model(reactants)))
 
     def test_d_d(self):
         reactants = list(parse_spec('d+d'))[0]
         self.assertEqual([
-            ((1, 1), (1, 1), (3, 1)),
+            ((1, 0), (1, 0), (1, 1), (1, 1)),
         ], list(self.model(reactants)))
 
     def test_d_3He(self):
         reactants = list(parse_spec('d+3He'))[0]
         self.assertEqual([
-            ((1, 1), (1, 1), (4, 2)),
+            ((1, 1), (1, 1), (3, 1)),
+            ((1, 0), (1, 0), (1, 1), (1, 1), (1, 1)),
         ], list(self.model(reactants)))
