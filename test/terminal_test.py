@@ -114,3 +114,19 @@ class TestStudiesView(unittest.TestCase):
              '',
              '[L15] 2015 Lugano E-Cat test by Levi et al.']
         , v.lines(references=True))
+
+
+class TestAscii(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
+
+    def test_output(self):
+        s = System.parse('p+d')
+        v = TerminalView(s)
+        self.assertEqual(
+            ['p + d => gamma + 3He + 5493 keV                                        gamma, stable',
+             'p + d => p + d + 0 keV                                                 n-transfer, stable',
+             'p + d => n + 2*p + -2225 keV                                           ->B-, n']
+        , v.lines(ascii=True))
