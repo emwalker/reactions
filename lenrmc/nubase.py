@@ -22,18 +22,50 @@ ALTERNATE_LABELS = {
 }
 
 ELEMENTS = {
-    'n':  0,
-    'H':  1,
-    'He': 2,
-    'Be': 4,
-    'Li': 3,
-    'C':  6,
-    'Al': 13,
-    'Fe': 26,
-    'Ni': 28,
-    'Cu': 29,
-    'Pd': 46,
+    'e-':  -1,
+    'n':    0,
+    'H':    1,
+    'He':   2,
+    'Be':   4,
+    'Li':   3,
+    'C':    6,
+    'Al':  13,
+    'Mn':  25,
+    'Fe':  26,
+    'Co':  27,
+    'Ni':  28,
+    'Cu':  29,
+    'Zn':  30,
+    'Pd':  46,
 }
+
+
+class Electron(object):
+
+    def __init__(self):
+        self.mass_number = 0
+        self.full_label = self._label = self.label = 'e-'
+        self.is_stable = True
+        self.spin_and_parity = '1/2+'
+        self.atomic_number = 0
+        self.numbers = (0, -1)
+        self.signature = (self.label, '0')
+        self.notes = {'e-'}
+        self.mass_excess_kev = 510.998928
+
+
+class ElectronNeutrino(object):
+
+    def __init__(self):
+        self.mass_number = 0
+        self.full_label = self._label = self.label = 'νe'
+        self.is_stable = False
+        self.spin_and_parity = '1/2+'
+        self.atomic_number = 0
+        self.signature = ('νe', '0')
+        self.numbers = (0, 0)
+        self.notes = {'νe'}
+        self.mass_excess_kev = 0.00023
 
 
 class BadNubaseRow(RuntimeError):
@@ -243,6 +275,7 @@ class Nuclides(object):
                     nuclides.append(n)
                 except BadNubaseRow:
                     continue
+        nuclides.extend([Electron(), ElectronNeutrino()])
         return cls(nuclides)
 
     def __init__(self, nuclides):

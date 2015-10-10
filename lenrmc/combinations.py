@@ -8,7 +8,7 @@ import operator
 import itertools
 from os.path import expanduser
 
-from .nubase import Nuclides
+from .nubase import Nuclides, Electron, ElectronNeutrino
 
 
 LENRMC_DIR = os.path.join(expanduser('~'), '.lenrmc')
@@ -49,6 +49,11 @@ class Reaction(object):
         self._rvalues = list(rvalues)
         self.q_value_kev = self._q_value_kev()
         self.is_stable = self._is_stable()
+        if self.is_single_body:
+            if self.has_electron_parent:
+                self._rvalues.append((1, ElectronNeutrino()))
+            else:
+                self._rvalues.append((1, GammaPhoton()))
 
     @property
     def notes(self):
@@ -62,9 +67,11 @@ class Reaction(object):
                     notes.add('n-transfer')
         if self.is_stable:
             notes.add('stable')
-        if self.has_gamma:
-            notes.add('ɣ')
-            self._rvalues.append((1, GammaPhoton()))
+        if self.is_single_body:
+            if self.has_electron_parent:
+                notes.add('νe')
+            else:
+                notes.add('ɣ')
         for num, d in self._rvalues:
             notes |= d.notes
         return notes
@@ -76,7 +83,11 @@ class Reaction(object):
         return all(d.is_stable for num, d in self._rvalues)
 
     @property
-    def has_gamma(self):
+    def has_electron_parent(self):
+        return any(isinstance(p, Electron) for num, p in self._lvalues)
+
+    @property
+    def is_single_body(self):
         if 1 < len(self._rvalues):
             return False
         return all(num == 1 for num, c in self._rvalues)
@@ -154,7 +165,18 @@ def normalize(pair):
     return daughters
 
 
-class PionExchangeModel(object):
+
+class Model(object):
+
+    def _smaller_and_larger(self, reactants):
+        "This helper method assumes a two-body reaction."
+        num0, smaller = min(reactants, key=lambda t: t[1].mass_number)
+        num1, larger  = max(reactants, key=lambda t: t[1].mass_number)
+        assert 1 == num0 == num1
+        return [(num0, smaller), (num1, larger)]
+
+
+class PionExchangeModel(Model):
 
     # Careful!
     # 7Li  -> 7Be
@@ -165,9 +187,7 @@ class PionExchangeModel(object):
     ]
 
     def __call__(self, reactants):
-        num0, smaller = min(reactants, key=lambda t: t[1].mass_number)
-        num1, larger  = max(reactants, key=lambda t: t[1].mass_number)
-        assert 1 == num0 == num1
+        (num0, smaller), (num1, larger) = self._smaller_and_larger(reactants)
         s_mass, s_atomic = smaller.numbers
         seen = set()
         for adj_left, adj_right in self._transformations:
@@ -200,10 +220,19 @@ class StrictPionExchangeModel(PionExchangeModel):
         seen.add(daughters)
 
 
+class ElectronCaptureModel(Model):
+
+    def __call__(self, reactants):
+        (num0, smaller), (num1, larger) = self._smaller_and_larger(reactants)
+        combined = add_numbers(smaller.numbers, larger.numbers)
+        yield tuple(normalize(combined))
+
+
 MODELS = {
     'regular':              regular_outcomes,
     'pion-exchange':        PionExchangeAndDecayModel(),
     'strict-pion-exchange': StrictPionExchangeModel(),
+    'electron-capture':     ElectronCaptureModel(),
 }
 
 

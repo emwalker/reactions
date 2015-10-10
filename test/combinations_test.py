@@ -2,6 +2,7 @@ import unittest
 
 from lenrmc.nubase import parse_spec
 from lenrmc.combinations import (
+    ElectronCaptureModel,
     PionExchangeAndDecayModel,
     Reaction,
     regular_combinations,
@@ -19,6 +20,14 @@ class ReactionsTest(unittest.TestCase):
             daughters=[(2, ('4He', '0'))],
         )
         self.assertEqual(17346.2443, r.q_value_kev)
+
+    def test_electron_capture_q_value(self):
+        r = Reaction.load(
+            reactants=[(1, ('e-', '0')), (1, ('63Cu', '0'))],
+            daughters=[(1, ('νe', '0')), (1, ('63Ni', '0'))],
+        )
+        # TODO - fix until it goes to zero?
+        self.assertEqual(443, int(r.q_value_kev))
 
     def test_4He_note(self):
         r = Reaction.load(
@@ -149,3 +158,39 @@ class StrictPionExchangeTest(unittest.TestCase):
             ((1, 1), (1, 1), (3, 1)),
             ((1, 0), (1, 0), (1, 1), (1, 1), (1, 1)),
         ], list(self.model(reactants)))
+
+
+class ElectronCaptureTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.model = ElectronCaptureModel()
+
+    def test_p_e(self):
+        reactants = list(parse_spec('p+e-'))[0]
+        self.assertEqual([((1, 0),)], list(self.model(reactants)))
+
+    def test_n_e(self):
+        # Will fail at a later stage
+        reactants = list(parse_spec('n+e-'))[0]
+        self.assertEqual([((1, -1),)], list(self.model(reactants)))
+
+    def test_t_e(self):
+        reactants = list(parse_spec('t+e-'))[0]
+        self.assertEqual([
+            ((1, 0), (1, 0), (1, 0))
+        ], list(self.model(reactants)))
+
+    def test_H_e(self):
+        results = [list(self.model(r)) for r in parse_spec('H+e-')]
+        self.assertEqual([
+            [((1, 0),)],
+            [((1, 0), (1, 0))]
+        ], results)
+
+    def test_Li_e(self):
+        results = [list(self.model(r)) for r in parse_spec('Li+e-')]
+        self.assertEqual([
+            [((6, 2),)],
+            [((7, 2),)]
+        ], results)
