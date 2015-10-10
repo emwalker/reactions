@@ -102,6 +102,17 @@
                 {"label": "91Zr", "change": "increase"},
                 {"label": "24Mg", "change": "increase"}
             ]
+        },
+        {
+            "citation": "Leonid Urutskoev, D. V. Filippov, Phenomenological model of collective Low Energy Nuclear Reactions (Transformation), in Peter Gluck's EGO-OUT blog",
+            "shortDescription": "2015 Urutskoev paper in Peter Gluck's blog",
+            "url": "http://egooutpeters.blogspot.ro/2015/10/leonid-urutskoev-phenomenological-model.html",
+            "label": "U15",
+            "excessHeat": "unknown",
+            "system": "Exploding titanium wires",
+            "isotopes": [
+                {"label": "48Ti", "change": "decrease"}
+            ]
         }
     ]
 }
