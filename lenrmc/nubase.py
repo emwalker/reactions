@@ -51,7 +51,7 @@ class Electron(object):
         self.numbers = (0, -1)
         self.signature = (self.label, '0')
         self.notes = {'e-'}
-        self.mass_excess_kev = 510.998928
+        self.mass_excess_kev = 0 # 510.998928
 
 
 class ElectronNeutrino(object):

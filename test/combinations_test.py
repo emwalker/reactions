@@ -27,7 +27,7 @@ class ReactionsTest(unittest.TestCase):
             daughters=[(1, ('νe', '0')), (1, ('63Ni', '0'))],
         )
         # TODO - fix until it goes to zero?
-        self.assertEqual(443, int(r.q_value_kev))
+        self.assertEqual(-67, int(r.q_value_kev))
 
     def test_4He_note(self):
         r = Reaction.load(
