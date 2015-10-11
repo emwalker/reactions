@@ -258,6 +258,7 @@ class Combinations(object):
         self._model = MODELS[self.model_name]
         self._kwargs = kwargs
         self._lower_bound = float(kwargs['lower_bound']) if 'lower_bound' in kwargs else None
+        self._upper_bound = float(kwargs['upper_bound']) if 'upper_bound' in kwargs else None
         self.cache_key = self._cache_key()
 
     def _cached_results(self):
@@ -318,4 +319,9 @@ class Combinations(object):
             self._cache_results(results)
 
     def _allowed(self, r):
-        return self._lower_bound is None or r.q_value_kev > self._lower_bound
+        conditions = [True]
+        if self._lower_bound:
+            conditions.append(r.q_value_kev >= self._lower_bound)
+        if self._upper_bound:
+            conditions.append(r.q_value_kev <= self._upper_bound)
+        return all(conditions)

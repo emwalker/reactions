@@ -23,6 +23,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('system', type=str)
     parser.add_argument('--lb', dest='lower_bound')
+    parser.add_argument('--ub', dest='upper_bound')
     parser.add_argument('--spins', dest='spins', action='store_true')
     parser.add_argument('--references', dest='references', action='store_true')
     parser.add_argument('--view', type=str, dest='view')
@@ -32,6 +33,7 @@ def parse_arguments():
     parser.add_argument('--ascii', dest='ascii', action='store_true')
     parser.set_defaults(
         lower_bound = 0,
+        upper_bound = None,
         spins       = False,
         references  = True,
         view        = 'default',
