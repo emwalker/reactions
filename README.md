@@ -2,7 +2,8 @@ lenrmc
 ======
 
 This project is intended to hold a set of tools for those interested in exploring different
-reaction pathways.  Currently `scripts/reactions.py` is the only tool available.
+reaction pathways that might be involved in LENR.  Currently `scripts/reactions.py` is the
+only tool available.
 
 # Requirements
 
