@@ -6,7 +6,7 @@ from lenrmc.combinations import (
     PionExchangeAndDecayModel,
     Reaction,
     regular_combinations,
-    regular_outcomes,
+    StandardModel,
     StrictPionExchangeModel,
     vectors3,
 )
@@ -77,7 +77,7 @@ class PossibleDaughtersTest(unittest.TestCase):
 
     def test_outcomes(self):
         reactants = list(parse_spec('p+7Li'))[0]
-        outcomes = list(regular_outcomes(reactants))
+        outcomes = list(StandardModel()(reactants))
         self.assertEqual(42, len(outcomes))
         self.assertEqual(((8, 4),), outcomes[0])
 

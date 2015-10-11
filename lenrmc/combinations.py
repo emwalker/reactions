@@ -153,12 +153,6 @@ def add_numbers(*numbers):
     return tuple(map(operator.add, *numbers))
 
 
-def regular_outcomes(reactants):
-    numbers = [num * n.numbers for num, n in reactants]
-    mass_number, atomic_number = add_numbers(*numbers)
-    return regular_combinations((mass_number, atomic_number))
-
-
 def normalize(pair):
     o_mass, o_atomic = pair
     if o_mass < 0:
@@ -172,8 +166,10 @@ def normalize(pair):
     return daughters
 
 
-
 class Model(object):
+
+    def parents(self, parents):
+        return parents
 
     def _smaller_and_larger(self, reactants):
         "This helper method assumes a two-body reaction."
@@ -181,6 +177,14 @@ class Model(object):
         num1, larger  = max(reactants, key=lambda t: t[1].mass_number)
         assert 1 == num0 == num1
         return [(num0, smaller), (num1, larger)]
+
+
+class StandardModel(Model):
+
+    def __call__(self, reactants):
+        numbers = [num * n.numbers for num, n in reactants]
+        mass_number, atomic_number = add_numbers(*numbers)
+        return regular_combinations((mass_number, atomic_number))
 
 
 class PionExchangeModel(Model):
@@ -236,6 +240,9 @@ class ElectronMediatedDecayModel(Model):
         [(-12, -6), [(4, 2), (4, 2), (4, 2)]],
     ]
 
+    def parents(self, parents):
+        return list(parents) + [(1, Electron())]
+
     def __call__(self, reactants):
         assert 1 == len(reactants)
         num, n = reactants[0]
@@ -246,7 +253,7 @@ class ElectronMediatedDecayModel(Model):
 
 
 MODELS = {
-    'regular':               regular_outcomes,
+    'standard':              StandardModel(),
     'pion-exchange':         PionExchangeAndDecayModel(),
     'strict-pion-exchange':  StrictPionExchangeModel(),
     'mediated-decay':        ElectronMediatedDecayModel(),
@@ -270,9 +277,9 @@ class Combinations(object):
         return cls._connection
 
     def __init__(self, parents, **kwargs):
-        self._parents = list(parents)
-        self.model_name = kwargs.get('model') or 'regular'
+        self.model_name = kwargs.get('model') or 'standard'
         self._model = MODELS[self.model_name]
+        self._parents = list(parents)
         self._kwargs = kwargs
         self._lower_bound = float(kwargs.get('lower_bound', 0))
         self._upper_bound = float(kwargs.get('upper_bound', 500000))
@@ -327,9 +334,10 @@ class Combinations(object):
             yield from results
         else:
             results = []
+            parents = self._model.parents(self._parents)
             for daughters in self._reactions():
                 rvalues = ((1, d) for d in daughters)
-                r = Reaction(self._parents, rvalues, **self._kwargs)
+                r = Reaction(parents, rvalues, **self._kwargs)
                 if not self._allowed(r):
                     continue
                 yield r
