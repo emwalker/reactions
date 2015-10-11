@@ -227,7 +227,7 @@ class StrictPionExchangeModel(PionExchangeModel):
         seen.add(daughters)
 
 
-class StimulatedElectronCaptureModel(Model):
+class ElectronStimulatedDecayModel(Model):
 
     def __call__(self, reactants):
         (num0, smaller), (num1, larger) = self._smaller_and_larger(reactants)
@@ -239,7 +239,7 @@ MODELS = {
     'regular':               regular_outcomes,
     'pion-exchange':         PionExchangeAndDecayModel(),
     'strict-pion-exchange':  StrictPionExchangeModel(),
-    'stimulated-EC':         StimulatedElectronCaptureModel(),
+    'stimulated-decay':      ElectronStimulatedDecayModel(),
 }
 
 
