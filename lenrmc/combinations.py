@@ -50,8 +50,10 @@ class Reaction(object):
         self.q_value_kev = self._q_value_kev()
         self.is_stable = self._is_stable()
         self.any_excited = self._any_excited()
+        self.lvalue_delim = self.rvalue_delim = '+'
         if self.is_single_body:
             if self.has_electron_parent:
+                self.lvalue_delim = '~'
                 self._rvalues.append((1, ElectronNeutrino()))
             else:
                 self._rvalues.append((1, GammaPhoton()))
@@ -225,7 +227,7 @@ class StrictPionExchangeModel(PionExchangeModel):
         seen.add(daughters)
 
 
-class ElectronAccelerationModel(Model):
+class StimulatedElectronCaptureModel(Model):
 
     def __call__(self, reactants):
         (num0, smaller), (num1, larger) = self._smaller_and_larger(reactants)
@@ -237,7 +239,7 @@ MODELS = {
     'regular':               regular_outcomes,
     'pion-exchange':         PionExchangeAndDecayModel(),
     'strict-pion-exchange':  StrictPionExchangeModel(),
-    'electron-acceleration': ElectronAccelerationModel(),
+    'stimulated-EC':         StimulatedElectronCaptureModel(),
 }
 
 

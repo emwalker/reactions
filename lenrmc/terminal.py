@@ -107,7 +107,7 @@ class TerminalLine(object):
         num, n = pair
         return n.mass_number, n.label
 
-    def _fancy_side(self, side):
+    def _fancy_side(self, delim, side):
         isotopes = defaultdict(lambda: 0)
         for num, n in side:
             isotopes[n] += num
@@ -117,14 +117,14 @@ class TerminalLine(object):
             label = self.format(n.full_label)
             string = self._multi_daughter_template.format(num, label) if num > 1 else label
             values.append(string)
-        return ' + '.join(values)
+        return ' {} '.format(delim).join(values)
 
     def terminal(self, **kwargs):
         kev = self.q_value_kev
         sign = '+' if kev >= 0 else '-'
         string = self._reaction_template.format(
-            self._fancy_side(self._lvalues),
-            self._fancy_side(self._rvalues),
+            self._fancy_side(self._reaction.lvalue_delim, self._lvalues),
+            self._fancy_side(self._reaction.rvalue_delim, self._rvalues),
             kev,
         )
         string = self._notes_template.format(string, ', '.join(sorted(self.notes)))
