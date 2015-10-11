@@ -120,7 +120,7 @@ d + 58Ni → n + 59Cu + 1194 keV                          n, →β+, →β-     
 6Li + 60Ni → n + p + 64Zn + 258 keV                     n, →β-                    0+, 1+               0+, 1/2+, 1/2+           ✗ 6Li [L15],  ✗ 60Ni [S05]
 
 [L15] 2015 Lugano E-Cat test by Levi et al.
-[M96] 1996 Miley and Patternson Infinite Energy reprint
+[M96] 1996 Miley and Patterson Infinite Energy reprint
 [O97] 1997 Ohmori Fusion Technology transmutation study
 [S04] 2004 Savvatimova Ti isotope study
 [S05] 2005 Savvatimova isotope study
