@@ -1,9 +1,29 @@
 lenrmc
 ======
 
-This project is intended to hold a set of tools for those interested in exploring different
-reaction pathways that might be involved in LENR.  Currently `scripts/reactions.py` is the
-only tool available.
+Explore different reaction pathways by specifying the parent isotopes or elements:
+
+```
+% python scripts/reactions.py "H+Li" --ascii --simple
+d + 6Li => p + 7Li + 5027 keV
+d + 6Li => p + t + 4He + 2559 keV
+d + 6Li => t + 5Li + 593 keV
+d + 6Li => 2*4He + 22373 keV
+d + 6Li => gamma + 8Be + 22281 keV
+p + 7Li => 2*4He + 17346 keV
+p + 7Li => gamma + 8Be + 17254 keV
+d + 7Li => gamma + 9Be + 16694 keV
+d + 7Li => 4He + 5He + 14387 keV
+p + 6Li => gamma + 7Be + 5607 keV
+p + 6Li => 3He + 4He + 4020 keV
+d + 6Li => 3He + 5He + 1060 keV
+d + 7Li => n + 2*4He + 15122 keV
+d + 7Li => n + 8Be + 15030 keV
+d + 6Li => n + 7Be + 3382 keV
+d + 6Li => n + 3He + 4He + 1795 keV
+%
+```
+
 
 # Requirements
 
@@ -62,28 +82,6 @@ d + 6Li → n + 7Be + 3382 keV                            n, →β-, →ε      
 d + 6Li → n + 3He + 4He + 1795 keV                      n, α, →β-                     ✗ 6Li [L15]
 
 [L15] 2015 Lugano E-Cat test by Levi et al.
-%
-```
-
-To print out the same set of reactions in ASCII without the accompanying annotations, do this:
-```
-% python scripts/reactions.py "H+Li" --ascii --simple
-d + 6Li => p + 7Li + 5027 keV
-d + 6Li => p + t + 4He + 2559 keV
-d + 6Li => t + 5Li + 593 keV
-d + 6Li => 2*4He + 22373 keV
-d + 6Li => gamma + 8Be + 22281 keV
-p + 7Li => 2*4He + 17346 keV
-p + 7Li => gamma + 8Be + 17254 keV
-d + 7Li => gamma + 9Be + 16694 keV
-d + 7Li => 4He + 5He + 14387 keV
-p + 6Li => gamma + 7Be + 5607 keV
-p + 6Li => 3He + 4He + 4020 keV
-d + 6Li => 3He + 5He + 1060 keV
-d + 7Li => n + 2*4He + 15122 keV
-d + 7Li => n + 8Be + 15030 keV
-d + 6Li => n + 7Be + 3382 keV
-d + 6Li => n + 3He + 4He + 1795 keV
 %
 ```
 
