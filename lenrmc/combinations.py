@@ -264,7 +264,7 @@ class Combinations(object):
         self.model_name = kwargs.get('model') or 'regular'
         self._model = MODELS[self.model_name]
         self._kwargs = kwargs
-        self._lower_bound = float(kwargs['lower_bound']) if 'lower_bound' in kwargs else None
+        self._lower_bound = float(kwargs.get('lower_bound', 0))
         self._upper_bound = float(kwargs['upper_bound']) if 'upper_bound' in kwargs else None
         self._excited = kwargs.get('excited')
         self.cache_key = self._cache_key()
@@ -327,9 +327,7 @@ class Combinations(object):
             self._cache_results(results)
 
     def _allowed(self, r):
-        conditions = [True]
-        if self._lower_bound:
-            conditions.append(r.q_value_kev >= self._lower_bound)
+        conditions = [r.q_value_kev >= self._lower_bound]
         if self._upper_bound:
             conditions.append(r.q_value_kev <= self._upper_bound)
         if not self._excited:
