@@ -2,7 +2,7 @@ import unittest
 
 from lenrmc.nubase import parse_spec
 from lenrmc.combinations import (
-    ElectronStimulatedDecayModel,
+    ElectronMediatedDecayModel,
     PionExchangeAndDecayModel,
     Reaction,
     regular_combinations,
@@ -160,11 +160,11 @@ class StrictPionExchangeTest(unittest.TestCase):
         ], list(self.model(reactants)))
 
 
-class ElectronStimulatedDecayModelTest(unittest.TestCase):
+class ElectronMediatedDecayModelTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.model = ElectronStimulatedDecayModel()
+        cls.model = ElectronMediatedDecayModel()
 
     def test_p(self):
         results = [list(self.model(r)) for r in parse_spec('p')]

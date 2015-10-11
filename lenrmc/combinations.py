@@ -227,7 +227,7 @@ class StrictPionExchangeModel(PionExchangeModel):
         seen.add(daughters)
 
 
-class ElectronStimulatedDecayModel(Model):
+class ElectronMediatedDecayModel(Model):
 
     _transformations = [
         [( 0, -1),  [(0, 0), (0, -1)]],
@@ -249,7 +249,7 @@ MODELS = {
     'regular':               regular_outcomes,
     'pion-exchange':         PionExchangeAndDecayModel(),
     'strict-pion-exchange':  StrictPionExchangeModel(),
-    'stimulated-decay':      ElectronStimulatedDecayModel(),
+    'mediated-decay':        ElectronMediatedDecayModel(),
 }
 
 
