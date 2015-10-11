@@ -67,7 +67,6 @@ d + 6Li → n + 3He + 4He + 1795 keV                      n, α, →β-         
 To print out the same set of reactions in ASCII without the accompanying annotations, do this:
 ```
 % python scripts/reactions.py "H+Li" --ascii --simple
-
 d + 6Li => p + 7Li + 5027 keV
 d + 6Li => p + t + 4He + 2559 keV
 d + 6Li => t + 5Li + 593 keV
@@ -84,6 +83,50 @@ d + 7Li => n + 2*4He + 15122 keV
 d + 7Li => n + 8Be + 15030 keV
 d + 6Li => n + 7Be + 3382 keV
 d + 6Li => n + 3He + 4He + 1795 keV
+%
+```
+
+To print out information for several kinds of reaction involving different combinations
+of parent isotopes, use quotation marks and separate the parents with commas:
+```
+% python scripts/reactions.py "Li+Ni, H+Ni" --spins
+6Li + 61Ni → p + 4He + 62Ni + 6898 keV                  in nature, n-transfer, α  1+, 3/2-             0+, 0+, 1/2+             ✗ 6Li [L15],  ✗ 61Ni [S05],  ✓ 62Ni [L15]
+d + 58Ni → p + 59Ni + 6775 keV                          n-transfer, →β+           0+, 1+               1/2+, 3/2-
+d + 60Ni → p + 61Ni + 5596 keV                          in nature, n-transfer     0+, 1+               1/2+, 3/2-              ✗ 60Ni [S05],  ✗ 61Ni [L15],  ✓ 61Ni [S05]
+6Li + 58Ni → p + 4He + 59Ni + 5301 keV                  n-transfer, α, →β+        0+, 1+               0+, 1/2+, 3/2-           ✗ 6Li [L15]
+6Li + 61Ni → 5Li + 62Ni + 4931 keV                      n-transfer, →p            1+, 3/2-             0+, 3/2-                 ✗ 6Li [L15],  ✗ 61Ni [S05],  ✓ 62Ni [L15]
+d + 62Ni → p + 63Ni + 4613 keV                          n-transfer, →β-           0+, 1+               1/2+, 1/2-              ✗ 62Ni [L15]
+6Li + 60Ni → p + 4He + 61Ni + 4122 keV                  in nature, n-transfer, α  0+, 1+               0+, 1/2+, 3/2-           ✗ 6Li [L15],  ✗ 60Ni [S05],  ✗ 61Ni [L15],  ✓ 61Ni [S05]
+d + 64Ni → p + 65Ni + 3873 keV                          n-transfer, →β-           0+, 1+               1/2+, 5/2-
+7Li + 61Ni → 6Li + 62Ni + 3345 keV                      in nature, n-transfer     3/2-, 3/2-           0+, 1+                  ✗ 61Ni [S05],   ✓ 6Li [L15],  ✓ 62Ni [L15]
+6Li + 58Ni → 5Li + 59Ni + 3335 keV                      n-transfer, →p, →β+       0+, 1+               3/2-, 3/2-               ✗ 6Li [L15]
+6Li + 62Ni → p + 4He + 63Ni + 3139 keV                  n-transfer, α, →β-        0+, 1+               0+, 1/2+, 1/2-           ✗ 6Li [L15],  ✗ 62Ni [L15]
+6Li + 64Ni → p + 4He + 65Ni + 2400 keV                  n-transfer, α, →β-        0+, 1+               0+, 1/2+, 5/2-           ✗ 6Li [L15]
+6Li + 60Ni → 5Li + 61Ni + 2156 keV                      n-transfer, →p            0+, 1+               3/2-, 3/2-               ✗ 6Li [L15],  ✗ 60Ni [S05],  ✗ 61Ni [L15],  ✓ 61Ni [S05]
+7Li + 61Ni → d + 4He + 62Ni + 1871 keV                  in nature, n-transfer, α  3/2-, 3/2-           0+, 0+, 1+              ✗ 61Ni [S05],  ✓ 62Ni [L15]
+7Li + 58Ni → 6Li + 59Ni + 1748 keV                      n-transfer, →β+           0+, 3/2-             1+, 3/2-                 ✓ 6Li [L15]
+6Li + 62Ni → 5Li + 63Ni + 1173 keV                      n-transfer, →p, →β-       0+, 1+               1/2-, 3/2-               ✗ 6Li [L15],  ✗ 62Ni [L15]
+7Li + 60Ni → 6Li + 61Ni + 569 keV                       in nature, n-transfer     0+, 3/2-             1+, 3/2-                ✗ 60Ni [S05],   ✓ 6Li [L15],  ✗ 61Ni [L15],  ✓ 61Ni [S05]
+6Li + 64Ni → 5Li + 65Ni + 434 keV                       n-transfer, →p, →β-       0+, 1+               3/2-, 5/2-               ✗ 6Li [L15]
+6Li + 64Ni → n + p + 68Zn + 1635 keV                    n, →β-                    0+, 1+               0+, 1/2+, 1/2+           ✗ 6Li [L15]
+
+[many reactions omitted ...]
+
+d + 58Ni → n + 59Cu + 1194 keV                          n, →β+, →β-               0+, 1+               1/2+, 3/2-
+6Li + 60Ni → n + 4He + 61Cu + 1102 keV                  n, α, →β+, →β-            0+, 1+               0+, 1/2+, 3/2-           ✗ 6Li [L15],  ✗ 60Ni [S05]
+7Li + 64Ni → 2·n + 69Ga + 994 keV                       n, →β-                    0+, 3/2-             1/2+, 1/2+, 3/2-
+6Li + 62Ni → n + p + 66Zn + 880 keV                     n, →β-                    0+, 1+               0+, 1/2+, 1/2+           ✗ 6Li [L15],  ✗ 62Ni [L15]
+7Li + 62Ni → n + p + 67Zn + 681 keV                     n, →β-                    0+, 3/2-             1/2+, 1/2+, 5/2-        ✗ 62Ni [L15]
+7Li + 61Ni → n + 12C + 55Mn + 326 keV                   n, →β-                    3/2-, 3/2-           0+, 1/2+, 5/2-          ✗ 61Ni [S05]
+6Li + 60Ni → n + p + 64Zn + 258 keV                     n, →β-                    0+, 1+               0+, 1/2+, 1/2+           ✗ 6Li [L15],  ✗ 60Ni [S05]
+
+[L15] 2015 Lugano E-Cat test by Levi et al.
+[M96] 1996 Miley and Patternson Infinite Energy reprint
+[O97] 1997 Ohmori Fusion Technology transmutation study
+[S04] 2004 Savvatimova Ti isotope study
+[S05] 2005 Savvatimova isotope study
+[U15] 2015 Urutskoev paper in Peter Gluck's blog
+[V03] 2003 Violante et al. Ni-hydride plasmon study
 %
 ```
 
