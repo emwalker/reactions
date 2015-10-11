@@ -30,6 +30,7 @@ def parse_arguments():
     parser.add_argument('--studies', dest='studies', action='store_true')
     parser.add_argument('--model', dest='model')
     parser.add_argument('--unstable', dest='unstable', action='store_true')
+    parser.add_argument('--excited', dest='excited', action='store_true')
     parser.add_argument('--ascii', dest='ascii', action='store_true')
     parser.set_defaults(
         lower_bound = 0,
