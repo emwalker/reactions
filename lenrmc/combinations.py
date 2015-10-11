@@ -49,6 +49,7 @@ class Reaction(object):
         self._rvalues = list(rvalues)
         self.q_value_kev = self._q_value_kev()
         self.is_stable = self._is_stable()
+        self.any_excited = self._any_excited()
         if self.is_single_body:
             if self.has_electron_parent:
                 self._rvalues.append((1, ElectronNeutrino()))
@@ -81,6 +82,10 @@ class Reaction(object):
 
     def _is_stable(self):
         return all(d.is_stable for num, d in self._rvalues)
+
+    def _any_excited(self):
+        combined = self._rvalues + self._lvalues
+        return any(n.is_excited for num, n in combined)
 
     @property
     def has_electron_parent(self):
@@ -259,6 +264,7 @@ class Combinations(object):
         self._kwargs = kwargs
         self._lower_bound = float(kwargs['lower_bound']) if 'lower_bound' in kwargs else None
         self._upper_bound = float(kwargs['upper_bound']) if 'upper_bound' in kwargs else None
+        self._excited = kwargs.get('excited')
         self.cache_key = self._cache_key()
 
     def _cached_results(self):
@@ -280,8 +286,8 @@ class Combinations(object):
     def _cache_key(self):
         parents = [(num, n.signature) for num, n in sorted(self._reactants, key=self._sort_key)]
         signature = {'parents': parents}
-        for field in ('lower_bound',):
-            signature['lower_bound'] = self._kwargs.get('lower_bound')
+        for field in ('lower_bound', 'upper_bound', 'excited'):
+            signature[field] = self._kwargs.get(field)
         signature['model'] = self.model_name
         string = json.dumps(signature, sort_keys=True).encode('utf-8')
         key = hashlib.sha1(string).hexdigest()
@@ -324,4 +330,6 @@ class Combinations(object):
             conditions.append(r.q_value_kev >= self._lower_bound)
         if self._upper_bound:
             conditions.append(r.q_value_kev <= self._upper_bound)
+        if not self._excited:
+            conditions.append(not r.any_excited)
         return all(conditions)

@@ -40,6 +40,7 @@ def parse_arguments():
         model       = 'regular',
         unstable    = False,
         ascii       = False,
+        excited     = False,
     )
     return parser.parse_args()
 

@@ -17,8 +17,11 @@ ALTERNATE_LABELS = {
     '2H':   'd',
     '3H':   't',
     '12Cx': '12C',
+    '8Bx':  '8B',
     '10Bx': '10B',
+    '28Px': '28P',
     '30Px': '30P',
+    '45Vx': '45V',
 }
 
 ELEMENTS = {
@@ -93,7 +96,8 @@ class Electron(object):
         self.numbers = (0, -1)
         self.signature = (self.label, '0')
         self.notes = {'e-'}
-        self.mass_excess_kev = 0 # 510.998928
+        self.mass_excess_kev = 0
+        self.is_excited = False
 
     def __repr__(self):
         return 'Electron'
@@ -111,6 +115,7 @@ class ElectronNeutrino(object):
         self.numbers = (0, 0)
         self.notes = {'νe'}
         self.mass_excess_kev = 0.00023
+        self.is_excited = False
 
     def __repr__(self):
         return 'ElectronNeutrino'
@@ -351,7 +356,7 @@ class Nuclides(object):
 def stable_nuclides(nuclides, unstable):
     if unstable:
         return ((1, n) for n in nuclides)
-    return ((1, n) for n in nuclides if n.is_stable)
+    return ((1, n) for n in nuclides if n.is_stable and not n.is_excited)
 
 
 def parse_spec(spec, **kwargs):
