@@ -6,7 +6,7 @@ reaction pathways.  Currently `scripts/reactions.py` is the only tool available.
 
 # Requirements
 
-The following components are needed to get this up and running:
+The following components are required:
 * Python 3
 * [Virtualenv wrapper](https://virtualenvwrapper.readthedocs.org/en/latest/)
 
@@ -25,16 +25,23 @@ To get set up, run the following commands:
 Ran 63 tests in 0.211s
 
 OK
-$
+%
 ```
 
 # Running
 
-Use the following command to execute the script:
+Before doing anything else, make sure you are in the virtual environment that is used
+with this project:
+```
+% workon reactions
+```
+
+## Examples
+
+In this example, extended information is provided about possible reactions between stable
+isotopes of lithium and stable isotopes of hydrogen:
 
 ```
-% # switch to the virtual environment used for this project
-% workon reactions
 % python scripts/reactions.py "H+Li"
 d + 6Li → p + 7Li + 5027 keV                            in nature, n-transfer         ✗ 6Li [L15],   ✗ 7Li [L15]
 d + 6Li → p + t + 4He + 2559 keV                        n-transfer, t, α, →β-         ✗ 6Li [L15]
@@ -55,6 +62,10 @@ d + 6Li → n + 3He + 4He + 1795 keV                      n, α, →β-         
 
 [L15] 2015 Lugano E-Cat test by Levi et al.
 %
+```
+
+To print out the same set of reactions in ASCII without the accompanying annotations, do this:
+```
 % python scripts/reactions.py "H+Li" --ascii --simple
 
 d + 6Li => p + 7Li + 5027 keV
@@ -73,6 +84,11 @@ d + 7Li => n + 2*4He + 15122 keV
 d + 7Li => n + 8Be + 15030 keV
 d + 6Li => n + 7Be + 3382 keV
 d + 6Li => n + 3He + 4He + 1795 keV
-% # Leave the virtual environment used for this project
+%
+```
+
+## Leaving the virtual environment
+To leave the Python virtualenv environment you set up, run this command:
+```
 % deactivate
 ```
