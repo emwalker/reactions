@@ -231,17 +231,18 @@ class StrictPionExchangeModel(PionExchangeModel):
 class ElectronStimulatedDecayModel(Model):
 
     _transformations = [
-        [( 0, -1), (0, 0)],
-        [(-4, -2), (4, 2)],
+        [( 0, -1), [(0, 0)]],
+        [(-4, -2), [(4, 2)]],
+        [(-8, -4), [(4, 2), (4, 2)]],
     ]
 
     def __call__(self, reactants):
         assert 1 == len(reactants)
         num, n = reactants[0]
         assert 1 == num
-        for transformation, rvalue2 in self._transformations:
+        for transformation, rvalues2 in self._transformations:
             rvalue = add_numbers(n.numbers, transformation)
-            yield tuple(normalize(rvalue) + [rvalue2])
+            yield tuple(normalize(rvalue) + rvalues2)
 
 
 MODELS = {
