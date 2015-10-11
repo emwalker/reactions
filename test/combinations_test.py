@@ -55,14 +55,14 @@ class ReactionsTest(unittest.TestCase):
             reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
             daughters=[(1, ('6Li', '0')), (1, ('61Ni', '0'))],
         )
-        self.assertIn('stable', r.notes)
+        self.assertIn('in nature', r.notes)
 
     def test_no_stable_note(self):
         r = Reaction.load(
             reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
             daughters=[(1, ('8Be', '0')), (1, ('59Co', '0'))],
         )
-        self.assertNotIn('stable', r.notes)
+        self.assertNotIn('in nature', r.notes)
 
     def test_beta_decay_note(self):
         # Reaction is fictional

@@ -13,13 +13,13 @@ class SystemTest(unittest.TestCase):
     def test_spins(self):
         s = System.parse('p+7Li')
         self.assertEqual(
-            ['p + 7Li → 2·4He + 17346 keV                             stable, α                 1/2+, 3/2-           0+, 0+',
+            ['p + 7Li → 2·4He + 17346 keV                             in nature, α              1/2+, 3/2-           0+, 0+',
              'p + 7Li → ɣ + 8Be + 17254 keV                           ɣ, →α                     1/2+, 3/2-           0+, 1-',
-             'p + 7Li → d + 6Li + -5027 keV                           n-transfer, stable        1/2+, 3/2-           1+, 1+',
-             'p + 7Li → 2·d + 4He + -6500 keV                         n-transfer, stable, α     1/2+, 3/2-           0+, 1+, 1+',
-             'p + 7Li → p + 7Li + 0 keV                               stable                    1/2+, 3/2-           1/2+, 3/2-',
+             'p + 7Li → d + 6Li + -5027 keV                           in nature, n-transfer     1/2+, 3/2-           1+, 1+',
+             'p + 7Li → 2·d + 4He + -6500 keV                         in nature, n-transfer, α  1/2+, 3/2-           0+, 1+, 1+',
              'p + 7Li → p + d + 5He + -9460 keV                       n-transfer, →n            1/2+, 3/2-           1+, 1/2+, 3/2-',
              'p + 7Li → d + 3He + t + -20821 keV                      n-transfer, t, →β-        1/2+, 3/2-           1+, 1/2+, 1/2+',
+             'p + 7Li → p + 7Li + 0 keV                               in nature                 1/2+, 3/2-           1/2+, 3/2-',
              'p + 7Li → p + t + 4He + -2468 keV                       t, α, →β-                 1/2+, 3/2-           0+, 1/2+, 1/2+',
              'p + 7Li → 3He + 5He + -3966 keV                         →n                        1/2+, 3/2-           1/2+, 3/2-',
              'p + 7Li → t + 5Li + -4434 keV                           t, →p, →β-                1/2+, 3/2-           1/2+, 3/2-',
@@ -39,13 +39,13 @@ class SystemTest(unittest.TestCase):
     def test_references(self):
         s = System.parse('p+7Li')
         self.assertEqual(
-            ['p + 7Li → 2·4He + 17346 keV                             stable, α',
+            ['p + 7Li → 2·4He + 17346 keV                             in nature, α',
              'p + 7Li → ɣ + 8Be + 17254 keV                           ɣ, →α',
-             'p + 7Li → d + 6Li + -5027 keV                           n-transfer, stable            ✓ 6Li [L15]',
-             'p + 7Li → 2·d + 4He + -6500 keV                         n-transfer, stable, α',
-             'p + 7Li → p + 7Li + 0 keV                               stable                        ✗ 7Li [L15]',
+             'p + 7Li → d + 6Li + -5027 keV                           in nature, n-transfer         ✓ 6Li [L15]',
+             'p + 7Li → 2·d + 4He + -6500 keV                         in nature, n-transfer, α',
              'p + 7Li → p + d + 5He + -9460 keV                       n-transfer, →n',
              'p + 7Li → d + 3He + t + -20821 keV                      n-transfer, t, →β-',
+             'p + 7Li → p + 7Li + 0 keV                               in nature                     ✗ 7Li [L15]',
              'p + 7Li → p + t + 4He + -2468 keV                       t, α, →β-',
              'p + 7Li → 3He + 5He + -3966 keV                         →n',
              'p + 7Li → t + 5Li + -4434 keV                           t, →p, →β-',
@@ -84,19 +84,19 @@ class TestStudiesView(unittest.TestCase):
         s = System.parse('p+7Li')
         v = StudiesTerminalView(s)
         self.assertEqual(
-            ['p + 7Li → d + 6Li + -5027 keV                           n-transfer, stable            ✓ 7Li [L15],   ✓ 6Li [L15]',
+            ['p + 7Li → d + 6Li + -5027 keV                           in nature, n-transfer         ✓ 7Li [L15],   ✓ 6Li [L15]',
              'p + 7Li → t + 5Li + -4434 keV                           t, →p, →β-                    ✓ 7Li [L15]',
              'p + 7Li → 3He + 5He + -3966 keV                         →n                            ✓ 7Li [L15]',
              'p + 7Li → 3Li + 5H + -39364 keV                         →2n                           ✓ 7Li [L15]',
              'p + 7Li → 4H + 4Li + -27744 keV                         →n, →p                        ✓ 7Li [L15]',
-             'p + 7Li → 2·4He + 17346 keV                             stable, α                     ✓ 7Li [L15]',
+             'p + 7Li → 2·4He + 17346 keV                             in nature, α                  ✓ 7Li [L15]',
              'p + 7Li → 2·p + 6He + -9974 keV                         →β-, →β-d                     ✓ 7Li [L15]',
              'p + 7Li → p + d + 5He + -9460 keV                       n-transfer, →n                ✓ 7Li [L15]',
              'p + 7Li → p + t + 4He + -2468 keV                       t, α, →β-                     ✓ 7Li [L15]',
              'p + 7Li → p + 3He + 4H + -24644 keV                     →n                            ✓ 7Li [L15]',
-             'p + 7Li → 2·d + 4He + -6500 keV                         n-transfer, stable, α         ✓ 7Li [L15]',
+             'p + 7Li → 2·d + 4He + -6500 keV                         in nature, n-transfer, α      ✓ 7Li [L15]',
              'p + 7Li → d + 3He + t + -20821 keV                      n-transfer, t, →β-            ✓ 7Li [L15]',
-             'p + 7Li → p + 7Li + 0 keV                               stable                        ✓ 7Li [L15],   ✗ 7Li [L15]',
+             'p + 7Li → p + 7Li + 0 keV                               in nature                     ✓ 7Li [L15],   ✗ 7Li [L15]',
              '',
              '[L15] 2015 Lugano E-Cat test by Levi et al.']
         , v.lines(references=True))
@@ -112,7 +112,7 @@ class TestAscii(unittest.TestCase):
         s = System.parse('p+d')
         v = TerminalView(s)
         self.assertEqual(
-            ['p + d => gamma + 3He + 5493 keV                                        gamma, stable',
-             'p + d => p + d + 0 keV                                                 n-transfer, stable',
+            ['p + d => gamma + 3He + 5493 keV                                        gamma, in nature',
+             'p + d => p + d + 0 keV                                                 in nature, n-transfer',
              'p + d => n + 2*p + -2225 keV                                           ->B-, n']
         , v.lines(ascii=True))

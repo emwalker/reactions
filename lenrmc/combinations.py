@@ -69,7 +69,7 @@ class Reaction(object):
                 if self._neutron_transfer(d, p):
                     notes.add('n-transfer')
         if self.is_stable:
-            notes.add('stable')
+            notes.add('in nature')
         if self.is_single_body:
             if self.has_electron_parent:
                 notes.add('νe')
