@@ -1,6 +1,6 @@
 import unittest
 
-from lenrmc.system import System
+from lenrmc.system import System, Options
 from lenrmc.terminal import TerminalView, TerminalLine, StudiesTerminalView
 
 
@@ -34,7 +34,7 @@ class SystemTest(unittest.TestCase):
              'p + 7Li → 2·n + 6Be + -12322 keV                        n, →2p, →β-               1/2+, 3/2-           0+, 1/2+, 1/2+',
              'p + 7Li → n + t + 4Li + -26145 keV                      n, t, →p, →β-             1/2+, 3/2-           1/2+, 1/2+, 2-',
              'p + 7Li → n + 3Li + 4H + -39165 keV                     n, →n, →β-                1/2+, 3/2-           1/2+, 2-']
-        , TerminalView(s).lines(spins=True))
+        , TerminalView(s).lines(Options(spins=True)))
 
     def test_references(self):
         s = System.parse('p+7Li', lower_bound=-40000)
@@ -62,12 +62,13 @@ class SystemTest(unittest.TestCase):
              'p + 7Li → n + 3Li + 4H + -39165 keV                     n, →n, →β-',
              '',
              '[L15] 2015 Lugano E-Cat test by Levi et al.']
-        , TerminalView(s).lines(references=True))
+        , TerminalView(s).lines(Options(references=True)))
 
     def test_reactions_2(self):
         s = System.parse('6Li+6Li')
         t = TerminalView(s)
-        self.assertTrue(any('2·6Li → 3·4He + 20899 keV' in l for l in t.lines()))
+        options = Options()
+        self.assertTrue(any('2·6Li → 3·4He + 20899 keV' in l for l in t.lines(options)))
 
     def test_element_shorthand(self):
         s = System.parse('H+Li')
@@ -99,7 +100,7 @@ class TestStudiesView(unittest.TestCase):
              'p + 7Li → p + 7Li + 0 keV                               in nature                     ✓ 7Li [L15],   ✗ 7Li [L15]',
              '',
              '[L15] 2015 Lugano E-Cat test by Levi et al.']
-        , v.lines(references=True))
+        , v.lines(Options(references=True)))
 
 
 class TestAscii(unittest.TestCase):
@@ -115,4 +116,4 @@ class TestAscii(unittest.TestCase):
             ['p + d => gamma + 3He + 5493 keV                         gamma, in nature',
              'p + d => p + d + 0 keV                                  in nature, n-transfer',
              'p + d => n + 2*p + -2225 keV                            ->B-, n']
-        , v.lines(ascii=True))
+        , v.lines(Options(ascii=True)))

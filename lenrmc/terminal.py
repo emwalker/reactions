@@ -33,15 +33,15 @@ class TerminalView(object):
     def _filter(self, reactions):
         return reactions
 
-    def lines(self, **kwargs):
+    def lines(self, options):
         refs = set()
         lines = []
-        line_cls = AsciiTerminalLine if kwargs.get('ascii') else UnicodeTerminalLine
+        line_cls = AsciiTerminalLine if options.ascii else UnicodeTerminalLine
         for r in self._reactions(line_cls):
-            line, _refs = r.terminal(**kwargs)
+            line, _refs = r.terminal(options)
             lines.append(line)
             refs |= set(_refs)
-        if refs and kwargs.get('references'):
+        if refs and options.references:
             lines.extend([''] + sorted(refs))
         return lines
 
@@ -121,7 +121,7 @@ class TerminalLine(object):
             values.append(string)
         return ' {} '.format(delim).join(values)
 
-    def terminal(self, **kwargs):
+    def terminal(self, options):
         kev = self.q_value_kev
         sign = '+' if kev >= 0 else '-'
         string = self._reaction_template.format(
@@ -129,11 +129,12 @@ class TerminalLine(object):
             self._fancy_side(self._reaction.rvalue_delim, self._rvalues),
             kev,
         )
-        string = self._notes_template.format(string, ', '.join(sorted(self.notes)))
-        if kwargs.get('spins'):
+        if options.notes:
+            string = self._notes_template.format(string, ', '.join(sorted(self.notes)))
+        if options.spins:
             string = self._spin_and_parity(string, self._lvalues)
             string = self._spin_and_parity(string, self._rvalues)
-        if kwargs.get('references'):
+        if options.references:
             string = self._add_marks(string)
         return string.strip(), self.references
 

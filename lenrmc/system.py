@@ -2,6 +2,17 @@ from .nubase import parse_spec
 from .combinations import Combinations
 
 
+class Options(object):
+
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+        self.simple = kwargs.get('simple', False)
+        self.references = not self.simple and kwargs.get('references')
+        self.spins = not self.simple and kwargs.get('spins')
+        self.ascii = kwargs.get('ascii', False)
+        self.notes = not self.simple
+
+
 class System(object):
 
     @classmethod

@@ -233,7 +233,7 @@ class ElectronStimulatedDecayModel(Model):
     _transformations = [
         [( 0, -1), [(0, 0)]],
         [(-4, -2), [(4, 2)]],
-        [(-8, -4), [(4, 2), (4, 2)]],
+        #[(-8, -4), [(4, 2), (4, 2)]],
     ]
 
     def __call__(self, reactants):

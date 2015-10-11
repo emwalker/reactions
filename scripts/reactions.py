@@ -1,6 +1,6 @@
 import argparse
 
-from lenrmc.system import System
+from lenrmc.system import System, Options
 from lenrmc.terminal import TerminalView, StudiesTerminalView
 
 
@@ -15,7 +15,8 @@ class App(object):
 
     def run(self):
         s = System.parse(self.kwargs['system'], **self.kwargs)
-        for line in self.view_cls(s).lines(**self.kwargs):
+        options = Options(**self.kwargs)
+        for line in self.view_cls(s).lines(options):
             print(line)
 
 
@@ -33,6 +34,7 @@ def parse_arguments():
     parser.add_argument('--excited', dest='excited', action='store_true')
     parser.add_argument('--ascii', dest='ascii', action='store_true')
     parser.add_argument('--parent-ub', dest='parent_ub', type=int)
+    parser.add_argument('--simple', dest='simple', action='store_true')
     parser.set_defaults(
         lower_bound = 0,
         upper_bound = 500000,
@@ -43,6 +45,7 @@ def parse_arguments():
         unstable    = False,
         ascii       = False,
         excited     = False,
+        simple      = False,
         parent_ub   = 1000,
     )
     return parser.parse_args()
