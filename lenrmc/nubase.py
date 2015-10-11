@@ -113,7 +113,7 @@ class ElectronNeutrino(object):
         self.atomic_number = 0
         self.signature = ('νe', '0')
         self.numbers = (0, 0)
-        self.notes = {'νe'}
+        self.notes = set() #{'νe'}
         self.mass_excess_kev = 0.00023
         self.is_excited = False
 
