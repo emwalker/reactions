@@ -166,31 +166,33 @@ class ElectronStimulatedDecayModelTest(unittest.TestCase):
     def setUpClass(cls):
         cls.model = ElectronStimulatedDecayModel()
 
-    def test_p_e(self):
-        reactants = list(parse_spec('p+e-'))[0]
-        self.assertEqual([((1, 0),)], list(self.model(reactants)))
-
-    def test_n_e(self):
-        # Will fail at a later stage
-        reactants = list(parse_spec('n+e-'))[0]
-        self.assertEqual([((1, -1),)], list(self.model(reactants)))
-
-    def test_t_e(self):
-        reactants = list(parse_spec('t+e-'))[0]
+    def test_p(self):
+        results = [list(self.model(r)) for r in parse_spec('p')]
         self.assertEqual([
-            ((1, 0), (1, 0), (1, 0))
-        ], list(self.model(reactants)))
-
-    def test_H_e(self):
-        results = [list(self.model(r)) for r in parse_spec('H+e-')]
-        self.assertEqual([
-            [((1, 0),)],
-            [((1, 0), (1, 0))]
+            [((1, 0), (0, 0)), ((-3, -1), (4, 2))]
         ], results)
 
-    def test_Li_e(self):
-        results = [list(self.model(r)) for r in parse_spec('Li+e-')]
+    def test_n(self):
+        # Will fail at a later stage
+        results = [list(self.model(r)) for r in parse_spec('n')]
+        self.assertEqual([[((1, -1), (0, 0)), ((-3, -2), (4, 2))]], results)
+
+    def test_t(self):
+        results = [list(self.model(r)) for r in parse_spec('t')]
         self.assertEqual([
-            [((6, 2),)],
-            [((7, 2),)]
+            [((1, 0), (1, 0), (1, 0), (0, 0)), ((-1, -1), (4, 2))]
+        ], results)
+
+    def test_H(self):
+        results = [list(self.model(r)) for r in parse_spec('H')]
+        self.assertEqual([
+            [((1, 0), (0, 0)), ((-3, -1), (4, 2))],
+            [((1, 0), (1, 0), (0, 0)), ((-2, -1), (4, 2))]]
+        , results)
+
+    def test_Li(self):
+        results = [list(self.model(r)) for r in parse_spec('Li')]
+        self.assertEqual([
+            [((6, 2), (0, 0)), ((2, 1), (4, 2))],
+            [((7, 2), (0, 0)), ((3, 1), (4, 2))]
         ], results)

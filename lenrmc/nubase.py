@@ -135,6 +135,16 @@ class HalfLife(object):
     def seconds(self):
         if 's' == self.unit:
             return float(self.value)
+        if 'd' == self.unit:
+            return 86400 * float(self.value)
+        if 'y' == self.unit:
+            return 3.154e+7 * float(self.value)
+        if 'ky' == self.unit:
+            return 3.154e+10 * float(self.value)
+        if 'Py' == self.unit:
+            return 3.154e+23 * float(self.value)
+        if 'ms' == self.unit:
+            return 0.001 * float(self.value)
         raise ValueError('do not know how to convert unit: {}'.format(self.unit))
 
     def __str__(self):

@@ -112,7 +112,7 @@ class TestAscii(unittest.TestCase):
         s = System.parse('p+d', lower_bound=-3000)
         v = TerminalView(s)
         self.assertEqual(
-            ['p + d => gamma + 3He + 5493 keV                                        gamma, in nature',
-             'p + d => p + d + 0 keV                                                 in nature, n-transfer',
-             'p + d => n + 2*p + -2225 keV                                           ->B-, n']
+            ['p + d => gamma + 3He + 5493 keV                         gamma, in nature',
+             'p + d => p + d + 0 keV                                  in nature, n-transfer',
+             'p + d => n + 2*p + -2225 keV                            ->B-, n']
         , v.lines(ascii=True))

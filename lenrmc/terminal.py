@@ -67,12 +67,14 @@ class StudiesTerminalView(TerminalView):
 
 class TerminalLine(object):
 
+    _notes_template = '{:<55} {:<25}'
+
     def __init__(self, reaction, **kwargs):
         self._reaction = reaction
         self.q_value_kev = reaction.q_value_kev
         self.notes = [self.format(s) for s in reaction.notes]
-        self._lvalues = reaction._lvalues
-        self._rvalues = reaction._rvalues
+        self._lvalues = reaction.lvalues
+        self._rvalues = reaction.rvalues
         self.references = []
         self.marks = []
         self._agreements = []
@@ -140,7 +142,6 @@ class UnicodeTerminalLine(TerminalLine):
 
     _multi_daughter_template = '{}·{}'
     _reaction_template = '{} → {} + {:.0f} keV'
-    _notes_template = '{:<55} {:<25}'
 
     def format(self, string):
         return string
@@ -150,7 +151,6 @@ class AsciiTerminalLine(TerminalLine):
 
     _multi_daughter_template = '{}*{}'
     _reaction_template = '{} => {} + {:.0f} keV'
-    _notes_template = '{:<70} {:<30}'
 
     _translated_patterns = [
         ('→',   '->'),

@@ -36,7 +36,7 @@ class Reaction(object):
         nuclides = Nuclides.db()
         reactants = ((num, nuclides[s]) for num, s in kwargs['reactants'])
         daughters = ((num, nuclides[s]) for num, s in kwargs['daughters'])
-        return cls(reactants, daughters)
+        return cls(reactants, daughters, **kwargs)
 
     _noteworthy = {
         '4He': 'α',
@@ -44,24 +44,28 @@ class Reaction(object):
         't':   't',
     }
 
-    def __init__(self, lvalues, rvalues):
+    def __init__(self, lvalues, rvalues, **kwargs):
         self._lvalues = list(lvalues)
-        self._rvalues = list(rvalues)
+        self.rvalues = list(rvalues)
+        self._model = kwargs.get('model')
         self.q_value_kev = self._q_value_kev()
         self.is_stable = self._is_stable()
         self.any_excited = self._any_excited()
-        self.lvalue_delim = self.rvalue_delim = '+'
-        if self.is_single_body:
-            if self.has_electron_parent:
-                self.lvalue_delim = '~'
-                self._rvalues.append((1, ElectronNeutrino()))
-            else:
-                self._rvalues.append((1, GammaPhoton()))
+        self.lvalue_delim = '~' if self._model == 'stimulated-decay' else '+'
+        self.rvalue_delim = '+'
+        if self.is_single_body and 1 < len(self._lvalues):
+            self.rvalues.append((1, GammaPhoton()))
+
+    @property
+    def lvalues(self):
+        if 'stimulated-decay' == self._model:
+            return [(1, Electron())] + self._lvalues
+        return self._lvalues
 
     @property
     def notes(self):
         notes = set()
-        for _, d in self._rvalues:
+        for _, d in self.rvalues:
             note = self._noteworthy.get(d.label)
             if note:
                 notes.add(note)
@@ -70,12 +74,7 @@ class Reaction(object):
                     notes.add('n-transfer')
         if self.is_stable:
             notes.add('in nature')
-        if self.is_single_body:
-            if self.has_electron_parent:
-                notes.add('νe')
-            else:
-                notes.add('ɣ')
-        for num, d in self._rvalues:
+        for num, d in self.rvalues:
             notes |= d.notes
         return notes
 
@@ -83,10 +82,10 @@ class Reaction(object):
         return d.numbers == tuple(map(operator.add, p.numbers, (1, 0)))
 
     def _is_stable(self):
-        return all(d.is_stable for num, d in self._rvalues)
+        return all(d.is_stable for num, d in self.rvalues)
 
     def _any_excited(self):
-        combined = self._rvalues + self._lvalues
+        combined = self.rvalues + self._lvalues
         return any(n.is_excited for num, n in combined)
 
     @property
@@ -95,13 +94,13 @@ class Reaction(object):
 
     @property
     def is_single_body(self):
-        if 1 < len(self._rvalues):
+        if 1 < len(self.rvalues):
             return False
-        return all(num == 1 for num, c in self._rvalues)
+        return all(num == 1 for num, c in self.rvalues)
 
     def _q_value_kev(self):
         lvalues = sum(num * i.mass_excess_kev for num, i in self._lvalues)
-        rvalues = sum(num * i.mass_excess_kev for num, i in self._rvalues)
+        rvalues = sum(num * i.mass_excess_kev for num, i in self.rvalues)
         return lvalues - rvalues
 
 
@@ -163,6 +162,8 @@ def regular_outcomes(reactants):
 
 def normalize(pair):
     o_mass, o_atomic = pair
+    if o_mass < 0:
+        return [(o_mass, o_atomic)]
     if 0 == o_atomic:
         daughters = [(1, 0) for i in range(o_mass)]
     elif o_mass == o_atomic:
@@ -229,10 +230,18 @@ class StrictPionExchangeModel(PionExchangeModel):
 
 class ElectronStimulatedDecayModel(Model):
 
+    _transformations = [
+        [( 0, -1), (0, 0)],
+        [(-4, -2), (4, 2)],
+    ]
+
     def __call__(self, reactants):
-        (num0, smaller), (num1, larger) = self._smaller_and_larger(reactants)
-        combined = add_numbers(smaller.numbers, larger.numbers)
-        yield tuple(normalize(combined))
+        assert 1 == len(reactants)
+        num, n = reactants[0]
+        assert 1 == num
+        for transformation, rvalue2 in self._transformations:
+            rvalue = add_numbers(n.numbers, transformation)
+            yield tuple(normalize(rvalue) + [rvalue2])
 
 
 MODELS = {
@@ -249,9 +258,9 @@ class Combinations(object):
 
     @classmethod
     def load(cls, **kwargs):
-        reactants = kwargs['reactants']
+        parents = kwargs['reactants']
         del kwargs['reactants']
-        return cls(reactants, **kwargs)
+        return cls(parents, **kwargs)
 
     @classmethod
     def connection(cls):
@@ -259,8 +268,8 @@ class Combinations(object):
             cls._connection = make_connection()
         return cls._connection
 
-    def __init__(self, reactants, **kwargs):
-        self._reactants = list(reactants)
+    def __init__(self, parents, **kwargs):
+        self._parents = list(parents)
         self.model_name = kwargs.get('model') or 'regular'
         self._model = MODELS[self.model_name]
         self._kwargs = kwargs
@@ -286,7 +295,7 @@ class Combinations(object):
         self.connection().commit()
 
     def _cache_key(self):
-        parents = [(num, n.signature) for num, n in sorted(self._reactants, key=self._sort_key)]
+        parents = [(num, n.signature) for num, n in sorted(self._parents, key=self._sort_key)]
         signature = {'parents': parents}
         for field in ('lower_bound', 'upper_bound', 'excited'):
             signature[field] = self._kwargs.get(field)
@@ -296,16 +305,16 @@ class Combinations(object):
         return key
 
     def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__, self._reactants)
+        return '{}({})'.format(self.__class__.__name__, self._parents)
 
     def _sort_key(self, pair):
         num, nuclide = pair
         return nuclide.signature
 
-    def _daughters(self):
+    def _reactions(self):
         nuclides = Nuclides.db()
         pairs = []
-        for _daughters in self._model(self._reactants):
+        for _daughters in self._model(self._parents):
             daughters = [nuclides.isomers[pair] for pair in _daughters]
             if not all(daughters):
                 continue
@@ -317,9 +326,9 @@ class Combinations(object):
             yield from results
         else:
             results = []
-            for daughters in self._daughters():
+            for daughters in self._reactions():
                 rvalues = ((1, d) for d in daughters)
-                r = Reaction(self._reactants, rvalues)
+                r = Reaction(self._parents, rvalues, **self._kwargs)
                 if not self._allowed(r):
                     continue
                 yield r
