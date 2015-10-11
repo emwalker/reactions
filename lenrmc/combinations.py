@@ -337,7 +337,10 @@ class Combinations(object):
             self._cache_results(results)
 
     def _allowed(self, r):
-        conditions = [r.q_value_kev >= self._lower_bound, r.q_value_kev <= self._upper_bound]
+        conditions = [
+            r.q_value_kev >  self._lower_bound,
+            r.q_value_kev <= self._upper_bound,
+        ]
         if not self._excited:
             conditions.append(not r.any_excited)
         return all(conditions)
