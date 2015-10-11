@@ -51,8 +51,7 @@ class Reaction(object):
         self.q_value_kev = self._q_value_kev()
         self.is_stable = self._is_stable()
         self.any_excited = self._any_excited()
-        self.lvalue_delim = '~' if self._model == 'stimulated-decay' else '+'
-        self.rvalue_delim = '+'
+        self.lvalue_delim = self.rvalue_delim = '+'
         if self.is_single_body and 1 < len(self._lvalues):
             self.rvalues.append((1, GammaPhoton()))
 
@@ -231,8 +230,8 @@ class StrictPionExchangeModel(PionExchangeModel):
 class ElectronStimulatedDecayModel(Model):
 
     _transformations = [
-        [( 0, -1), [(0, 0)]],
-        [(-4, -2), [(4, 2)]],
+        [( 0, -1), [(0, 0), (0, -1)]],
+        [(-4, -2), [(4, 2), (0, -1)]],
         #[(-8, -4), [(4, 2), (4, 2)]],
     ]
 
