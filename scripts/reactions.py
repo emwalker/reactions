@@ -34,7 +34,7 @@ def parse_arguments():
     parser.add_argument('--ascii', dest='ascii', action='store_true')
     parser.set_defaults(
         lower_bound = 0,
-        upper_bound = None,
+        upper_bound = 500000,
         spins       = False,
         references  = True,
         view        = 'default',
