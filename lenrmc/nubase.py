@@ -70,6 +70,15 @@ ELEMENTS = {
     'Ru':  44,
     'Rh':  45,
     'Pd':  46,
+    'Ag':  47,
+    'Cd':  48,
+    'In':  49,
+    'Sn':  50,
+    'Sb':  51,
+    'Ir':  77,
+    'Pt':  78,
+    'Au':  79,
+    'Pb':  82,
 }
 
 
@@ -86,6 +95,9 @@ class Electron(object):
         self.notes = {'e-'}
         self.mass_excess_kev = 0 # 510.998928
 
+    def __repr__(self):
+        return 'Electron'
+
 
 class ElectronNeutrino(object):
 
@@ -99,6 +111,9 @@ class ElectronNeutrino(object):
         self.numbers = (0, 0)
         self.notes = {'νe'}
         self.mass_excess_kev = 0.00023
+
+    def __repr__(self):
+        return 'ElectronNeutrino'
 
 
 class BadNubaseRow(RuntimeError):
@@ -333,19 +348,29 @@ class Nuclides(object):
         return self._by_signature[signature]
 
 
+def stable_nuclides(nuclides, unstable):
+    if unstable:
+        return ((1, n) for n in nuclides)
+    return ((1, n) for n in nuclides if n.is_stable)
+
+
 def parse_spec(spec, **kwargs):
+    unstable = kwargs.get('unstable')
     nuclides = Nuclides.db()
     reactants = []
     for label in (l.strip() for l in spec.split('+')):
         n = nuclides.get((label, '0'))
         if n:
             reactants.append([(1, n)])
+        elif 'all' == label:
+            row = []
+            for number in ELEMENTS.values():
+                ns = nuclides.atomic_number(number)
+                row.extend(stable_nuclides(ns, unstable))
+            reactants.append(row)
         else:
             number = ELEMENTS[label]
             ns = nuclides.atomic_number(number)
-            if kwargs.get('unstable'):
-                it = ((1, n) for n in ns)
-            else:
-                it = ((1, n) for n in ns if n.is_stable)
+            it = stable_nuclides(ns, unstable)
             reactants.append(it)
     return itertools.product(*reactants)
