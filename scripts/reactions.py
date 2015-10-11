@@ -32,6 +32,7 @@ def parse_arguments():
     parser.add_argument('--unstable', dest='unstable', action='store_true')
     parser.add_argument('--excited', dest='excited', action='store_true')
     parser.add_argument('--ascii', dest='ascii', action='store_true')
+    parser.add_argument('--parent-ub', dest='parent_ub', type=int)
     parser.set_defaults(
         lower_bound = 0,
         upper_bound = 500000,
@@ -42,6 +43,7 @@ def parse_arguments():
         unstable    = False,
         ascii       = False,
         excited     = False,
+        parent_ub   = 1000,
     )
     return parser.parse_args()
 

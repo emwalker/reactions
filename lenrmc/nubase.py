@@ -412,7 +412,10 @@ def parse_spec(spec, **kwargs):
             reactants.append([(1, n)])
         elif 'all' == label:
             row = []
+            parent_ub = kwargs.get('parent_ub', 1000)
             for number in ELEMENTS.values():
+                if number > parent_ub:
+                    continue
                 ns = nuclides.atomic_number(number)
                 row.extend(stable_nuclides(ns, unstable))
             reactants.append(row)
