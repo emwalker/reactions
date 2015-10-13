@@ -2,6 +2,7 @@ import unittest
 
 from lenrmc.nubase import parse_spec
 from lenrmc.combinations import (
+    coulomb_barrier,
     ElectronMediatedDecayModel,
     PionExchangeAndDecayModel,
     Reaction,
@@ -10,6 +11,17 @@ from lenrmc.combinations import (
     StrictPionExchangeModel,
     vectors3,
 )
+
+
+class HelpersTest(unittest.TestCase):
+
+    def test_coulomb_barrier(self):
+        r = Reaction.load(
+            reactants=[(1, ('212Po', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('208Pb', '0'))],
+        )
+        nuclides = [n for num, n in r.rvalues]
+        self.assertEqual(236156, int(coulomb_barrier(nuclides, 1).kev))
 
 
 class ReactionsTest(unittest.TestCase):
