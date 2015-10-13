@@ -10,6 +10,9 @@ from collections import defaultdict
 basepath = os.path.dirname(__file__)
 NUBASE_PATH = os.path.abspath(os.path.join(basepath, "../db/nubtab12.asc"))
 
+# Fine structure constant
+# e^2/(4 * pi * epsilon_0), in MeV fm
+FSC = 1.439976
 
 ALTERNATE_LABELS = {
     '1 n':    'n',
@@ -139,6 +142,60 @@ ELEMENTS = {
 }
 
 
+class Energy(object):
+
+    @classmethod
+    def load(cls, **kwargs):
+        if 'kev' in kwargs:
+            return cls(kwargs['kev'])
+        if 'mev' in kwargs:
+            return cls(1e3 * kwargs['mev'])
+        raise ValueError('do not know how to load energy')
+
+    def __init__(self, energy_kev):
+        self.kev = energy_kev
+
+    @property
+    def mev(self):
+        return 1e-3 * self.kev
+
+
+class Distance(object):
+
+    @classmethod
+    def load(cls, **kwargs):
+        return cls(kwargs['fermis'])
+
+    def __init__(self, fermis):
+        self.fermis = fermis
+
+
+class HalfLife(object):
+
+    def __init__(self, value, unit):
+        self.value = value
+        self.unit = unit
+
+    @property
+    def seconds(self):
+        if 's' == self.unit:
+            return float(self.value)
+        if 'd' == self.unit:
+            return 86400 * float(self.value)
+        if 'y' == self.unit:
+            return 3.154e+7 * float(self.value)
+        if 'ky' == self.unit:
+            return 3.154e+10 * float(self.value)
+        if 'Py' == self.unit:
+            return 3.154e+23 * float(self.value)
+        if 'ms' == self.unit:
+            return 0.001 * float(self.value)
+        raise ValueError('do not know how to convert unit: {}'.format(self.unit))
+
+    def __str__(self):
+        return '{} {}'.format(self.value, self.unit)
+
+
 class Electron(object):
 
     def __init__(self):
@@ -177,32 +234,6 @@ class ElectronNeutrino(object):
 
 class BadNubaseRow(RuntimeError):
     pass
-
-
-class HalfLife(object):
-
-    def __init__(self, value, unit):
-        self.value = value
-        self.unit = unit
-
-    @property
-    def seconds(self):
-        if 's' == self.unit:
-            return float(self.value)
-        if 'd' == self.unit:
-            return 86400 * float(self.value)
-        if 'y' == self.unit:
-            return 3.154e+7 * float(self.value)
-        if 'ky' == self.unit:
-            return 3.154e+10 * float(self.value)
-        if 'Py' == self.unit:
-            return 3.154e+23 * float(self.value)
-        if 'ms' == self.unit:
-            return 0.001 * float(self.value)
-        raise ValueError('do not know how to convert unit: {}'.format(self.unit))
-
-    def __str__(self):
-        return '{} {}'.format(self.value, self.unit)
 
 
 def first_match(pattern, string):
@@ -369,6 +400,18 @@ class Nuclide(object):
 
     def __repr__(self):
         return 'Nuclide({})'.format(self.full_label)
+
+    def coulomb_barrier(self, o, radius):
+        """V(r) for a given radius r in fermis."""
+        B = FSC * self.atomic_number * o.atomic_number / float(radius)
+        return Energy.load(mev=B)
+
+    def coulomb_barrier_width(self, o, q_value):
+        """The width of the Coulomb barrier through which an alpha particle would
+        need to escape.
+        """
+        b = FSC * self.atomic_number * o.atomic_number / q_value.mev
+        return Distance.load(fermis=b)
 
 
 class Nuclides(object):

@@ -9,7 +9,7 @@ import operator
 import itertools
 from os.path import expanduser
 
-from .nubase import Nuclides, Electron, ElectronNeutrino
+from .nubase import Energy, Nuclides, Electron, ElectronNeutrino
 
 
 LENRMC_DIR = os.path.join(expanduser('~'), '.lenrmc')
@@ -30,24 +30,6 @@ class GammaPhoton(object):
         self.notes = {'ɣ'}
 
 
-class Energy(object):
-
-    @classmethod
-    def load(cls, **kwargs):
-        if 'kev' in kwargs:
-            return cls(kwargs['kev'])
-        if 'mev' in kwargs:
-            return cls(1e3 * kwargs['mev'])
-        raise ValueError('do not know how to load energy')
-
-    def __init__(self, energy_kev):
-        self.kev = energy_kev
-
-    @property
-    def mev(self):
-        return 1e-3 * self.kev
-
-
 class QValue(object):
 
     def __init__(self, reaction):
@@ -63,19 +45,6 @@ class QValue(object):
         lvalues = sum(num * i.mass_excess_kev for num, i in self.reaction._lvalues)
         rvalues = sum(num * i.mass_excess_kev for num, i in self.reaction.rvalues)
         return lvalues - rvalues
-
-
-# Fine structure constant
-# e^2/(4 * pi * epsilon_0), in MeV fm
-FSC = 1.439976
-
-
-def coulomb_barrier(nuclides, radius):
-    """V(r) for a given radius r in fermis."""
-    assert 2 == len(nuclides)
-    n1, n2 = nuclides
-    b = FSC * n1.atomic_number * n2.atomic_number / float(radius)
-    return Energy.load(mev=b)
 
 
 class Reaction(object):

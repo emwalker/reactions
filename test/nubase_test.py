@@ -2,7 +2,7 @@ import unittest
 import os.path
 import sys
 
-from lenrmc.nubase import NUBASE_PATH, Nuclide, Nuclides
+from lenrmc.nubase import NUBASE_PATH, Nuclide, Nuclides, Energy
 from lenrmc.system import System
 
 
@@ -140,6 +140,20 @@ class NuclideTest(unittest.TestCase):
     def test_SF_note(self):
         n = Nuclide.load(line=self.lines[4901])
         self.assertIn('→SF', n.notes)
+
+    def test_coulomb_barrier(self):
+        nuclides = Nuclides.db()
+        n0 = nuclides.get(('4He', '0'))
+        n1 = nuclides.get(('208Pb', '0'))
+        self.assertEqual(236156, int(n0.coulomb_barrier(n1, 1).kev))
+
+    def test_coulomb_barrier_width(self):
+        nuclides = Nuclides.db()
+        n0 = nuclides.get(('4He', '0'))
+        n1 = nuclides.get(('208Pb', '0'))
+        # Fictional Q value
+        q_value = Energy.load(mev=6)
+        self.assertEqual(39, int(n0.coulomb_barrier_width(n1, q_value).fermis))
 
 
 class NuclidesTest(unittest.TestCase):
