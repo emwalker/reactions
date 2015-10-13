@@ -93,6 +93,20 @@ class ReactionsTest(unittest.TestCase):
         )
         self.assertEqual(-6, int(r.geiger_nuttal_law()))
 
+    def test_gamow_factor_1(self):
+        r = Reaction.load(
+            reactants=[(1, ('212Po', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('208Pb', '0'))],
+        )
+        self.assertEqual('4.92e+12', '{:.2e}'.format(r.gamow_factor()))
+
+    def test_gamow_factor_2(self):
+        r = Reaction.load(
+            reactants=[(1, ('185Re', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('181Ta', '0'))],
+        )
+        self.assertEqual('2.36e+13', '{:.2e}'.format(r.gamow_factor()))
+
 
 class PossibleDaughtersTest(unittest.TestCase):
 

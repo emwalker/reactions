@@ -10,6 +10,7 @@ import itertools
 from os.path import expanduser
 
 from .nubase import Energy, Nuclides, Electron, ElectronNeutrino
+from .constants import FINE_STRUCTURE_CONSTANT_MEV_FM, HBAR_MEV_S
 
 
 LENRMC_DIR = os.path.join(expanduser('~'), '.lenrmc')
@@ -80,6 +81,21 @@ class Reaction(object):
         """
         num, larger = max(self.rvalues, key=lambda t: t[1].mass_number)
         return -46.83 + 1.454 * larger.atomic_number / math.sqrt(self.q_value.mev)
+
+    def gamow_factor(self):
+        """Gamow factor for alpha particle tunneling.
+
+        Assumes one of the daughters is a heavy nucleus and the other an alpha particle.
+        """
+        assert 2 == len(self.rvalues)
+        n0, n1 = [n for num, n in self.rvalues]
+        num, smaller = min(self.rvalues, key=lambda t: t[1].mass_number)
+        Q = self.q_value.mev
+        x = Q / n0.coulomb_barrier_width(n1, self.q_value).fermis
+        t0 = math.sqrt((2 * smaller.mass.mev)/(HBAR_MEV_S**2 * Q))
+        t1 = n0.atomic_number * n1.atomic_number * FINE_STRUCTURE_CONSTANT_MEV_FM
+        t2 = math.acos(math.sqrt(x)) - math.sqrt(x * (1 - x))
+        return t0 * t1 * t2
 
     @property
     def lvalues(self):

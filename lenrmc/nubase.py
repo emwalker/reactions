@@ -6,16 +6,12 @@ import operator
 import itertools
 from collections import defaultdict
 
+from .constants import FINE_STRUCTURE_CONSTANT_MEV_FM, DALTON_KEV
+
 
 basepath = os.path.dirname(__file__)
 NUBASE_PATH = os.path.abspath(os.path.join(basepath, "../db/nubtab12.asc"))
 
-# Fine structure constant
-# e^2/(4 * pi * epsilon_0), in MeV fm
-FSC = 1.439976
-PROTON_MASS_KEV = 938272.046
-NEUTRON_MASS_KEV = 939565.378
-DALTON_KEV =  931494.061
 
 ALTERNATE_LABELS = {
     '1 n':    'n',
@@ -408,14 +404,14 @@ class Nuclide(object):
 
     def coulomb_barrier(self, o, radius):
         """V(r) for a given radius r in fermis."""
-        B = FSC * self.atomic_number * o.atomic_number / float(radius)
+        B = FINE_STRUCTURE_CONSTANT_MEV_FM * self.atomic_number * o.atomic_number / float(radius)
         return Energy.load(mev=B)
 
     def coulomb_barrier_width(self, o, q_value):
         """The width of the Coulomb barrier through which an alpha particle would
         need to escape.
         """
-        b = FSC * self.atomic_number * o.atomic_number / q_value.mev
+        b = FINE_STRUCTURE_CONSTANT_MEV_FM * self.atomic_number * o.atomic_number / q_value.mev
         return Distance.load(fermis=b)
 
 
