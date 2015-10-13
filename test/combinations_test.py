@@ -19,7 +19,7 @@ class ReactionsTest(unittest.TestCase):
             reactants=[(1, ('p', '0')), (1, ('7Li', '0'))],
             daughters=[(2, ('4He', '0'))],
         )
-        self.assertEqual(17346.2443, r.q_value_kev)
+        self.assertEqual(17346.2443, r.q_value.kev)
 
     def test_electron_capture_q_value(self):
         r = Reaction.load(
@@ -27,7 +27,7 @@ class ReactionsTest(unittest.TestCase):
             daughters=[(1, ('νe', '0')), (1, ('63Ni', '0'))],
         )
         # TODO - fix until it goes to zero?
-        self.assertEqual(-67, int(r.q_value_kev))
+        self.assertEqual(-67, int(r.q_value.kev))
 
     def test_4He_note(self):
         r = Reaction.load(
@@ -71,6 +71,27 @@ class ReactionsTest(unittest.TestCase):
             daughters=[(1, ('t', '0')), (1, ('t', '0'))],
         )
         self.assertEqual({'→β-', 't'}, r.notes)
+
+    def test_geiger_nuttal_law_1(self):
+        r = Reaction.load(
+            reactants=[(1, ('185Re', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('181Ta', '0'))],
+        )
+        self.assertEqual(24, int(r.geiger_nuttal_law()))
+
+    def test_geiger_nuttal_law_2(self):
+        r = Reaction.load(
+            reactants=[(1, ('144Nd', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('140Ce', '0'))],
+        )
+        self.assertEqual(14, int(r.geiger_nuttal_law()))
+
+    def test_geiger_nuttal_law_3(self):
+        r = Reaction.load(
+            reactants=[(1, ('212Po', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('208Pb', '0'))],
+        )
+        self.assertEqual(-6, int(r.geiger_nuttal_law()))
 
 
 class PossibleDaughtersTest(unittest.TestCase):

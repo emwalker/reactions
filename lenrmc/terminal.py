@@ -22,9 +22,9 @@ class TerminalView(object):
 
     _kwargs = {'selective': True}
 
-    def _sort_key(self, reaction):
-        desirable = sum(self._desirable.get(n, 0) for n in reaction.notes)
-        return reaction.q_value_kev > 0, desirable, reaction.q_value_kev
+    def _sort_key(self, line):
+        desirable = sum(self._desirable.get(n, 0) for n in line.notes)
+        return line.q_value_kev > 0, desirable, line.q_value_kev
 
     def _reactions(self, line_cls):
         reactions = (line_cls(r, **self._kwargs) for r in self._system.reactions())
@@ -71,7 +71,7 @@ class TerminalLine(object):
 
     def __init__(self, reaction, **kwargs):
         self._reaction = reaction
-        self.q_value_kev = reaction.q_value_kev
+        self.q_value_kev = reaction.q_value.kev
         self.notes = [self.format(s) for s in reaction.notes]
         self._lvalues = reaction.lvalues
         self._rvalues = reaction.rvalues

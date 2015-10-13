@@ -1,5 +1,6 @@
 import os
 import json
+import math
 import sqlite3
 import hashlib
 import logging
@@ -29,6 +30,22 @@ class GammaPhoton(object):
         self.notes = {'ɣ'}
 
 
+class QValue(object):
+
+    def __init__(self, reaction):
+        self.reaction = reaction
+        self.kev = self._kev()
+
+    @property
+    def mev(self):
+        return 1e-3 * self.kev
+
+    def _kev(self):
+        lvalues = sum(num * i.mass_excess_kev for num, i in self.reaction._lvalues)
+        rvalues = sum(num * i.mass_excess_kev for num, i in self.reaction.rvalues)
+        return lvalues - rvalues
+
+
 class Reaction(object):
 
     @classmethod
@@ -47,13 +64,21 @@ class Reaction(object):
     def __init__(self, lvalues, rvalues, **kwargs):
         self._lvalues = list(lvalues)
         self.rvalues = list(rvalues)
+        self.q_value = QValue(self)
         self._model = kwargs.get('model')
-        self.q_value_kev = self._q_value_kev()
         self.is_stable = self._is_stable()
         self.any_excited = self._any_excited()
         self.lvalue_delim = self.rvalue_delim = '+'
         if self.is_single_body and 1 < len(self._lvalues):
             self.rvalues.append((1, GammaPhoton()))
+
+    def geiger_nuttal_law(self):
+        """Assumes alpha decay.  Approximate calculation.
+
+        See http://demonstrations.wolfram.com/GamowModelForAlphaDecayTheGeigerNuttallLaw/
+        """
+        num, larger = max(self.rvalues, key=lambda t: t[1].mass_number)
+        return -46.83 + 1.454 * larger.atomic_number / math.sqrt(self.q_value.mev)
 
     @property
     def lvalues(self):
@@ -96,11 +121,6 @@ class Reaction(object):
         if 1 < len(self.rvalues):
             return False
         return all(num == 1 for num, c in self.rvalues)
-
-    def _q_value_kev(self):
-        lvalues = sum(num * i.mass_excess_kev for num, i in self._lvalues)
-        rvalues = sum(num * i.mass_excess_kev for num, i in self.rvalues)
-        return lvalues - rvalues
 
 
 def vectors3(integer):
@@ -346,8 +366,8 @@ class Combinations(object):
 
     def _allowed(self, r):
         conditions = [
-            r.q_value_kev >  self._lower_bound,
-            r.q_value_kev <= self._upper_bound,
+            r.q_value.kev >  self._lower_bound,
+            r.q_value.kev <= self._upper_bound,
         ]
         if not self._excited:
             conditions.append(not r.any_excited)
