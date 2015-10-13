@@ -155,6 +155,11 @@ class NuclideTest(unittest.TestCase):
         q_value = Energy.load(mev=6)
         self.assertEqual(39, int(n0.coulomb_barrier_width(n1, q_value).fermis))
 
+    def test_mass(self):
+        nuclides = Nuclides.db()
+        n0 = nuclides.get(('208Pb', '0'))
+        self.assertEqual(193729.016588, n0.mass.mev)
+
 
 class NuclidesTest(unittest.TestCase):
 

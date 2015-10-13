@@ -13,6 +13,9 @@ NUBASE_PATH = os.path.abspath(os.path.join(basepath, "../db/nubtab12.asc"))
 # Fine structure constant
 # e^2/(4 * pi * epsilon_0), in MeV fm
 FSC = 1.439976
+PROTON_MASS_KEV = 938272.046
+NEUTRON_MASS_KEV = 939565.378
+DALTON_KEV =  931494.061
 
 ALTERNATE_LABELS = {
     '1 n':    'n',
@@ -323,6 +326,7 @@ class Nuclide(object):
         self._label = row['nuclide']
         self.atomic_number = int(first_match(r'\d+', self._row['atomicNumber']))
         self.mass_number = int(self._row['massNumber'])
+        self.neutron_number = self.mass_number - self.atomic_number
         decays = self._row.get('decayModesAndIntensities', '')
         g = re.search(r'IS=([\d\.]+)', decays)
         self.isotopic_abundance = float(g.group(1)) if g else 0.
@@ -342,6 +346,7 @@ class Nuclide(object):
         self.spin_and_parity = None
         if 'spinAndParity' in self._row:
             self.spin_and_parity = ' '.join(self._row['spinAndParity'].split())
+        self.mass = Energy.load(kev=self.mass_number * DALTON_KEV + self.mass_excess_kev)
 
     _noteworthy = {
         'A':    '→α',
