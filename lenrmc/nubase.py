@@ -12,16 +12,17 @@ NUBASE_PATH = os.path.abspath(os.path.join(basepath, "../db/nubtab12.asc"))
 
 
 ALTERNATE_LABELS = {
-    '1 n':  'n',
-    '1H':   'p',
-    '2H':   'd',
-    '3H':   't',
-    '12Cx': '12C',
-    '8Bx':  '8B',
-    '10Bx': '10B',
-    '28Px': '28P',
-    '30Px': '30P',
-    '45Vx': '45V',
+    '1 n':    'n',
+    '1H':     'p',
+    '2H':     'd',
+    '3H':     't',
+    '12Cx':   '12C',
+    '8Bx':    '8B',
+    '10Bx':   '10B',
+    '28Px':   '28P',
+    '30Px':   '30P',
+    '45Vx':   '45V',
+    '180Tam': '180Ta',
 }
 
 ELEMENTS = {
