@@ -375,9 +375,14 @@ class Nuclide(object):
     def is_excited(self):
         if self.isotopic_abundance:
             return False
+        # TODO -- remove.  But add in tests!
         if self._label in self._not_excited:
             return False
-        return any(self._label.endswith(s) for s in 'ijmnpqrx')
+        matching_suffix = any(self._label.endswith(s) for s in 'ijmnpqrx')
+        matches = re.findall('[a-z]', self._label)
+        if 1 < len(matches):
+            return True
+        return False
 
     @property
     def half_life(self):
