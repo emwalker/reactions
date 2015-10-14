@@ -72,7 +72,7 @@ class SystemTest(unittest.TestCase):
 
     def test_element_shorthand(self):
         s = System.parse('H+Li')
-        self.assertEqual(4, len(s._combinations))
+        self.assertEqual(6, len(s._combinations))
 
 
 class TestStudiesView(unittest.TestCase):

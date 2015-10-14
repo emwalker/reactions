@@ -140,6 +140,62 @@ ELEMENTS = {
     'Hs':  108,
 }
 
+TRACE_ISOTOPES = {
+    '3H':    ['https://en.wikipedia.org/wiki/Hydrogen'],
+    '7Be':   ['https://en.wikipedia.org/wiki/Beryllium'],
+    '14C':   ['https://en.wikipedia.org/wiki/Carbon'],
+    '18F':   ['https://en.wikipedia.org/wiki/Fluorine'],
+    '22Na':  ['https://en.wikipedia.org/wiki/Sodium'],
+    '26Al':  ['https://en.wikipedia.org/wiki/Aluminium'],
+    '32Si':  ['https://en.wikipedia.org/wiki/Silicon'],
+    '36Cl':  ['https://en.wikipedia.org/wiki/Chlorine'],
+    '39Ar':  ['https://en.wikipedia.org/wiki/Argon'],
+    '41Ca':  ['https://en.wikipedia.org/wiki/Calcium'],
+    '53Mn':  ['https://en.wikipedia.org/wiki/Manganese'],
+    '59Ni':  ['https://en.wikipedia.org/wiki/Nickel'],
+    '79Se':  ['https://en.wikipedia.org/wiki/Selenium'],
+    '81Kr':  ['https://en.wikipedia.org/wiki/Krypton'],
+    '90Sr':  ['https://en.wikipedia.org/wiki/Strontium'],
+    '93Zr':  ['https://en.wikipedia.org/wiki/Zirconium'],
+    '99Tc':  ['https://en.wikipedia.org/wiki/Technetium'],
+    '107Pd': ['https://en.wikipedia.org/wiki/Palladium'],
+    '126Sn': ['https://en.wikipedia.org/wiki/Tin'],
+    '129I':  ['https://en.wikipedia.org/wiki/Iodine'],
+    '135Cs': ['https://en.wikipedia.org/wiki/Caesium'],
+    '137Cs': ['https://en.wikipedia.org/wiki/Caesium'],
+    '146Sm': ['https://en.wikipedia.org/wiki/Samarium'],
+    '147Pm': ['https://en.wikipedia.org/wiki/Promethium'],
+    '182Hf': ['https://en.wikipedia.org/wiki/Caesium'],
+    '210Bi': ['https://en.wikipedia.org/wiki/Bismuth'],
+    '210Pb': ['https://en.wikipedia.org/wiki/Lead'],
+    '210Po': ['https://en.wikipedia.org/wiki/Polonium'],
+    '221Fr': ['https://en.wikipedia.org/wiki/Francium'],
+    '222Rn': ['https://en.wikipedia.org/wiki/Radon'],
+    '223Fr': ['https://en.wikipedia.org/wiki/Francium'],
+    '223Ra': ['https://en.wikipedia.org/wiki/Radium'],
+    '224Ra': ['https://en.wikipedia.org/wiki/Radium'],
+    '225Ac': ['https://en.wikipedia.org/wiki/Actinium'],
+    '225Ra': ['https://en.wikipedia.org/wiki/Radium'],
+    '226Ra': ['https://en.wikipedia.org/wiki/Radium'],
+    '227Th': ['https://en.wikipedia.org/wiki/Thorium'],
+    '228Ra': ['https://en.wikipedia.org/wiki/Radium'],
+    '228Th': ['https://en.wikipedia.org/wiki/Thorium'],
+    '229Th': ['https://en.wikipedia.org/wiki/Thorium'],
+    '230Th': ['https://en.wikipedia.org/wiki/Thorium'],
+    '231Th': ['https://en.wikipedia.org/wiki/Thorium'],
+    '233Pa': ['https://en.wikipedia.org/wiki/Protactinium'],
+    '233U':  ['https://en.wikipedia.org/wiki/Uranium'],
+    '234Pa': ['https://en.wikipedia.org/wiki/Protactinium'],
+    '234Th': ['https://en.wikipedia.org/wiki/Thorium'],
+    '236U':  ['https://en.wikipedia.org/wiki/Uranium'],
+    '237Np': ['https://en.wikipedia.org/wiki/Neptunium'],
+    '238Pu': ['https://en.wikipedia.org/wiki/Plutonium'],
+    '239Np': ['https://en.wikipedia.org/wiki/Neptunium'],
+    '239Pu': ['https://en.wikipedia.org/wiki/Plutonium'],
+    '240Pu': ['https://en.wikipedia.org/wiki/Plutonium'],
+    '244Pu': ['https://en.wikipedia.org/wiki/Plutonium'],
+}
+
 
 class Energy(object):
 
@@ -327,6 +383,8 @@ class Nuclide(object):
         g = re.search(r'IS=([\d\.]+)', decays)
         self.isotopic_abundance = float(g.group(1)) if g else 0.
         self.is_stable = g is not None
+        self.is_trace = self._label in TRACE_ISOTOPES
+        self.in_nature = self.is_stable or self.is_trace
         self.numbers = (self.mass_number, self.atomic_number)
         if self.is_excited:
             label, self._excitation_level = self._label[:-1], self._label[-1]
@@ -450,6 +508,7 @@ class Nuclides(object):
         self._by_signature = {}
         self._by_atomic_number = defaultdict(list)
         self.isomers = defaultdict(list)
+        self.trace = {}
         for n in self._nuclides:
             self._by_label[n._label] = n
             self._by_signature[n.signature] = n
@@ -469,7 +528,7 @@ class Nuclides(object):
 def stable_nuclides(nuclides, unstable):
     if unstable:
         return ((1, n) for n in nuclides)
-    return ((1, n) for n in nuclides if n.is_stable and not n.is_excited)
+    return ((1, n) for n in nuclides if n.in_nature and not n.is_excited)
 
 
 def parse_spec(spec, **kwargs):

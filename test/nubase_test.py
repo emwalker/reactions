@@ -183,3 +183,9 @@ class NuclidesTest(unittest.TestCase):
         self.assertEqual((7, 3), n.numbers)
         ns = self.nuclides.isomers[n.numbers]
         self.assertEqual([('7Li', '0'), ('7Li', 'i')], [n.signature for n in ns])
+
+    def test_trace_isotopes(self):
+        n0 = self.nuclides.get(('90Sr', '0'))
+        self.assertFalse(n0.is_stable)
+        self.assertTrue(n0.in_nature)
+        self.assertTrue(n0.is_trace)
