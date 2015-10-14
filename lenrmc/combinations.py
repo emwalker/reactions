@@ -272,9 +272,8 @@ class ElectronMediatedDecayModel(Model):
 
     _transformations = [
         [( 0, -1),  [(0, 0), (0, -1)]],
+        [(-1, -1),  [(1, 1)]],
         [(-4, -2),  [(4, 2), (0, -1)]],
-        [(-8, -4),  [(4, 2), (4, 2)]],
-        [(-12, -6), [(4, 2), (4, 2), (4, 2)]],
     ]
 
     def parents(self, parents):
