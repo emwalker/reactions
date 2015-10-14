@@ -41,7 +41,7 @@ def parse_arguments():
         spins       = False,
         references  = True,
         view        = 'default',
-        model       = 'regular',
+        model       = 'standard',
         unstable    = False,
         ascii       = False,
         excited     = False,
