@@ -205,7 +205,7 @@ class Electron(object):
         self.atomic_number = 0
         self.numbers = (0, -1)
         self.signature = (self.label, '0')
-        self.notes = {'e-'}
+        self.notes = set()
         self.mass_excess_kev = 0
         self.is_excited = False
 
@@ -217,13 +217,13 @@ class ElectronNeutrino(object):
 
     def __init__(self):
         self.mass_number = 0
-        self.full_label = self._label = self.label = 'νe'
+        self.full_label = self._label = self.label = 'ν'
         self.is_stable = False
         self.spin_and_parity = '1/2+'
         self.atomic_number = 0
-        self.signature = ('νe', '0')
+        self.signature = ('ν', '0')
         self.numbers = (0, 0)
-        self.notes = set() #{'νe'}
+        self.notes = set() #{'ν'}
         self.mass_excess_kev = 0.00023
         self.is_excited = False
 

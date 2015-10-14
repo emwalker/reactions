@@ -1,6 +1,7 @@
 import unittest
 
 from lenrmc.nubase import parse_spec
+from lenrmc.system import System
 from lenrmc.combinations import (
     ElectronMediatedDecayModel,
     PionExchangeAndDecayModel,
@@ -24,7 +25,7 @@ class ReactionsTest(unittest.TestCase):
     def test_electron_capture_q_value(self):
         r = Reaction.load(
             reactants=[(1, ('e-', '0')), (1, ('63Cu', '0'))],
-            daughters=[(1, ('νe', '0')), (1, ('63Ni', '0'))],
+            daughters=[(1, ('ν', '0')), (1, ('63Ni', '0'))],
         )
         # TODO - fix until it goes to zero?
         self.assertEqual(-67, int(r.q_value.kev))
@@ -205,6 +206,7 @@ class ElectronMediatedDecayModelTest(unittest.TestCase):
         results = [list(self.model(r)) for r in parse_spec('p')]
         self.assertEqual([
             [((1, 0), (0, 0), (0, -1)),
+             ((1, 2), (0, 0), (0, -1)),
              ((1, 1),),
              ((-3, -1), (4, 2), (0, -1))]]
         , results)
@@ -214,6 +216,7 @@ class ElectronMediatedDecayModelTest(unittest.TestCase):
         results = [list(self.model(r)) for r in parse_spec('n')]
         self.assertEqual([
             [((1, -1), (0, 0), (0, -1)),
+             ((1, 1), (0, 0), (0, -1)),
              ((0, -1), (1, 1)),
              ((-3, -2), (4, 2), (0, -1))]]
         , results)
@@ -222,6 +225,7 @@ class ElectronMediatedDecayModelTest(unittest.TestCase):
         results = [list(self.model(r)) for r in parse_spec('t')]
         self.assertEqual([
             [((1, 0), (1, 0), (1, 0), (0, 0), (0, -1)),
+             ((3, 2), (0, 0), (0, -1)),
              ((1, 0), (1, 0), (1, 1)),
              ((-1, -1), (4, 2), (0, -1))]]
         , results)
@@ -230,9 +234,11 @@ class ElectronMediatedDecayModelTest(unittest.TestCase):
         results = [list(self.model(r)) for r in parse_spec('H')]
         self.assertEqual([
             [((1, 0), (0, 0), (0, -1)),
+             ((1, 2), (0, 0), (0, -1)),
              ((1, 1),),
              ((-3, -1), (4, 2), (0, -1))],
             [((1, 0), (1, 0), (0, 0), (0, -1)),
+             ((1, 1), (1, 1), (0, 0), (0, -1)),
              ((1, 0), (1, 1)),
              ((-2, -1), (4, 2), (0, -1))]]
         , results)
@@ -241,9 +247,28 @@ class ElectronMediatedDecayModelTest(unittest.TestCase):
         results = [list(self.model(r)) for r in parse_spec('Li')]
         self.assertEqual([
             [((6, 2), (0, 0), (0, -1)),
+             ((6, 4), (0, 0), (0, -1)),
              ((5, 2), (1, 1)),
              ((2, 1), (4, 2), (0, -1))],
             [((7, 2), (0, 0), (0, -1)),
+             ((7, 4), (0, 0), (0, -1)),
              ((6, 2), (1, 1)),
              ((3, 1), (4, 2), (0, -1))]]
         , results)
+
+    def test_90Sr(self):
+        results = [list(self.model(r)) for r in parse_spec('90Sr')]
+        self.assertEqual([
+            [((90, 37), (0, 0), (0, -1)),
+             ((90, 39), (0, 0), (0, -1)),
+             ((89, 37), (1, 1)),
+             ((86, 36), (4, 2), (0, -1))]]
+        , results)
+
+    def test_90Sr_2(self):
+        s = System.parse('90Sr', model='mediated-decay', lb=-1000)
+        reactions = list(r for c in s._combinations for r in c.reactions())
+        self.assertEqual(1, len(reactions))
+        reaction = reactions[0]
+        self.assertEqual(('90Y', '0'), reaction.rvalues[0][1].signature)
+        self.assertEqual(545.9997699999949, reaction.q_value.kev)

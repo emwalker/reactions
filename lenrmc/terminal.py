@@ -159,7 +159,7 @@ class AsciiTerminalLine(TerminalLine):
         ('ε',   'EC'),
         ('α',   'A'),
         ('ɣ',   'gamma'),
-        ('νe',  'electron neutrino'),
+        ('ν',   'neutrino'),
         ('✗',   'x'),
         ('✓'    'a'),
     ]

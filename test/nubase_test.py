@@ -174,6 +174,10 @@ class NuclidesTest(unittest.TestCase):
         n0 = self.nuclides.get(('90Sr', '0'))
         self.assertEqual(90, n0.mass_number)
 
+    def test_Y(self):
+        n0 = self.nuclides.get(('90Y', '0'))
+        self.assertEqual(90, n0.mass_number)
+
     def test_isomers(self):
         n = self.nuclides.get(('7Li', '0'))
         self.assertEqual((7, 3), n.numbers)
