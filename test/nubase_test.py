@@ -189,3 +189,4 @@ class NuclidesTest(unittest.TestCase):
         self.assertFalse(n0.is_stable)
         self.assertTrue(n0.in_nature)
         self.assertTrue(n0.is_trace)
+        self.assertIn('trace', n0.notes)

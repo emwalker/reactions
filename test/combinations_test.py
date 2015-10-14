@@ -71,7 +71,7 @@ class ReactionsTest(unittest.TestCase):
             reactants=[(1, ('7Li', '0')), (1, ('60Ni', '0'))],
             daughters=[(1, ('t', '0')), (1, ('t', '0'))],
         )
-        self.assertEqual({'→β-', 't'}, r.notes)
+        self.assertEqual({'→β-', 't', 'trace'}, r.notes)
 
     def test_geiger_nuttal_law_1(self):
         r = Reaction.load(

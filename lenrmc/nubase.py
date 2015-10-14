@@ -264,6 +264,8 @@ class Electron(object):
         self.notes = set()
         self.mass_excess_kev = 0
         self.is_excited = False
+        self.in_nature = True
+        self.is_trace = False
 
     def __repr__(self):
         return 'Electron'
@@ -282,6 +284,8 @@ class ElectronNeutrino(object):
         self.notes = set() #{'ν'}
         self.mass_excess_kev = 0.00023
         self.is_excited = False
+        self.in_nature = True
+        self.is_trace = False
 
     def __repr__(self):
         return 'ElectronNeutrino'
@@ -427,7 +431,10 @@ class Nuclide(object):
     @property
     def notes(self):
         it = re.split(r'[;=~<]', self._row.get('decayModesAndIntensities', ''))
-        return {self._noteworthy.get(token) for token in filter(None, it)} - {None}
+        notes = {self._noteworthy.get(token) for token in filter(None, it)} - {None}
+        if self.is_trace:
+            notes.add('trace')
+        return notes
 
     @property
     def is_excited(self):
