@@ -275,6 +275,8 @@ class ElectronMediatedDecayModel(Model):
         [( 0, -1),  [(0, 0), (0, -1)]],
         # β- decay
         [( 0,  1),  [(0, 0), (0, -1)]],
+        # β-β- decay
+        [( 0,  2),  [(0, 0), (0, 0), (0, -1), (0, -1)]],
         # ejection of a proton
         [(-1, -1),  [(1, 1)]],
         # ejection of an alpha particle
