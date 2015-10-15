@@ -299,7 +299,7 @@ MODELS = {
     'standard':              StandardModel(),
     'pion-exchange':         PionExchangeAndDecayModel(),
     'strict-pion-exchange':  StrictPionExchangeModel(),
-    'mediated-decay':        ElectronMediatedDecayModel(),
+    'induced-decay':        ElectronMediatedDecayModel(),
 }
 
 
