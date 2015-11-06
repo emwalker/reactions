@@ -29,6 +29,18 @@
             ]
         },
         {
+            "citation": "Yasuhiro Iwamura, Takehiko Itoh, Mitsuru Sakano And Satoshi Sakai, Observation of Low Energy Nuclear Reactions Induced by D2 Gas Permeation through Pd Complexes, The Ninth International Conference On Cold Fusion. 2002. Beijing, China: Tsinghua University.",
+            "shortDescription": "2002 Iwamura isotope study",
+            "url": "http://lenr-canr.org/acrobat/IwamuraYobservatioa.pdf",
+            "label": "I02",
+            "system": "D2 permeation of Pd/CaO/Pd complexes",
+            "isotopes": [
+                {"label": "96Mo", "change": "increase"},
+                {"label": "133Cs", "change": "decrease"},
+                {"label": "141Pr", "change": "increase"}
+            ]
+        },
+        {
             "citation": "Mizuno, T., T. Ohmori, and M. Enyo, Anomalous Isotopic Distribution in Palladium Cathode After Electrolysis. J. New Energy, 1996. 1(2): p. 37.",
             "url": "http://www.lenr-canr.org/acrobat/MizunoTanomalousia.pdf",
             "shortDescription": "1996 Miley and Patterson Infinite Energy reprint",
