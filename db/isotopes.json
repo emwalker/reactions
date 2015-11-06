@@ -35,9 +35,7 @@
             "label": "I02",
             "system": "D2 permeation of Pd/CaO/Pd complexes",
             "isotopes": [
-                {"label": "96Mo", "change": "increase"},
-                {"label": "133Cs", "change": "decrease"},
-                {"label": "141Pr", "change": "increase"}
+                {"label": "96Mo", "change": "increase"}
             ]
         },
         {
