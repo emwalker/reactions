@@ -350,7 +350,7 @@ class Combinations(object):
     def _cache_key(self):
         parents = [(num, n.signature) for num, n in sorted(self._parents, key=self._sort_key)]
         signature = {'parents': parents}
-        for field in ('lower_bound', 'upper_bound', 'excited', 'parent_ub'):
+        for field in ('lower_bound', 'upper_bound', 'excited', 'parent_ub', 'daughter_count'):
             signature[field] = self._kwargs.get(field)
         signature['model'] = self.model_name
         string = json.dumps(signature, sort_keys=True).encode('utf-8')
