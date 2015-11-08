@@ -332,7 +332,7 @@ class Combinations(object):
         self._upper_bound = float(kwargs.get('upper_bound', 500000))
         self._excited = kwargs.get('excited')
         self.cache_key = self._cache_key()
-        self.daughter_count = {int(c) for c in kwargs.get('daughter_count', '') if c}
+        self.daughter_count = {int(c) for c in kwargs.get('daughter_count', '').split(',') if c}
 
     def _cached_results(self):
         cursor = self.connection().execute(
