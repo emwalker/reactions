@@ -40,7 +40,7 @@ def parse_arguments():
         lower_bound    = 0,
         upper_bound    = 500000,
         spins          = False,
-        references     = True,
+        references     = False,
         view           = 'default',
         model          = 'standard',
         unstable       = False,
