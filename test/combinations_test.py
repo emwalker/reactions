@@ -15,6 +15,13 @@ from lenrmc.combinations import (
 
 class ReactionsTest(unittest.TestCase):
 
+    def test_daughter_count(self):
+        r = Reaction.load(
+            reactants=[(1, ('p', '0')), (1, ('7Li', '0'))],
+            daughters=[(2, ('4He', '0'))],
+        )
+        self.assertEqual(2, r.daughter_count)
+
     def test_q_value(self):
         r = Reaction.load(
             reactants=[(1, ('p', '0')), (1, ('7Li', '0'))],

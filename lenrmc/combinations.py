@@ -71,6 +71,8 @@ class Reaction(object):
         self.is_stable = self._is_stable()
         self.any_excited = self._any_excited()
         self.lvalue_delim = self.rvalue_delim = '+'
+        # Photons are not counted as a daughter.
+        self.daughter_count = sum(n for (n, d) in self.rvalues)
         if self.is_single_body and 1 < len(self._lvalues):
             self.rvalues.append((1, GammaPhoton()))
 
@@ -330,6 +332,7 @@ class Combinations(object):
         self._upper_bound = float(kwargs.get('upper_bound', 500000))
         self._excited = kwargs.get('excited')
         self.cache_key = self._cache_key()
+        self.daughter_count = {int(c) for c in kwargs.get('daughter_count', '') if c}
 
     def _cached_results(self):
         cursor = self.connection().execute(
@@ -394,6 +397,10 @@ class Combinations(object):
             r.q_value.kev >  self._lower_bound,
             r.q_value.kev <= self._upper_bound,
         ]
+        if self.daughter_count:
+            conditions.append(
+                any(c == r.daughter_count for c in self.daughter_count)
+            )
         if not self._excited:
             conditions.append(not r.any_excited)
         return all(conditions)

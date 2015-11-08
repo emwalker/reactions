@@ -35,18 +35,20 @@ def parse_arguments():
     parser.add_argument('--ascii', dest='ascii', action='store_true')
     parser.add_argument('--parent-ub', dest='parent_ub', type=int)
     parser.add_argument('--simple', dest='simple', action='store_true')
+    parser.add_argument('--daughter-count', dest='daughter_count')
     parser.set_defaults(
-        lower_bound = 0,
-        upper_bound = 500000,
-        spins       = False,
-        references  = True,
-        view        = 'default',
-        model       = 'standard',
-        unstable    = False,
-        ascii       = False,
-        excited     = False,
-        simple      = False,
-        parent_ub   = 1000,
+        lower_bound    = 0,
+        upper_bound    = 500000,
+        spins          = False,
+        references     = True,
+        view           = 'default',
+        model          = 'standard',
+        unstable       = False,
+        ascii          = False,
+        excited        = False,
+        simple         = False,
+        parent_ub      = 1000,
+        daughter_count = '',
     )
     return parser.parse_args()
 
