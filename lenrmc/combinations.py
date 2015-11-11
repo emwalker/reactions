@@ -306,12 +306,15 @@ class SeparatedNuclideModel(Model):
     """
     nuclides = Nuclides.db()
 
-    def parents(self, fission_daughter, daughters):
+    def parents(self, fission_daughters, daughters):
+        assert 1 == len(fission_daughters)
+        num, d = fission_daughters[0]
         assert 2 == len(daughters)
-        fission_parent = add_numbers(daughters[0].numbers, daughters[1].numbers)
-        parents = self.nuclides.isomers[fission_parent]
-        for parent in parents:
+        parent_numbers = add_numbers(daughters[0].numbers, daughters[1].numbers)
+        for parent in self.nuclides.isomers[parent_numbers]:
             if not parent.in_nature:
+                continue
+            if parent.mass_number == d.mass_number:
                 continue
             yield [(1, parent)] + [(1, Electron())]
 
