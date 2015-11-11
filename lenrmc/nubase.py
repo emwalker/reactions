@@ -528,6 +528,9 @@ class Nuclides(object):
     def get(self, signature):
         return self._by_signature.get(signature)
 
+    def __iter__(self):
+        return iter(self._nuclides)
+
     def __getitem__(self, signature):
         return self._by_signature[signature]
 

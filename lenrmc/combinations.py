@@ -207,8 +207,8 @@ def normalize(pair):
 
 class Model(object):
 
-    def parents(self, parents):
-        return parents
+    def parents(self, parents, daughters):
+        yield parents
 
     def _smaller_and_larger(self, reactants):
         "This helper method assumes a two-body reaction."
@@ -287,8 +287,8 @@ class ElectronMediatedDecayModel(Model):
         # [(-12, -6), [(4, 2), (4, 2), (4, 2), (0, -1)]],
     ]
 
-    def parents(self, parents):
-        return list(parents) + [(1, Electron())]
+    def parents(self, parents, daughters):
+        yield list(parents) + [(1, Electron())]
 
     def __call__(self, reactants):
         assert 1 == len(reactants)
@@ -299,11 +299,36 @@ class ElectronMediatedDecayModel(Model):
             yield tuple(normalize(rvalue) + rvalues2)
 
 
+class SeparatedNuclideModel(Model):
+    """Find those parents who, if separated from a specific
+    nuclide, would fission in an exothermic reaction, if fission
+    were feasible.
+    """
+    nuclides = Nuclides.db()
+
+    def parents(self, fission_daughter, daughters):
+        assert 2 == len(daughters)
+        fission_parent = add_numbers(daughters[0].numbers, daughters[1].numbers)
+        parents = self.nuclides.isomers[fission_parent]
+        for parent in parents:
+            if not parent.in_nature:
+                continue
+            yield [(1, parent)] + [(1, Electron())]
+
+    def __call__(self, reactants):
+        assert 1 == len(reactants)
+        num, n0 = reactants[0]
+        assert 1 == num
+        for n1 in Nuclides.db():
+            yield tuple([n0.numbers, n1.numbers])
+
+
 MODELS = {
     'standard':              StandardModel(),
     'pion-exchange':         PionExchangeAndDecayModel(),
     'strict-pion-exchange':  StrictPionExchangeModel(),
-    'induced-decay':        ElectronMediatedDecayModel(),
+    'induced-decay':         ElectronMediatedDecayModel(),
+    'separated-nuclide':     SeparatedNuclideModel(),
 }
 
 
@@ -382,14 +407,15 @@ class Combinations(object):
             yield from results
         else:
             results = []
-            parents = self._model.parents(self._parents)
             for daughters in self._reactions():
-                rvalues = ((1, d) for d in daughters)
-                r = Reaction(parents, rvalues, **self._kwargs)
-                if not self._allowed(r):
-                    continue
-                yield r
-                results.append(r)
+                all_parents = self._model.parents(self._parents, daughters)
+                for parents in all_parents:
+                    rvalues = ((1, d) for d in daughters)
+                    r = Reaction(parents, rvalues, **self._kwargs)
+                    if not self._allowed(r):
+                        continue
+                    yield r
+                    results.append(r)
             self._cache_results(results)
 
     def _allowed(self, r):
