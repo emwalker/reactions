@@ -89,15 +89,41 @@ class Reaction(object):
 
         Assumes one of the daughters is a heavy nucleus and the other an alpha particle.
         """
-        assert 2 == len(self.rvalues)
-        n0, n1 = [n for num, n in self.rvalues]
-        num, smaller = min(self.rvalues, key=lambda t: t[1].mass_number)
+        smaller, larger = self._daughters_2()
         Q = self.q_value.mev
-        x = Q / n0.coulomb_barrier_width(n1, self.q_value).fermis
+        x = Q / smaller.coulomb_barrier_width(larger, self.q_value).fermis
         t0 = math.sqrt((2 * smaller.mass.mev)/(HBAR_MEV_S**2 * Q))
-        t1 = n0.atomic_number * n1.atomic_number * FINE_STRUCTURE_CONSTANT_MEV_FM
+        t1 = smaller.atomic_number * larger.atomic_number * FINE_STRUCTURE_CONSTANT_MEV_FM
         t2 = math.acos(math.sqrt(x)) - math.sqrt(x * (1 - x))
         return t0 * t1 * t2
+
+    def gamow_supression_factor(self):
+        """Gamow suppression factor in log10 units
+
+        From Hermes: https://www.lenr-forum.com/forum/index.php/Thread/3434-Document-Isotopic-Composition
+        -of-Rossi-Fuel-Sample-Unverified/?postID=29085#post29085.
+
+        Estimate distance between 2 spherical nuclei when they touch
+        Estimate distance when supplied energy has overcome Coulomb barrier
+        if r >= 1 there is no Coulomb barrier to cross!
+
+        - Hermes
+        """
+        smaller, larger = self._daughters_2()
+        A  = larger.mass_number
+        Z  = larger.atomic_number
+        A4 = smaller.mass_number
+        Z4 = smaller.atomic_number
+        Q  = self.q_value.mev
+        if Q < 0:
+            return math.nan
+        # Distances in fm
+        rs = 1.1 * (pow(larger.mass_number, .333333) + pow(smaller.mass_number, .333333))
+        rc = float(larger.atomic_number) * smaller.atomic_number * 1.43998 / Q
+        r  = rs / rc
+        G  = 0 if r >= 1 else math.acos(math.sqrt(r)) - math.sqrt(r * (1. - r))
+        m  = (float(A) * A4) / (A + A4)
+        return 0.2708122 * Z * Z4 * G * math.sqrt(m / Q)
 
     @property
     def lvalues(self):
@@ -130,6 +156,13 @@ class Reaction(object):
     def _any_excited(self):
         combined = self.rvalues + self._lvalues
         return any(n.is_excited for num, n in combined)
+
+    def _daughters_2(self):
+        assert 2 == len(self.rvalues)
+        n0, n1 = [n for num, n in self.rvalues]
+        num, smaller = min(self.rvalues, key=lambda t: t[1].mass_number)
+        larger = n0 if n1.mass_number == smaller.mass_number else n1
+        return smaller, larger
 
     @property
     def has_electron_parent(self):
