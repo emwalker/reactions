@@ -1,4 +1,5 @@
 import re
+import math
 from collections import defaultdict
 
 from .studies import Studies
@@ -80,6 +81,7 @@ class TerminalLine(object):
         self._agreements = []
         self._add_references(self._lvalues, 'decrease', **kwargs)
         self._add_references(self._rvalues, 'increase')
+        # Cases where a daughter was found in a study
         self.agreement = sum(self._agreements) if self._agreements else None
 
     def _spin_and_parity(self, string, values):
@@ -121,6 +123,12 @@ class TerminalLine(object):
             values.append(string)
         return ' {} '.format(delim).join(values)
 
+    def _add_gamow(self, string):
+        gamow = self._reaction.gamow_suppression_factor()
+        if math.isnan(gamow):
+            return string
+        return '{} [{:.0f}]'.format(string, gamow)
+
     def terminal(self, options):
         kev = self.q_value_kev
         sign = '+' if kev >= 0 else '-'
@@ -129,6 +137,8 @@ class TerminalLine(object):
             self._fancy_side(self._reaction.rvalue_delim, self._rvalues),
             kev,
         )
+        if options.gamow:
+            string = self._add_gamow(string)
         if options.notes:
             string = self._notes_template.format(string, ', '.join(sorted(self.notes)))
         if options.spins:

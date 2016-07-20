@@ -9,6 +9,7 @@ class Options(object):
         self.simple = kwargs.get('simple', False)
         self.references = not self.simple and kwargs.get('references')
         self.spins = not self.simple and kwargs.get('spins')
+        self.gamow = kwargs.get('gamow')
         self.ascii = kwargs.get('ascii', False)
         self.notes = not self.simple
 

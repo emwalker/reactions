@@ -116,33 +116,33 @@ class ReactionsTest(unittest.TestCase):
         )
         self.assertEqual('2.36e+13', '{:.2e}'.format(r.gamow_factor()))
 
-    def test_gamow_supression_factor(self):
+    def test_gamow_suppression_factor(self):
         r = Reaction.load(
             reactants=[(1, ('185Re', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('181Ta', '0'))],
         )
-        self.assertEqual(52, int(r.gamow_supression_factor()))
+        self.assertEqual(52, int(r.gamow_suppression_factor()))
 
-    def test_gamow_supression_factor_2(self):
+    def test_gamow_suppression_factor_2(self):
         r = Reaction.load(
             reactants=[(1, ('58Fe', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('54Cr', '0'))],
         )
-        self.assertTrue(math.isnan(r.gamow_supression_factor()))
+        self.assertTrue(math.isnan(r.gamow_suppression_factor()))
 
-    def test_gamow_supression_factor_3(self):
+    def test_gamow_suppression_factor_3(self):
         r = Reaction.load(
             reactants=[(1, ('190Pt', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('186Os', '0'))],
         )
-        self.assertEqual(40, int(r.gamow_supression_factor()))
+        self.assertEqual(40, int(r.gamow_suppression_factor()))
 
-    def test_gamow_supression_factor_4(self):
+    def test_gamow_suppression_factor_4(self):
         r = Reaction.load(
             reactants=[(1, ('241Am', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('237Np', '0'))],
         )
-        self.assertEqual(31, int(r.gamow_supression_factor()))
+        self.assertEqual(31, int(r.gamow_suppression_factor()))
 
 
 class PossibleDaughtersTest(unittest.TestCase):

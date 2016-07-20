@@ -89,7 +89,10 @@ class Reaction(object):
 
         Assumes one of the daughters is a heavy nucleus and the other an alpha particle.
         """
-        smaller, larger = self._daughters_2()
+        daughters = self._daughters_A4()
+        if daughters is None:
+            return math.nan
+        smaller, larger = daughters
         Q = self.q_value.mev
         x = Q / smaller.coulomb_barrier_width(larger, self.q_value).fermis
         t0 = math.sqrt((2 * smaller.mass.mev)/(HBAR_MEV_S**2 * Q))
@@ -97,7 +100,7 @@ class Reaction(object):
         t2 = math.acos(math.sqrt(x)) - math.sqrt(x * (1 - x))
         return t0 * t1 * t2
 
-    def gamow_supression_factor(self):
+    def gamow_suppression_factor(self):
         """Gamow suppression factor in log10 units
 
         From Hermes: https://www.lenr-forum.com/forum/index.php/Thread/3434-Document-Isotopic-Composition
@@ -109,7 +112,10 @@ class Reaction(object):
 
         - Hermes
         """
-        smaller, larger = self._daughters_2()
+        daughters = self._daughters_A4()
+        if daughters is None:
+            return math.nan
+        smaller, larger = daughters
         A  = larger.mass_number
         Z  = larger.atomic_number
         A4 = smaller.mass_number
@@ -157,10 +163,14 @@ class Reaction(object):
         combined = self.rvalues + self._lvalues
         return any(n.is_excited for num, n in combined)
 
-    def _daughters_2(self):
-        assert 2 == len(self.rvalues)
-        n0, n1 = [n for num, n in self.rvalues]
-        num, smaller = min(self.rvalues, key=lambda t: t[1].mass_number)
+    def _daughters_A4(self):
+        values = [p for num, p in self.rvalues if p.is_baryon]
+        if 2 != len(values):
+            return None
+        if 0 == len([p for p in values if p.numbers == (4, 2)]):
+            return None
+        n0, n1 = values
+        smaller = min(values, key=lambda v: v.mass_number)
         larger = n0 if n1.mass_number == smaller.mass_number else n1
         return smaller, larger
 

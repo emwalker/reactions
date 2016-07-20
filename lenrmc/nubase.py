@@ -266,6 +266,7 @@ class Electron(object):
         self.is_excited = False
         self.in_nature = True
         self.is_trace = False
+        self.is_baryon = False
 
     def __repr__(self):
         return 'Electron'
@@ -286,6 +287,7 @@ class ElectronNeutrino(object):
         self.is_excited = False
         self.in_nature = True
         self.is_trace = False
+        self.is_baryon = False
 
     def __repr__(self):
         return 'ElectronNeutrino'
@@ -381,6 +383,7 @@ class Nuclide(object):
         self._row = row
         self._label = row['nuclide']
         self.atomic_number = int(first_match(r'\d+', self._row['atomicNumber']))
+        self.is_baryon = True
         self.mass_number = int(self._row['massNumber'])
         self.neutron_number = self.mass_number - self.atomic_number
         decays = self._row.get('decayModesAndIntensities', '')
