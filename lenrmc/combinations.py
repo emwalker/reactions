@@ -10,7 +10,7 @@ import itertools
 from os.path import expanduser
 
 from .nubase import Energy, Nuclides, Electron, ElectronNeutrino
-from .constants import FINE_STRUCTURE_CONSTANT_MEV_FM, HBAR_MEV_S
+from .calculations import GamowSuppressionFactor, GeigerNuttal, Gamow2
 
 
 LENRMC_DIR = os.path.join(expanduser('~'), '.lenrmc')
@@ -76,60 +76,14 @@ class Reaction(object):
         if self.is_single_body and 1 < len(self._lvalues):
             self.rvalues.append((1, GammaPhoton()))
 
-    def geiger_nuttal_law(self):
-        """Assumes alpha decay.  Approximate calculation.
+    def geiger_nuttal(self):
+        return GeigerNuttal.load(self._daughters_A4(), self.q_value)
 
-        See http://demonstrations.wolfram.com/GamowModelForAlphaDecayTheGeigerNuttallLaw/
-        """
-        num, larger = max(self.rvalues, key=lambda t: t[1].mass_number)
-        return -46.83 + 1.454 * larger.atomic_number / math.sqrt(self.q_value.mev)
+    def gamow(self):
+        return GamowSuppressionFactor.load(self._daughters_A4(), self.q_value)
 
-    def gamow_factor(self):
-        """Gamow factor for alpha particle tunneling.
-
-        Assumes one of the daughters is a heavy nucleus and the other an alpha particle.
-        """
-        daughters = self._daughters_A4()
-        if daughters is None:
-            return math.nan
-        smaller, larger = daughters
-        Q = self.q_value.mev
-        x = Q / smaller.coulomb_barrier_width(larger, self.q_value).fermis
-        t0 = math.sqrt((2 * smaller.mass.mev)/(HBAR_MEV_S**2 * Q))
-        t1 = smaller.atomic_number * larger.atomic_number * FINE_STRUCTURE_CONSTANT_MEV_FM
-        t2 = math.acos(math.sqrt(x)) - math.sqrt(x * (1 - x))
-        return t0 * t1 * t2
-
-    def gamow_suppression_factor(self):
-        """Gamow suppression factor in log10 units
-
-        From Hermes: https://www.lenr-forum.com/forum/index.php/Thread/3434-Document-Isotopic-Composition
-        -of-Rossi-Fuel-Sample-Unverified/?postID=29085#post29085.
-
-        Estimate distance between 2 spherical nuclei when they touch
-        Estimate distance when supplied energy has overcome Coulomb barrier
-        if r >= 1 there is no Coulomb barrier to cross!
-
-        - Hermes
-        """
-        daughters = self._daughters_A4()
-        if daughters is None:
-            return math.nan
-        smaller, larger = daughters
-        A  = larger.mass_number
-        Z  = larger.atomic_number
-        A4 = smaller.mass_number
-        Z4 = smaller.atomic_number
-        Q  = self.q_value.mev
-        if Q < 0:
-            return math.nan
-        # Distances in fm
-        rs = 1.1 * (pow(larger.mass_number, .333333) + pow(smaller.mass_number, .333333))
-        rc = float(larger.atomic_number) * smaller.atomic_number * 1.43998 / Q
-        r  = rs / rc
-        G  = 0 if r >= 1 else math.acos(math.sqrt(r)) - math.sqrt(r * (1. - r))
-        m  = (float(A) * A4) / (A + A4)
-        return 0.2708122 * Z * Z4 * G * math.sqrt(m / Q)
+    def gamow2(self):
+        return Gamow2.load(self._daughters_A4(), self.q_value)
 
     @property
     def lvalues(self):

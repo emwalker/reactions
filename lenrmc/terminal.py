@@ -124,10 +124,10 @@ class TerminalLine(object):
         return ' {} '.format(delim).join(values)
 
     def _add_gamow(self, string):
-        gamow = self._reaction.gamow_suppression_factor()
-        if math.isnan(gamow):
+        g = self._reaction.gamow()
+        if g is None:
             return string
-        return '{} [{:.0f}]'.format(string, gamow)
+        return '{} [{:.0f}]'.format(string, g.factor())
 
     def terminal(self, options):
         kev = self.q_value_kev
