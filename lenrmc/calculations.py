@@ -65,3 +65,55 @@ class GamowSuppressionFactor(Calculation):
         G  = 0 if r >= 1 else math.acos(math.sqrt(r)) - math.sqrt(r * (1. - r))
         m  = (float(A) * A4) / (A + A4)
         return 0.2708122 * Z * Z4 * G * math.sqrt(m / Q)
+
+
+class AlphaDecay(Calculation):
+    """From http://hyperphysics.phy-astr.gsu.edu/hbase/nuclear/alpdec.html
+    """
+
+    speed_of_light = 3 * math.pow(10, 8)
+    hbarc = 197.33
+
+    def __init__(self, daughters, q_value):
+        self.smaller, self.larger = daughters
+        self.A4, self.Z4 = self.smaller.mass_number, self.smaller.atomic_number
+        self.A,  self.Z  = self.larger.mass_number,  self.larger.atomic_number
+        self.q_value = q_value
+        self.alpha_mass = self.smaller.mass.mev
+        # Ea = Q / (1 + m/M)
+        self.alpha_energy = self.q_value.mev / (1 + self.alpha_mass / self.larger.mass.mev)
+        # Units in fm
+        self.nuclear_separation = 1.2 * (math.pow(self.A4, 1./3) - (-1) * math.pow(self.A, 1./3))
+
+    @property
+    def barrier_height(self):
+        "Units in MeV"
+        return 2 * self.Z * 1.44 / self.nuclear_separation
+
+    @property
+    def alpha_velocity(self):
+        "Units in m/s"
+        return math.sqrt(2 * self.alpha_energy / self.alpha_mass) * self.speed_of_light
+
+    @property
+    def barrier_assault_frequency(self):
+        "Units in s^-1"
+        return self.alpha_velocity * math.pow(10, 15) / (2 * self.nuclear_separation)
+
+    @property
+    def gamow_factor(self):
+        x = self.alpha_energy / self.barrier_height
+        ph = math.sqrt(2 * self.alpha_mass / ((self.hbarc ** 2) * self.alpha_energy))
+        return ph * 2 * self.Z * 1.44 * (math.acos(math.sqrt(x)) - math.sqrt(x * (1 - x)))
+
+    @property
+    def tunneling_probability(self):
+        return math.exp(-2 * self.gamow_factor)
+
+    @property
+    def decay_constant(self):
+        return self.tunneling_probability * self.barrier_assault_frequency
+
+    @property
+    def half_life(self):
+        return 0.693 / self.decay_constant

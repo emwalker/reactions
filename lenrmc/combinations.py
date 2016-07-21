@@ -10,7 +10,7 @@ import itertools
 from os.path import expanduser
 
 from .nubase import Energy, Nuclides, Electron, ElectronNeutrino
-from .calculations import GamowSuppressionFactor, GeigerNuttal, Gamow2
+from .calculations import GamowSuppressionFactor, GeigerNuttal, Gamow2, AlphaDecay
 
 
 LENRMC_DIR = os.path.join(expanduser('~'), '.lenrmc')
@@ -76,15 +76,6 @@ class Reaction(object):
         if self.is_single_body and 1 < len(self._lvalues):
             self.rvalues.append((1, GammaPhoton()))
 
-    def geiger_nuttal(self):
-        return GeigerNuttal.load(self._daughters_A4(), self.q_value)
-
-    def gamow(self):
-        return GamowSuppressionFactor.load(self._daughters_A4(), self.q_value)
-
-    def gamow2(self):
-        return Gamow2.load(self._daughters_A4(), self.q_value)
-
     @property
     def lvalues(self):
         if 'stimulated-decay' == self._model:
@@ -137,6 +128,18 @@ class Reaction(object):
         if 1 < len(self.rvalues):
             return False
         return all(num == 1 for num, c in self.rvalues)
+
+    def geiger_nuttal(self):
+        return GeigerNuttal.load(self._daughters_A4(), self.q_value)
+
+    def gamow(self):
+        return GamowSuppressionFactor.load(self._daughters_A4(), self.q_value)
+
+    def gamow2(self):
+        return Gamow2.load(self._daughters_A4(), self.q_value)
+
+    def alpha_decay(self):
+        return AlphaDecay.load(self._daughters_A4(), self.q_value)
 
 
 def vectors3(integer):

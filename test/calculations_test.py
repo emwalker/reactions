@@ -1,6 +1,8 @@
 import unittest
 import math
 
+import numpy as np
+
 from lenrmc.combinations import Reaction
 
 
@@ -74,3 +76,40 @@ class GeigerNuttalLawTest(unittest.TestCase):
             daughters=[(1, ('4He', '0')), (1, ('208Pb', '0'))],
         ).geiger_nuttal()
         self.assertEqual(-6, int(c.value()))
+
+
+class AlphaDecayTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.c = Reaction.load(
+            reactants=[(1, ('212Po', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('208Pb', '0'))],
+        ).alpha_decay()
+
+    def test_nuclear_separation(self):
+        np.testing.assert_almost_equal(9.01, self.c.nuclear_separation, 2)
+
+    def test_barrier_height(self):
+        np.testing.assert_almost_equal(26.196, self.c.barrier_height, 2)
+
+    def test_alpha_energy(self):
+        np.testing.assert_almost_equal(8.785, self.c.alpha_energy, 2)
+
+    def test_alpha_velocity(self):
+        np.testing.assert_approx_equal(2.06e7, self.c.alpha_velocity, significant=3)
+
+    def test_barrier_assault_frequency(self):
+        np.testing.assert_approx_equal(1.14e21, self.c.barrier_assault_frequency, significant=3)
+
+    def test_gamow_factor(self):
+        np.testing.assert_approx_equal(16.77, self.c.gamow_factor, significant=3)
+
+    def test_tunneling_probability(self):
+        np.testing.assert_approx_equal(2.697e-15, self.c.tunneling_probability, significant=4)
+
+    def test_decay_constant(self):
+        np.testing.assert_approx_equal(3080639, self.c.decay_constant, significant=4)
+
+    def test_half_life(self):
+        np.testing.assert_approx_equal(2.2495e-7, self.c.half_life, significant=4)
