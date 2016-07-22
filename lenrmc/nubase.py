@@ -6,8 +6,8 @@ import operator
 import itertools
 from collections import defaultdict
 
-from .constants import FINE_STRUCTURE_CONSTANT_MEV_FM, DALTON_KEV
 from .units import Energy, Distance, HalfLife
+from .constants import DALTON_KEV
 
 
 basepath = os.path.dirname(__file__)
@@ -421,18 +421,6 @@ class Nuclide(object):
 
     def __repr__(self):
         return 'Nuclide({})'.format(self.full_label)
-
-    def coulomb_barrier(self, o, radius):
-        """V(r) for a given radius r in fermis."""
-        B = FINE_STRUCTURE_CONSTANT_MEV_FM * self.atomic_number * o.atomic_number / float(radius)
-        return Energy.load(mev=B)
-
-    def coulomb_barrier_width(self, o, q_value):
-        """The width of the Coulomb barrier through which an alpha particle would
-        need to escape.
-        """
-        b = FINE_STRUCTURE_CONSTANT_MEV_FM * self.atomic_number * o.atomic_number / q_value.mev
-        return Distance.load(fermis=b)
 
 
 class Nuclides(object):

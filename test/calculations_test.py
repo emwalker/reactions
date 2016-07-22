@@ -3,8 +3,29 @@ import math
 
 import numpy as np
 
+from lenrmc.units import Energy, Distance
+from lenrmc.nubase import Nuclides
 from lenrmc.combinations import Reaction
-from lenrmc.calculations import DecayPower
+from lenrmc.calculations import DecayPower, CoulombBarrier
+
+
+class CoulombBarrierTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        nuclides = Nuclides.db()
+        cls.c = CoulombBarrier(
+            nuclides.get(('4He', '0')),
+            nuclides.get(('208Pb', '0'))
+        )
+
+    def test_coulomb_barrier(self):
+        radius = Distance(fermis=1)
+        np.testing.assert_approx_equal(236156, self.c.height(radius).kev)
+
+    def test_coulomb_barrier_width(self):
+        q_value = Energy.load(mev=6)
+        np.testing.assert_approx_equal(39.359344, self.c.width(q_value).fermis)
 
 
 class GamowSuppressionFactorTest(unittest.TestCase):

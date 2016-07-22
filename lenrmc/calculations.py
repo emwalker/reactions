@@ -3,10 +3,10 @@ import math
 import scipy.constants as cs
 
 from .constants import FINE_STRUCTURE_CONSTANT_MEV_FM, HBAR_MEV_S
-from .units import Energy, Power, HalfLife
+from .units import Energy, Power, HalfLife, Distance
 
 
-class Calculation(object):
+class AlphaCalculationMixin(object):
 
     @classmethod
     def load(cls, daughters, q_value):
@@ -17,6 +17,22 @@ class Calculation(object):
     def __init__(self, daughters, q_value):
         self.smaller, self.larger = daughters
         self.q_value = q_value
+
+
+class CoulombBarrier(object):
+
+    def __init__(self, n0, n1):
+        self.n0 = n0
+        self.n1 = n1
+        self._base = FINE_STRUCTURE_CONSTANT_MEV_FM * n0.atomic_number * n1.atomic_number
+
+    def height(self, radius):
+        height = self._base / float(radius.fermis)
+        return Energy.load(mev=height)
+
+    def width(self, q_value):
+        width = self._base / q_value.mev
+        return Distance.load(fermis=width)
 
 
 class ReactionEnergy(object):
@@ -31,13 +47,13 @@ class ReactionEnergy(object):
         return lvalues - rvalues
 
 
-class GeigerNuttal(Calculation):
+class GeigerNuttal(AlphaCalculationMixin):
 
     def value(self):
         return -46.83 + 1.454 * self.larger.atomic_number / math.sqrt(self.q_value.mev)
 
 
-class Gamow2(Calculation):
+class Gamow2(AlphaCalculationMixin):
     """Gamow factor for alpha particle tunneling.
 
     Assumes one of the daughters is a heavy nucleus and the other an alpha particle.
@@ -45,14 +61,14 @@ class Gamow2(Calculation):
 
     def value(self):
         Q = self.q_value.mev
-        x = Q / self.smaller.coulomb_barrier_width(self.larger, self.q_value).fermis
+        x = Q / CoulombBarrier(self.smaller, self.larger).width(self.q_value).fermis
         t0 = math.sqrt((2 * self.smaller.mass.mev)/(HBAR_MEV_S**2 * Q))
         t1 = self.smaller.atomic_number * self.larger.atomic_number * FINE_STRUCTURE_CONSTANT_MEV_FM
         t2 = math.acos(math.sqrt(x)) - math.sqrt(x * (1 - x))
         return t0 * t1 * t2
 
 
-class GamowSuppressionFactor(Calculation):
+class GamowSuppressionFactor(AlphaCalculationMixin):
     """Gamow suppression factor in log10 units
 
     From Hermes: https://www.lenr-forum.com/forum/index.php/Thread/3434-Document-Isotopic-Composition
@@ -82,7 +98,7 @@ class GamowSuppressionFactor(Calculation):
         return 0.2708122 * Z * Z4 * G * math.sqrt(m / Q)
 
 
-class AlphaDecay(Calculation):
+class AlphaDecay(AlphaCalculationMixin):
     """From http://hyperphysics.phy-astr.gsu.edu/hbase/nuclear/alpdec.html
     """
 
