@@ -1,6 +1,9 @@
 import math
 
+import scipy.constants as cs
+
 from .constants import FINE_STRUCTURE_CONSTANT_MEV_FM, HBAR_MEV_S
+from .units import Energy, Power, HalfLife
 
 
 class Calculation(object):
@@ -14,6 +17,18 @@ class Calculation(object):
     def __init__(self, daughters, q_value):
         self.smaller, self.larger = daughters
         self.q_value = q_value
+
+
+class ReactionEnergy(object):
+
+    def __init__(self, reaction):
+        self.reaction = reaction
+        self.value = Energy.load(kev=self._kev())
+
+    def _kev(self):
+        lvalues = sum(num * i.mass_excess_kev for num, i in self.reaction._lvalues)
+        rvalues = sum(num * i.mass_excess_kev for num, i in self.reaction.rvalues)
+        return lvalues - rvalues
 
 
 class GeigerNuttal(Calculation):
@@ -116,4 +131,33 @@ class AlphaDecay(Calculation):
 
     @property
     def half_life(self):
-        return 0.693 / self.decay_constant
+        seconds = 0.693 / self.decay_constant
+        return HalfLife(seconds, 's')
+
+    def power(self, **kwargs):
+        return DecayPower(
+            decay_constant=self.decay_constant,
+            deposited_energy=self.q_value,
+            **kwargs,
+        )
+
+
+class DecayPower(object):
+
+    avogadros_number, _, _ = cs.physical_constants['Avogadro constant']
+
+    def __init__(self, **kwargs):
+        self.decay_constant = kwargs['decay_constant']
+        self.deposited_energy = kwargs['deposited_energy']
+        self.initial = kwargs['moles'] * self.avogadros_number
+
+    def activity(self, **kwargs):
+        return self.decay_constant * self.remaining(**kwargs)
+
+    def remaining(self, **kwargs):
+        elapsed = kwargs['seconds']
+        return self.initial * math.exp(-self.decay_constant * elapsed)
+
+    def power(self, **kwargs):
+        watts = self.activity(**kwargs) * self.deposited_energy.joules
+        return Power(watts=watts)

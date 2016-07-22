@@ -10,7 +10,13 @@ import itertools
 from os.path import expanduser
 
 from .nubase import Energy, Nuclides, Electron, ElectronNeutrino
-from .calculations import GamowSuppressionFactor, GeigerNuttal, Gamow2, AlphaDecay
+from .calculations import (
+    AlphaDecay,
+    GamowSuppressionFactor,
+    GeigerNuttal,
+    Gamow2,
+    ReactionEnergy,
+)
 
 
 LENRMC_DIR = os.path.join(expanduser('~'), '.lenrmc')
@@ -31,23 +37,6 @@ class GammaPhoton(object):
         self.notes = {'ɣ'}
 
 
-class QValue(object):
-
-    def __init__(self, reaction):
-        self.reaction = reaction
-        self.energy = Energy.load(kev=self._kev())
-        self.kev = self.energy.kev
-
-    @property
-    def mev(self):
-        return self.energy.mev
-
-    def _kev(self):
-        lvalues = sum(num * i.mass_excess_kev for num, i in self.reaction._lvalues)
-        rvalues = sum(num * i.mass_excess_kev for num, i in self.reaction.rvalues)
-        return lvalues - rvalues
-
-
 class Reaction(object):
 
     @classmethod
@@ -66,7 +55,7 @@ class Reaction(object):
     def __init__(self, lvalues, rvalues, **kwargs):
         self._lvalues = list(lvalues)
         self.rvalues = list(rvalues)
-        self.q_value = QValue(self)
+        self.q_value = ReactionEnergy(self).value
         self._model = kwargs.get('model')
         self.is_stable = self._is_stable()
         self.any_excited = self._any_excited()

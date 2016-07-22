@@ -4,6 +4,7 @@ import math
 import numpy as np
 
 from lenrmc.combinations import Reaction
+from lenrmc.calculations import DecayPower
 
 
 class GamowSuppressionFactorTest(unittest.TestCase):
@@ -112,4 +113,28 @@ class AlphaDecayTest(unittest.TestCase):
         np.testing.assert_approx_equal(3080639, self.c.decay_constant, significant=4)
 
     def test_half_life(self):
-        np.testing.assert_approx_equal(2.2495e-7, self.c.half_life, significant=4)
+        np.testing.assert_approx_equal(2.2495e-7, self.c.half_life.seconds, significant=4)
+
+
+class DecayPowerTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.c = Reaction.load(
+            reactants=[(1, ('190Pt', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('186Os', '0'))]
+        ).alpha_decay().power(moles=1)
+
+    def test_remaining(self):
+        np.testing.assert_approx_equal(6.022e23, self.c.remaining(seconds=1), significant=4)
+        np.testing.assert_approx_equal(6.022e23, self.c.remaining(seconds=100), significant=4)
+        np.testing.assert_approx_equal(6.022e23, self.c.remaining(seconds=3.154e7), significant=4)
+        np.testing.assert_approx_equal(1.378e23, self.c.remaining(seconds=1e20), significant=4)
+
+    def test_activity(self):
+        np.testing.assert_approx_equal(8880, self.c.activity(seconds=1), significant=4)
+        np.testing.assert_approx_equal(2032, self.c.activity(seconds=1e20), significant=4)
+
+    def test_power(self):
+        np.testing.assert_approx_equal(4.627712259789981e-09, self.c.power(seconds=1).watts, significant=4)
+        np.testing.assert_approx_equal(1.05908972475364e-09, self.c.power(seconds=1e20).watts, significant=4)
