@@ -11,13 +11,11 @@ from lenrmc.calculations import DecayPower, CoulombBarrier
 
 class CoulombBarrierTest(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        nuclides = Nuclides.db()
-        cls.c = CoulombBarrier(
-            nuclides.get(('4He', '0')),
-            nuclides.get(('208Pb', '0'))
-        )
+    nuclides = Nuclides.db()
+    c = CoulombBarrier(
+        nuclides.get(('4He', '0')),
+        nuclides.get(('208Pb', '0'))
+    )
 
     def test_coulomb_barrier(self):
         radius = Distance(fermis=1)
@@ -102,12 +100,10 @@ class GeigerNuttalLawTest(unittest.TestCase):
 
 class AlphaDecayTest(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.c = Reaction.load(
-            reactants=[(1, ('212Po', '0'))],
-            daughters=[(1, ('4He', '0')), (1, ('208Pb', '0'))],
-        ).alpha_decay()
+    c = Reaction.load(
+        reactants=[(1, ('212Po', '0'))],
+        daughters=[(1, ('4He', '0')), (1, ('208Pb', '0'))],
+    ).alpha_decay()
 
     def test_nuclear_separation(self):
         np.testing.assert_almost_equal(9.01, self.c.nuclear_separation, 2)
@@ -119,50 +115,49 @@ class AlphaDecayTest(unittest.TestCase):
         np.testing.assert_almost_equal(8.785, self.c.alpha_energy, 2)
 
     def test_alpha_velocity(self):
-        np.testing.assert_approx_equal(2.06e7, self.c.alpha_velocity, significant=3)
+        np.testing.assert_approx_equal(20594372.446746927, self.c.alpha_velocity)
 
     def test_barrier_assault_frequency(self):
-        np.testing.assert_approx_equal(1.14e21, self.c.barrier_assault_frequency, significant=3)
+        np.testing.assert_approx_equal(1.142244329315791e+21, self.c.barrier_assault_frequency)
 
     def test_gamow_factor(self):
-        np.testing.assert_approx_equal(16.77, self.c.gamow_factor, significant=3)
+        np.testing.assert_approx_equal(16.77331705003231, self.c.gamow_factor)
 
     def test_tunneling_probability(self):
-        np.testing.assert_approx_equal(2.697e-15, self.c.tunneling_probability, significant=4)
+        np.testing.assert_approx_equal(2.697006070113634e-15, self.c.tunneling_probability)
 
     def test_decay_constant(self):
-        np.testing.assert_approx_equal(3080639, self.c.decay_constant, significant=4)
+        np.testing.assert_approx_equal(3080639, self.c.decay_constant)
 
     def test_half_life(self):
-        np.testing.assert_approx_equal(2.2495e-7, self.c.half_life.seconds, significant=4)
+        np.testing.assert_approx_equal(2.2495326451918876e-07, self.c.half_life.seconds)
 
 
 class DecayPowerTest(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.pt190 = Reaction.load(
-            reactants=[(1, ('190Pt', '0'))],
-            daughters=[(1, ('4He', '0')), (1, ('186Os', '0'))]
-        ).alpha_decay().power(moles=1)
-        cls.am241 = Reaction.load(
-            reactants=[(1, ('241Am', '0'))],
-            daughters=[(1, ('4He', '0')), (1, ('237Np', '0'))]
-        ).alpha_decay().power(moles=1)
+    pt190 = Reaction.load(
+        reactants=[(1, ('190Pt', '0'))],
+        daughters=[(1, ('4He', '0')), (1, ('186Os', '0'))]
+    ).alpha_decay().power(moles=1)
+
+    am241 = Reaction.load(
+        reactants=[(1, ('241Am', '0'))],
+        daughters=[(1, ('4He', '0')), (1, ('237Np', '0'))]
+    ).alpha_decay().power(moles=1)
 
     def test_remaining_190Pt(self):
-        np.testing.assert_approx_equal(6.022e23, self.pt190.remaining(seconds=1), significant=4)
-        np.testing.assert_approx_equal(6.022e23, self.pt190.remaining(seconds=100), significant=4)
-        np.testing.assert_approx_equal(6.022e23, self.pt190.remaining(seconds=3.154e7), significant=4)
-        np.testing.assert_approx_equal(1.378e23, self.pt190.remaining(seconds=1e20), significant=4)
+        np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining(seconds=1))
+        np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining(seconds=100))
+        np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining(seconds=3.154e7))
+        np.testing.assert_approx_equal(1.378216190464504e+23, self.pt190.remaining(seconds=1e20))
 
     def test_activity_190Pt(self):
-        np.testing.assert_approx_equal(8880, self.pt190.activity(seconds=1), significant=4)
-        np.testing.assert_approx_equal(2032, self.pt190.activity(seconds=1e20), significant=4)
+        np.testing.assert_approx_equal(8880.567784325336, self.pt190.activity(seconds=1))
+        np.testing.assert_approx_equal(2032.390425843806, self.pt190.activity(seconds=1e20))
 
     def test_power_190Pt(self):
-        np.testing.assert_approx_equal(4.627712259789981e-09, self.pt190.power(seconds=1).watts, significant=4)
-        np.testing.assert_approx_equal(1.05908972475364e-09, self.pt190.power(seconds=1e20).watts, significant=4)
+        np.testing.assert_approx_equal(4.627712259789981e-09, self.pt190.power(seconds=1).watts)
+        np.testing.assert_approx_equal(1.05908972475364e-09, self.pt190.power(seconds=1e20).watts)
 
     def test_remaining_241Am(self):
         np.testing.assert_approx_equal(6.022141289646228e+23, self.am241.remaining(seconds=1))
