@@ -172,3 +172,16 @@ class DecayPowerTest(unittest.TestCase):
     def test_power_241Am(self):
         np.testing.assert_approx_equal(31.955283773279884, self.am241.power(seconds=1).watts)
         np.testing.assert_approx_equal(0.0, self.am241.power(seconds=1e20).watts)
+
+    def test_power_241Am_2(self):
+        # Sanity check against a number found in Wikipedia
+        # https://en.wikipedia.org/wiki/Isotopes_of_americium
+        # (1 kg * 1000 g/kg) / (243 g/mole)
+        moles = 1e3 / 243
+        am241 = Reaction.load(
+            reactants=[(1, ('241Am', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('237Np', '0'))]
+        ).alpha_decay().power(moles=moles)
+        # Should be 114 watts/kg
+        np.testing.assert_approx_equal(131.50322540444398, am241.power(seconds=1).watts)
+        np.testing.assert_approx_equal(0.0, am241.power(seconds=1e20).watts)
