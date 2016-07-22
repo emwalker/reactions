@@ -22,6 +22,10 @@ class Energy(object):
 
 class Power(object):
 
+    @classmethod
+    def load(cls, **kwargs):
+        return cls(kwargs['watts'])
+
     def __init__(self, watts):
         self.watts = watts
 

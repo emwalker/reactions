@@ -141,21 +141,39 @@ class DecayPowerTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.c = Reaction.load(
+        cls.pt190 = Reaction.load(
             reactants=[(1, ('190Pt', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('186Os', '0'))]
         ).alpha_decay().power(moles=1)
+        cls.am241 = Reaction.load(
+            reactants=[(1, ('241Am', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('237Np', '0'))]
+        ).alpha_decay().power(moles=1)
 
-    def test_remaining(self):
-        np.testing.assert_approx_equal(6.022e23, self.c.remaining(seconds=1), significant=4)
-        np.testing.assert_approx_equal(6.022e23, self.c.remaining(seconds=100), significant=4)
-        np.testing.assert_approx_equal(6.022e23, self.c.remaining(seconds=3.154e7), significant=4)
-        np.testing.assert_approx_equal(1.378e23, self.c.remaining(seconds=1e20), significant=4)
+    def test_remaining_190Pt(self):
+        np.testing.assert_approx_equal(6.022e23, self.pt190.remaining(seconds=1), significant=4)
+        np.testing.assert_approx_equal(6.022e23, self.pt190.remaining(seconds=100), significant=4)
+        np.testing.assert_approx_equal(6.022e23, self.pt190.remaining(seconds=3.154e7), significant=4)
+        np.testing.assert_approx_equal(1.378e23, self.pt190.remaining(seconds=1e20), significant=4)
 
-    def test_activity(self):
-        np.testing.assert_approx_equal(8880, self.c.activity(seconds=1), significant=4)
-        np.testing.assert_approx_equal(2032, self.c.activity(seconds=1e20), significant=4)
+    def test_activity_190Pt(self):
+        np.testing.assert_approx_equal(8880, self.pt190.activity(seconds=1), significant=4)
+        np.testing.assert_approx_equal(2032, self.pt190.activity(seconds=1e20), significant=4)
 
-    def test_power(self):
-        np.testing.assert_approx_equal(4.627712259789981e-09, self.c.power(seconds=1).watts, significant=4)
-        np.testing.assert_approx_equal(1.05908972475364e-09, self.c.power(seconds=1e20).watts, significant=4)
+    def test_power_190Pt(self):
+        np.testing.assert_approx_equal(4.627712259789981e-09, self.pt190.power(seconds=1).watts, significant=4)
+        np.testing.assert_approx_equal(1.05908972475364e-09, self.pt190.power(seconds=1e20).watts, significant=4)
+
+    def test_remaining_241Am(self):
+        np.testing.assert_approx_equal(6.022141289646228e+23, self.am241.remaining(seconds=1))
+        np.testing.assert_approx_equal(6.02214125462277e+23, self.am241.remaining(seconds=100))
+        np.testing.assert_approx_equal(6.01099364222362e+23, self.am241.remaining(seconds=3.154e7))
+        np.testing.assert_approx_equal(0.0, self.am241.remaining(seconds=1e20))
+
+    def test_activity_241Am(self):
+        np.testing.assert_approx_equal(35377229832344.93, self.am241.activity(seconds=1))
+        np.testing.assert_approx_equal(0.0, self.am241.activity(seconds=1e20))
+
+    def test_power_241Am(self):
+        np.testing.assert_approx_equal(31.955283773279884, self.am241.power(seconds=1).watts)
+        np.testing.assert_approx_equal(0.0, self.am241.power(seconds=1e20).watts)

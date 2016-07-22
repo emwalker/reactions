@@ -176,4 +176,4 @@ class DecayPower(object):
 
     def power(self, **kwargs):
         watts = self.activity(**kwargs) * self.deposited_energy.joules
-        return Power(watts=watts)
+        return Power.load(watts=watts)
