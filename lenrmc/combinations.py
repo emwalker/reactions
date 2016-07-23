@@ -127,8 +127,8 @@ class Reaction(object):
     def gamow2(self):
         return Gamow2.load(self._daughters_A4(), self.q_value)
 
-    def alpha_decay(self):
-        return AlphaDecay.load(self._daughters_A4(), self.q_value)
+    def alpha_decay(self, **kwargs):
+        return AlphaDecay.load(self._daughters_A4(), self.q_value, **kwargs)
 
 
 def vectors3(integer):

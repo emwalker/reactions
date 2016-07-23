@@ -140,11 +140,6 @@ class DecayPowerTest(unittest.TestCase):
         daughters=[(1, ('4He', '0')), (1, ('186Os', '0'))]
     ).alpha_decay().power(moles=1)
 
-    am241 = Reaction.load(
-        reactants=[(1, ('241Am', '0'))],
-        daughters=[(1, ('4He', '0')), (1, ('237Np', '0'))]
-    ).alpha_decay().power(moles=1)
-
     def test_remaining_190Pt(self):
         np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining(seconds=1))
         np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining(seconds=100))
@@ -159,21 +154,24 @@ class DecayPowerTest(unittest.TestCase):
         np.testing.assert_approx_equal(4.627712259789981e-09, self.pt190.power(seconds=1).watts)
         np.testing.assert_approx_equal(1.05908972475364e-09, self.pt190.power(seconds=1e20).watts)
 
-    def test_remaining_241Am(self):
-        np.testing.assert_approx_equal(6.022141289646228e+23, self.am241.remaining(seconds=1))
-        np.testing.assert_approx_equal(6.02214125462277e+23, self.am241.remaining(seconds=100))
-        np.testing.assert_approx_equal(6.01099364222362e+23, self.am241.remaining(seconds=3.154e7))
-        np.testing.assert_approx_equal(0.0, self.am241.remaining(seconds=1e20))
+    def test_241Am(self):
+        am241 = Reaction.load(
+            reactants=[(1, ('241Am', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('237Np', '0'))]
+        ).alpha_decay().power(moles=1)
+        # Remaining
+        np.testing.assert_approx_equal(6.022141289646228e+23, am241.remaining(seconds=1))
+        np.testing.assert_approx_equal(6.02214125462277e+23, am241.remaining(seconds=100))
+        np.testing.assert_approx_equal(6.01099364222362e+23, am241.remaining(seconds=3.154e7))
+        np.testing.assert_approx_equal(0.0, am241.remaining(seconds=1e20))
+        # Activity
+        np.testing.assert_approx_equal(35377229832344.93, am241.activity(seconds=1))
+        np.testing.assert_approx_equal(0.0, am241.activity(seconds=1e20))
+        # Power
+        np.testing.assert_approx_equal(31.955283773279884, am241.power(seconds=1).watts)
+        np.testing.assert_approx_equal(0.0, am241.power(seconds=1e20).watts)
 
-    def test_activity_241Am(self):
-        np.testing.assert_approx_equal(35377229832344.93, self.am241.activity(seconds=1))
-        np.testing.assert_approx_equal(0.0, self.am241.activity(seconds=1e20))
-
-    def test_power_241Am(self):
-        np.testing.assert_approx_equal(31.955283773279884, self.am241.power(seconds=1).watts)
-        np.testing.assert_approx_equal(0.0, self.am241.power(seconds=1e20).watts)
-
-    def test_power_241Am_2(self):
+    def test_241Am_power(self):
         # Sanity check against a number found in Wikipedia
         # https://en.wikipedia.org/wiki/Isotopes_of_americium
         # (1 kg * 1000 g/kg) / (243 g/mole)
@@ -185,3 +183,20 @@ class DecayPowerTest(unittest.TestCase):
         # Should be 114 watts/kg
         np.testing.assert_approx_equal(131.50322540444398, am241.power(seconds=1).watts)
         np.testing.assert_approx_equal(0.0, am241.power(seconds=1e20).watts)
+
+    def test_screened_190Pt(self):
+        pt190 = Reaction.load(
+            reactants=[(1, ('190Pt', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('186Os', '0'))]
+        ).alpha_decay(screening=11).power(moles=1)
+        # Remaining
+        np.testing.assert_approx_equal(6.02214129e+23, pt190.remaining(seconds=1))
+        np.testing.assert_approx_equal(6.02214129e+23, pt190.remaining(seconds=100))
+        np.testing.assert_approx_equal(6.021836528709286e+23, pt190.remaining(seconds=3.154e7))
+        np.testing.assert_approx_equal(0.0, pt190.remaining(seconds=1e20))
+        # Activity
+        np.testing.assert_approx_equal(966293603266.9395, pt190.activity(seconds=1))
+        np.testing.assert_approx_equal(0.0, pt190.activity(seconds=1e20))
+        # Power
+        np.testing.assert_approx_equal(0.5035408616876824, pt190.power(seconds=1).watts)
+        np.testing.assert_approx_equal(0.0, pt190.power(seconds=1e20).watts)

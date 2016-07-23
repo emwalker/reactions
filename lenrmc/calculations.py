@@ -9,14 +9,15 @@ from .units import Energy, Power, HalfLife, Distance
 class AlphaCalculationMixin(object):
 
     @classmethod
-    def load(cls, daughters, q_value):
+    def load(cls, daughters, q_value, **kwargs):
         if daughters is None:
             return None
-        return cls(daughters, q_value)
+        return cls(daughters, q_value, **kwargs)
 
-    def __init__(self, daughters, q_value):
+    def __init__(self, daughters, q_value, **kwargs):
         self.smaller, self.larger = daughters
         self.q_value = q_value
+        self.kwargs = kwargs
 
 
 class CoulombBarrier(object):
@@ -105,10 +106,12 @@ class AlphaDecay(AlphaCalculationMixin):
     speed_of_light = 3 * math.pow(10, 8)
     hbarc = 197.33
 
-    def __init__(self, daughters, q_value):
+    def __init__(self, daughters, q_value, **kwargs):
+        self.screening = kwargs.get('screening') or 0
         self.smaller, self.larger = daughters
         self.A4, self.Z4 = self.smaller.mass_number, self.smaller.atomic_number
         self.A,  self.Z  = self.larger.mass_number,  self.larger.atomic_number
+        self.screened_Z = self.Z - self.screening
         self.q_value = q_value
         self.alpha_mass = self.smaller.mass.mev
         # Ea = Q / (1 + m/M)
@@ -119,7 +122,7 @@ class AlphaDecay(AlphaCalculationMixin):
     @property
     def barrier_height(self):
         "Units in MeV"
-        return 2 * self.Z * 1.44 / self.nuclear_separation
+        return 2 * self.screened_Z * 1.44 / self.nuclear_separation
 
     @property
     def alpha_velocity(self):
@@ -135,7 +138,7 @@ class AlphaDecay(AlphaCalculationMixin):
     def gamow_factor(self):
         x = self.alpha_energy / self.barrier_height
         ph = math.sqrt(2 * self.alpha_mass / ((self.hbarc ** 2) * self.alpha_energy))
-        return ph * 2 * self.Z * 1.44 * (math.acos(math.sqrt(x)) - math.sqrt(x * (1 - x)))
+        return ph * 2 * self.screened_Z * 1.44 * (math.acos(math.sqrt(x)) - math.sqrt(x * (1 - x)))
 
     @property
     def tunneling_probability(self):
