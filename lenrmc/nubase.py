@@ -414,7 +414,9 @@ class Nuclide(object):
         return self.json().iteritems()
 
     def __eq__(self, o):
-        return self.signature == o.signature
+        if isinstance(o, self.__class__):
+            return self.signature == o.signature
+        return False
 
     def __hash__(self):
         return hash(self.signature)

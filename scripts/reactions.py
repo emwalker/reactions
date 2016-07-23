@@ -14,7 +14,7 @@ class App(object):
             self.view_cls = TerminalView
 
     def run(self):
-        s = System.parse(self.kwargs['system'], **self.kwargs)
+        s = System.load(self.kwargs['system'], **self.kwargs)
         options = Options(**self.kwargs)
         for line in self.view_cls(s).lines(options):
             print(line)

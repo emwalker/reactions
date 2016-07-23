@@ -11,7 +11,7 @@ from os.path import expanduser
 
 from .nubase import Energy, Nuclides, Electron, ElectronNeutrino
 from .calculations import (
-    AlphaDecay,
+    IsotopicAlphaDecayCalculation,
     GamowSuppressionFactor,
     GeigerNuttal,
     Gamow2,
@@ -97,7 +97,7 @@ class Reaction(object):
         combined = self.rvalues + self._lvalues
         return any(n.is_excited for num, n in combined)
 
-    def _daughters_A4(self):
+    def _alpha_components(self):
         values = [p for num, p in self.rvalues if p.is_baryon]
         if 2 != len(values):
             return None
@@ -106,7 +106,8 @@ class Reaction(object):
         n0, n1 = values
         smaller = min(values, key=lambda v: v.mass_number)
         larger = n0 if n1.mass_number == smaller.mass_number else n1
-        return smaller, larger
+        num, parent = max(self._lvalues, key=lambda t: t[1].atomic_number)
+        return parent, (smaller, larger)
 
     @property
     def has_electron_parent(self):
@@ -119,16 +120,24 @@ class Reaction(object):
         return all(num == 1 for num, c in self.rvalues)
 
     def geiger_nuttal(self):
-        return GeigerNuttal.load(self._daughters_A4(), self.q_value)
+        return GeigerNuttal.load(self._alpha_components(), self.q_value)
 
     def gamow(self):
-        return GamowSuppressionFactor.load(self._daughters_A4(), self.q_value)
+        return GamowSuppressionFactor.load(self._alpha_components(), self.q_value)
 
     def gamow2(self):
-        return Gamow2.load(self._daughters_A4(), self.q_value)
+        return Gamow2.load(self._alpha_components(), self.q_value)
+
+    def _alpha_decay_calculation(self, **kwargs):
+        return IsotopicAlphaDecayCalculation.load(
+            self._alpha_components(),
+            self.q_value,
+            **kwargs
+        )
 
     def alpha_decay(self, **kwargs):
-        return AlphaDecay.load(self._daughters_A4(), self.q_value, **kwargs)
+        calc = self._alpha_decay_calculation(**kwargs)
+        return calc.decay(**kwargs) if calc else None
 
 
 def vectors3(integer):

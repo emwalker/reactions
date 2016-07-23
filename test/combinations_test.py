@@ -252,7 +252,7 @@ class ElectronMediatedDecayModelTest(unittest.TestCase):
         , results)
 
     def test_90Sr_2(self):
-        s = System.parse('90Sr', model='induced-decay', lb=-1000)
+        s = System.load('90Sr', model='induced-decay', lb=-1000)
         reactions = list(r for c in s._combinations for r in c.reactions())
         self.assertEqual(2, len(reactions))
         reaction = reactions[0]

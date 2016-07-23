@@ -1,4 +1,5 @@
 import math
+from collections import defaultdict
 
 import scipy.constants as cs
 
@@ -9,12 +10,14 @@ from .units import Energy, Power, HalfLife, Distance
 class AlphaCalculationMixin(object):
 
     @classmethod
-    def load(cls, daughters, q_value, **kwargs):
-        if daughters is None:
+    def load(cls, components, q_value, **kwargs):
+        if components is None:
             return None
-        return cls(daughters, q_value, **kwargs)
+        parent, daughters = components
+        return cls(parent, daughters, q_value, **kwargs)
 
-    def __init__(self, daughters, q_value, **kwargs):
+    def __init__(self, parent, daughters, q_value, **kwargs):
+        self.parent = parent
         self.smaller, self.larger = daughters
         self.q_value = q_value
         self.kwargs = kwargs
@@ -99,20 +102,24 @@ class GamowSuppressionFactor(AlphaCalculationMixin):
         return 0.2708122 * Z * Z4 * G * math.sqrt(m / Q)
 
 
-class AlphaDecay(AlphaCalculationMixin):
+class IsotopicAlphaDecayCalculation(AlphaCalculationMixin):
     """From http://hyperphysics.phy-astr.gsu.edu/hbase/nuclear/alpdec.html
     """
 
     speed_of_light = 3 * math.pow(10, 8)
     hbarc = 197.33
 
-    def __init__(self, daughters, q_value, **kwargs):
+    def __init__(self, parent, daughters, q_value, **kwargs):
+        self.parent = parent
+        self.daughters = daughters
+        self.q_value = q_value
+        self.kwargs = kwargs
+        self.parent_isotopic_abundance = parent.isotopic_abundance
         self.screening = kwargs.get('screening') or 0
         self.smaller, self.larger = daughters
         self.A4, self.Z4 = self.smaller.mass_number, self.smaller.atomic_number
         self.A,  self.Z  = self.larger.mass_number,  self.larger.atomic_number
         self.screened_Z = self.Z - self.screening
-        self.q_value = q_value
         self.alpha_mass = self.smaller.mass.mev
         # Ea = Q / (1 + m/M)
         self.alpha_energy = self.q_value.mev / (1 + self.alpha_mass / self.larger.mass.mev)
@@ -153,21 +160,26 @@ class AlphaDecay(AlphaCalculationMixin):
         seconds = 0.693 / self.decay_constant
         return HalfLife(seconds, 's')
 
-    def power(self, **kwargs):
-        return DecayPower(
+    def decay(self, **kwargs):
+        merged = {**self.kwargs, **kwargs}
+        return IsotopicDecay(
             decay_constant=self.decay_constant,
             deposited_energy=self.q_value,
-            **kwargs,
+            atomic_number=self.parent.atomic_number,
+            isotopic_abundance=self.parent.isotopic_abundance,
+            **merged,
         )
 
 
-class DecayPower(object):
+class IsotopicDecay(object):
 
     avogadros_number, _, _ = cs.physical_constants['Avogadro constant']
 
     def __init__(self, **kwargs):
         self.decay_constant = kwargs['decay_constant']
         self.deposited_energy = kwargs['deposited_energy']
+        self.atomic_number = kwargs['atomic_number']
+        self.isotopic_abundance = kwargs['isotopic_abundance']
         self.initial = kwargs['moles'] * self.avogadros_number
 
     def activity(self, **kwargs):
@@ -180,3 +192,32 @@ class DecayPower(object):
     def power(self, **kwargs):
         watts = self.activity(**kwargs) * self.deposited_energy.joules
         return Power.load(watts=watts)
+
+
+class AlphaDecay(object):
+
+    @classmethod
+    def load(cls, **kwargs):
+        copy = kwargs.copy()
+        reactions = copy['reactions']
+        del copy['reactions']
+        return cls(reactions, **copy)
+
+    def __init__(self, reactions, **kwargs):
+        self.reactions = list(reactions)
+        self.decays = defaultdict(list)
+        for d in (r.alpha_decay(**kwargs) for r in self.reactions):
+            if d is None:
+                continue
+            self.decays[d.atomic_number].append(d)
+        self.kwargs = kwargs
+
+    def activity(self, **kwargs):
+        activity = 0
+        for atomic_number, decays in self.decays.items():
+            for decay in decays:
+                activity += decay.isotopic_abundance * decay.activity(**kwargs)
+        return activity
+
+    def power(self, **kwargs):
+        return Power.load(watts=1)

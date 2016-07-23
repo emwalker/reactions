@@ -11,7 +11,7 @@ class SystemTest(unittest.TestCase):
         cls.maxDiff = None
 
     def test_spins(self):
-        s = System.parse('p+7Li', lower_bound=-40000)
+        s = System.load('p+7Li', lower_bound=-40000)
         self.assertEqual(
             ['p + 7Li → 2·4He + 17346 keV                             in nature, α              1/2+, 3/2-           0+, 0+',
              'p + 7Li → ɣ + 8Be + 17254 keV                           ɣ, →α                     1/2+, 3/2-           0+, 1-',
@@ -37,7 +37,7 @@ class SystemTest(unittest.TestCase):
         , TerminalView(s).lines(Options(spins=True)))
 
     def test_references(self):
-        s = System.parse('p+7Li', lower_bound=-40000)
+        s = System.load('p+7Li', lower_bound=-40000)
         self.assertEqual(
             ['p + 7Li → 2·4He + 17346 keV                             in nature, α',
              'p + 7Li → ɣ + 8Be + 17254 keV                           ɣ, →α',
@@ -65,13 +65,13 @@ class SystemTest(unittest.TestCase):
         , TerminalView(s).lines(Options(references=True)))
 
     def test_reactions_2(self):
-        s = System.parse('6Li+6Li')
+        s = System.load('6Li+6Li')
         t = TerminalView(s)
         options = Options()
         self.assertTrue(any('2·6Li → 3·4He + 20899 keV' in l for l in t.lines(options)))
 
     def test_element_shorthand(self):
-        s = System.parse('H+Li')
+        s = System.load('H+Li')
         self.assertEqual(6, len(s._combinations))
 
 
@@ -82,7 +82,7 @@ class TestStudiesView(unittest.TestCase):
         cls.maxDiff = None
 
     def test_output(self):
-        s = System.parse('p+7Li', lower_bound=-40000)
+        s = System.load('p+7Li', lower_bound=-40000)
         v = StudiesTerminalView(s)
         self.assertEqual(
             ['p + 7Li → d + 6Li + -5027 keV                           in nature, n-transfer         ✓ 7Li [L15],   ✓ 6Li [L15]',
@@ -110,7 +110,7 @@ class TestAscii(unittest.TestCase):
         cls.maxDiff = None
 
     def test_output(self):
-        s = System.parse('p+d', lower_bound=-3000)
+        s = System.load('p+d', lower_bound=-3000)
         v = TerminalView(s)
         self.assertEqual(
             ['p + d => gamma + 3He + 5493 keV                         gamma, in nature',

@@ -5,13 +5,16 @@ import numpy as np
 
 from lenrmc.units import Energy, Distance
 from lenrmc.nubase import Nuclides
+from lenrmc.system import System
 from lenrmc.combinations import Reaction
-from lenrmc.calculations import DecayPower, CoulombBarrier
+from lenrmc.calculations import CoulombBarrier
+
+
+nuclides = Nuclides.db()
 
 
 class CoulombBarrierTest(unittest.TestCase):
 
-    nuclides = Nuclides.db()
     c = CoulombBarrier(
         nuclides.get(('4He', '0')),
         nuclides.get(('208Pb', '0'))
@@ -98,12 +101,15 @@ class GeigerNuttalLawTest(unittest.TestCase):
         self.assertEqual(-6, int(c.value()))
 
 
-class AlphaDecayTest(unittest.TestCase):
+class IsotopicAlphaDecayTest(unittest.TestCase):
 
     c = Reaction.load(
         reactants=[(1, ('212Po', '0'))],
         daughters=[(1, ('4He', '0')), (1, ('208Pb', '0'))],
-    ).alpha_decay()
+    )._alpha_decay_calculation(moles=1)
+
+    def test_parent(self):
+        self.assertEqual(nuclides.get(('212Po', '0')), self.c.parent)
 
     def test_nuclear_separation(self):
         np.testing.assert_almost_equal(9.01, self.c.nuclear_separation, 2)
@@ -133,12 +139,18 @@ class AlphaDecayTest(unittest.TestCase):
         np.testing.assert_approx_equal(2.2495326451918876e-07, self.c.half_life.seconds)
 
 
-class DecayPowerTest(unittest.TestCase):
+class DecayTest(unittest.TestCase):
 
     pt190 = Reaction.load(
         reactants=[(1, ('190Pt', '0'))],
         daughters=[(1, ('4He', '0')), (1, ('186Os', '0'))]
-    ).alpha_decay().power(moles=1)
+    ).alpha_decay(moles=1)
+
+    def test_atomic_number(self):
+        self.assertEqual(78, self.pt190.atomic_number)
+
+    def test_abundance(self):
+        self.assertEqual(0.012, self.pt190.isotopic_abundance)
 
     def test_remaining_190Pt(self):
         np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining(seconds=1))
@@ -158,7 +170,7 @@ class DecayPowerTest(unittest.TestCase):
         am241 = Reaction.load(
             reactants=[(1, ('241Am', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('237Np', '0'))]
-        ).alpha_decay().power(moles=1)
+        ).alpha_decay(moles=1)
         # Remaining
         np.testing.assert_approx_equal(6.022141289646228e+23, am241.remaining(seconds=1))
         np.testing.assert_approx_equal(6.02214125462277e+23, am241.remaining(seconds=100))
@@ -179,7 +191,7 @@ class DecayPowerTest(unittest.TestCase):
         am241 = Reaction.load(
             reactants=[(1, ('241Am', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('237Np', '0'))]
-        ).alpha_decay().power(moles=moles)
+        ).alpha_decay(moles=moles)
         # Should be 114 watts/kg
         np.testing.assert_approx_equal(131.50322540444398, am241.power(seconds=1).watts)
         np.testing.assert_approx_equal(0.0, am241.power(seconds=1e20).watts)
@@ -188,7 +200,7 @@ class DecayPowerTest(unittest.TestCase):
         pt190 = Reaction.load(
             reactants=[(1, ('190Pt', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('186Os', '0'))]
-        ).alpha_decay(screening=11).power(moles=1)
+        ).alpha_decay(screening=11, moles=1)
         # Remaining
         np.testing.assert_approx_equal(6.02214129e+23, pt190.remaining(seconds=1))
         np.testing.assert_approx_equal(6.02214129e+23, pt190.remaining(seconds=100))
@@ -200,3 +212,19 @@ class DecayPowerTest(unittest.TestCase):
         # Power
         np.testing.assert_approx_equal(0.5035408616876824, pt190.power(seconds=1).watts)
         np.testing.assert_approx_equal(0.0, pt190.power(seconds=1e20).watts)
+
+
+class ElementalDecayTest(unittest.TestCase):
+
+    def test_elemental_Pt(self):
+        pt = System.load('Pt', model='induced-decay').alpha_decay(moles=1)
+        np.testing.assert_approx_equal(106.56681343649926, pt.activity(seconds=1))
+
+    def test_screened_Pt(self):
+        pt = System.load('Pt', model='induced-decay').alpha_decay(screening=11, moles=1)
+        np.testing.assert_approx_equal(11595523371.509394, pt.activity(seconds=1))
+
+    def test_miles_4He_study(self):
+        # Model productino of of 22,522,522,523 4He/s
+        pt = System.load('Pt', model='induced-decay').alpha_decay(screening=11, moles=1)
+        np.testing.assert_approx_equal(11595523371.509394, pt.activity(seconds=1))

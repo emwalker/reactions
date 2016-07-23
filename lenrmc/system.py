@@ -1,5 +1,6 @@
 from .nubase import parse_spec
 from .combinations import Combinations
+from .calculations import AlphaDecay
 
 
 class Options(object):
@@ -17,7 +18,7 @@ class Options(object):
 class System(object):
 
     @classmethod
-    def parse(cls, string, **kwargs):
+    def load(cls, string, **kwargs):
         system = filter(None, (rs.strip() for rs in string.split(',')))
         combinations = []
         for spec in system:
@@ -33,3 +34,6 @@ class System(object):
     def reactions(self):
         for c in self._combinations:
             yield from c.reactions()
+
+    def alpha_decay(self, **kwargs):
+        return AlphaDecay.load(reactions=self.reactions(), **kwargs)
