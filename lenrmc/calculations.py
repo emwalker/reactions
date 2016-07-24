@@ -1,6 +1,8 @@
 import math
 from collections import defaultdict
 
+import numpy as np
+import pandas as pd
 import scipy.constants as cs
 
 from .constants import FINE_STRUCTURE_CONSTANT_MEV_FM, HBAR_MEV_S
@@ -163,10 +165,10 @@ class IsotopicAlphaDecayCalculation(AlphaCalculationMixin):
     def decay(self, **kwargs):
         merged = {**self.kwargs, **kwargs}
         return IsotopicDecay(
+            self.parent,
             decay_constant=self.decay_constant,
             deposited_energy=self.q_value,
-            atomic_number=self.parent.atomic_number,
-            isotopic_abundance=self.parent.isotopic_abundance,
+            gamow_factor=self.gamow_factor,
             **merged,
         )
 
@@ -175,26 +177,30 @@ class IsotopicDecay(object):
 
     avogadros_number, _, _ = cs.physical_constants['Avogadro constant']
 
-    def __init__(self, **kwargs):
+    def __init__(self, parent, **kwargs):
+        self.parent = parent
+        self.screening = kwargs.get('screening') or 0
         self.decay_constant = kwargs['decay_constant']
         self.deposited_energy = kwargs['deposited_energy']
-        self.atomic_number = kwargs['atomic_number']
-        self.isotopic_abundance = kwargs['isotopic_abundance']
-        self.initial = kwargs['moles'] * self.avogadros_number
-
-    def activity(self, **kwargs):
-        return self.decay_constant * self.remaining(**kwargs)
-
-    def remaining(self, **kwargs):
-        elapsed = kwargs['seconds']
-        return self.initial * math.exp(-self.decay_constant * elapsed)
-
-    def power(self, **kwargs):
-        watts = self.activity(**kwargs) * self.deposited_energy.joules
-        return Power.load(watts=watts)
+        self.moles = kwargs['moles']
+        self.gamow_factor = kwargs['gamow_factor']
+        self.starting_atoms = self.moles * self.avogadros_number
 
 
 class AlphaDecay(object):
+
+    initial_column_names = [
+        'atomic_number',
+        'isotope',
+        'screening',
+        'gamow_factor',
+        'decay_constant',
+        'isotopic_abundance',
+        'deposited_q_value_kev',
+        'deposited_q_value_joules',
+    ]
+
+    avogadros_number, _, _ = cs.physical_constants['Avogadro constant']
 
     @classmethod
     def load(cls, **kwargs):
@@ -209,18 +215,44 @@ class AlphaDecay(object):
         for d in (r.alpha_decay(**kwargs) for r in self.reactions):
             if d is None:
                 continue
-            self.decays[d.atomic_number].append(d)
+            self.decays[d.parent.atomic_number].append(d)
         self.kwargs = kwargs
+        self.df = self._initial_dataframe()
 
     def activity(self, **kwargs):
-        return self._sum(lambda d: d.isotopic_abundance * d.activity(**kwargs))
+        return self.dataframe(**kwargs).activity.sum()
 
     def power(self, **kwargs):
-        return self._sum(lambda d: d.isotopic_abundance * d.power(**kwargs).watts)
+        return Power.load(watts=self.dataframe(**kwargs).watts.sum())
 
-    def _sum(self, f):
-        total = 0
+    def remaining_active_atoms(self, **kwargs):
+        return self.dataframe(**kwargs).remaining_active_atoms.sum()
+
+    def _initial_dataframe(self):
+        rows = []
         for atomic_number, decays in self.decays.items():
-            for decay in decays:
-                total += f(decay)
-        return total
+            for d in decays:
+                rows.append([
+                    atomic_number,
+                    d.parent.label,
+                    d.screening,
+                    d.gamow_factor,
+                    d.decay_constant,
+                    d.parent.isotopic_abundance,
+                    d.deposited_energy.kev,
+                    d.deposited_energy.joules,
+                ])
+        return pd.DataFrame(rows, columns=self.initial_column_names)
+
+    def dataframe(self, **kwargs):
+        elapsed = kwargs['seconds']
+        df = self.df
+        df['isotopic_fraction'] = df.isotopic_abundance / 100.
+        df['starting_moles'] = kwargs['moles'] * (kwargs.get('isotopic_fraction') or df.isotopic_fraction)
+        df['active_fraction'] = kwargs.get('active_fraction') or 1
+        df['starting_active_moles'] = df.starting_moles * df.active_fraction
+        df['starting_active_atoms'] = df.starting_active_moles * self.avogadros_number
+        df['remaining_active_atoms'] = df.starting_active_atoms * np.exp(-df.decay_constant * elapsed)
+        df['activity'] = df.decay_constant * df.remaining_active_atoms
+        df['watts'] = df.activity * df.deposited_q_value_joules
+        return df
