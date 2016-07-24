@@ -108,7 +108,7 @@ class IsotopicAlphaDecayTest(unittest.TestCase):
     c = Reaction.load(
         reactants=[(1, ('212Po', '0'))],
         daughters=[(1, ('4He', '0')), (1, ('208Pb', '0'))],
-    )._alpha_decay_calculation(moles=1)
+    ).alpha_decay(moles=1)
 
     def test_parent(self):
         self.assertEqual(nuclides.get(('212Po', '0')), self.c.parent)
@@ -157,39 +157,38 @@ class DecayTest(unittest.TestCase):
 
 class AlphaDecayTest(unittest.TestCase):
 
-    pt190 = System.load('190Pt', model='induced-decay').alpha_decay(moles=1)
+    pt190 = System.load('190Pt', model='induced-decay').alpha_decay(moles=1).scenario(seconds=1, isotopic_fraction=1)
 
     def test_remaining_190Pt(self):
-        kwargs = dict(moles=1, isotopic_fraction=1)
-        np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms(seconds=1, **kwargs))
-        np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms(seconds=100, **kwargs))
-        np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms(seconds=3.154e7, **kwargs))
-        np.testing.assert_approx_equal(1.378216190464504e+23, self.pt190.remaining_active_atoms(seconds=1e20, **kwargs))
+        np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms())
+        np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms(seconds=100))
+        np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms(seconds=3.154e7))
+        np.testing.assert_approx_equal(1.378216190464504e+23, self.pt190.remaining_active_atoms(seconds=1e20))
 
     def test_activity_190Pt(self):
-        kwargs = dict(moles=1, isotopic_fraction=1)
-        np.testing.assert_approx_equal(8880.567784325336, self.pt190.activity(seconds=1, **kwargs))
-        np.testing.assert_approx_equal(2032.390425843806, self.pt190.activity(seconds=1e20, **kwargs))
+        np.testing.assert_approx_equal(8880.567784325336, self.pt190.activity(seconds=1))
+        np.testing.assert_approx_equal(2032.390425843806, self.pt190.activity(seconds=1e20))
 
     def test_power_190Pt(self):
-        kwargs = dict(moles=1, isotopic_fraction=1)
-        np.testing.assert_approx_equal(4.627712259789981e-09, self.pt190.power(seconds=1, **kwargs).watts)
-        np.testing.assert_approx_equal(1.05908972475364e-09, self.pt190.power(seconds=1e20, **kwargs).watts)
+        np.testing.assert_approx_equal(4.627712259789981e-09, self.pt190.power(seconds=1).watts)
+        np.testing.assert_approx_equal(1.05908972475364e-09, self.pt190.power(seconds=1e20).watts)
 
     def test_241Am(self):
         kwargs = dict(isotopic_fraction=1, moles=1)
-        am241 = System.load('241Am', model='induced-decay').alpha_decay(moles=1)
+        scenario = System.load('241Am', model='induced-decay') \
+            .alpha_decay(moles=1) \
+            .scenario(seconds=1, **kwargs)
         # Remaining
-        np.testing.assert_approx_equal(6.022141289646228e+23, am241.remaining_active_atoms(seconds=1, **kwargs))
-        np.testing.assert_approx_equal(6.02214125462277e+23, am241.remaining_active_atoms(seconds=100, **kwargs))
-        np.testing.assert_approx_equal(6.01099364222362e+23, am241.remaining_active_atoms(seconds=3.154e7, **kwargs))
-        np.testing.assert_approx_equal(0.0, am241.remaining_active_atoms(seconds=1e20, **kwargs))
+        np.testing.assert_approx_equal(6.022141289646228e+23, scenario.remaining_active_atoms())
+        np.testing.assert_approx_equal(6.02214125462277e+23, scenario.remaining_active_atoms(seconds=100, **kwargs))
+        np.testing.assert_approx_equal(6.01099364222362e+23, scenario.remaining_active_atoms(seconds=3.154e7, **kwargs))
+        np.testing.assert_approx_equal(0.0, scenario.remaining_active_atoms(seconds=1e20, **kwargs))
         # Activity
-        np.testing.assert_approx_equal(35377229832344.93, am241.activity(seconds=1, **kwargs))
-        np.testing.assert_approx_equal(0.0, am241.activity(seconds=1e20, **kwargs))
+        np.testing.assert_approx_equal(35377229832344.93, scenario.activity(seconds=1, **kwargs))
+        np.testing.assert_approx_equal(0.0, scenario.activity(seconds=1e20, **kwargs))
         # Power
-        np.testing.assert_approx_equal(31.955283773279884, am241.power(seconds=1, **kwargs).watts)
-        np.testing.assert_approx_equal(0.0, am241.power(seconds=1e20, **kwargs).watts)
+        np.testing.assert_approx_equal(31.955283773279884, scenario.power(seconds=1, **kwargs).watts)
+        np.testing.assert_approx_equal(0.0, scenario.power(seconds=1e20, **kwargs).watts)
 
     def test_241Am_power(self):
         # Sanity check against a number found in Wikipedia
@@ -199,23 +198,24 @@ class AlphaDecayTest(unittest.TestCase):
         kwargs = dict(moles=moles, isotopic_fraction=1)
         am241 = System.load('241Am', model='induced-decay').alpha_decay(**kwargs)
         # Should be 114 watts/kg
-        np.testing.assert_approx_equal(131.50322540444398, am241.power(seconds=1, **kwargs).watts)
-        np.testing.assert_approx_equal(0.0, am241.power(seconds=1e20, **kwargs).watts)
+        scenario = am241.scenario(seconds=1, isotopic_fraction=1)
+        np.testing.assert_approx_equal(131.50322540444398, scenario.power().watts)
+        np.testing.assert_approx_equal(0.0, scenario.power(seconds=1e20).watts)
 
     def test_screened_190Pt(self):
         kwargs = dict(screening=11, moles=1, isotopic_fraction=1)
-        pt190 = System.load('190Pt', model='induced-decay').alpha_decay(**kwargs)
+        pt190 = System.load('190Pt', model='induced-decay').alpha_decay(**kwargs).scenario(seconds=1)
         # Remaining
-        np.testing.assert_approx_equal(6.02214129e+23, pt190.remaining_active_atoms(seconds=1, **kwargs))
-        np.testing.assert_approx_equal(6.02214129e+23, pt190.remaining_active_atoms(seconds=100, **kwargs))
-        np.testing.assert_approx_equal(6.021836528709286e+23, pt190.remaining_active_atoms(seconds=3.154e7, **kwargs))
-        np.testing.assert_approx_equal(0.0, pt190.remaining_active_atoms(seconds=1e20, **kwargs))
+        np.testing.assert_approx_equal(6.02214129e+23, pt190.remaining_active_atoms())
+        np.testing.assert_approx_equal(6.02214129e+23, pt190.remaining_active_atoms(seconds=100))
+        np.testing.assert_approx_equal(6.021836528709286e+23, pt190.remaining_active_atoms(seconds=3.154e7))
+        np.testing.assert_approx_equal(0.0, pt190.remaining_active_atoms(seconds=1e20))
         # Activity
-        np.testing.assert_approx_equal(966293603266.9395, pt190.activity(seconds=1, **kwargs))
-        np.testing.assert_approx_equal(0.0, pt190.activity(seconds=1e20, **kwargs))
+        np.testing.assert_approx_equal(966293603266.9395, pt190.activity(seconds=1))
+        np.testing.assert_approx_equal(0.0, pt190.activity(seconds=1e20))
         # Power
-        np.testing.assert_approx_equal(0.5035408616876824, pt190.power(seconds=1, **kwargs).watts)
-        np.testing.assert_approx_equal(0.0, pt190.power(seconds=1e20, **kwargs).watts)
+        np.testing.assert_approx_equal(0.5035408616876824, pt190.power().watts)
+        np.testing.assert_approx_equal(0.0, pt190.power(seconds=1e20).watts)
 
 
 class AlphaDecayColumnTest(unittest.TestCase):
@@ -237,22 +237,20 @@ class AlphaDecayColumnTest(unittest.TestCase):
 
     miles = System.load('Pt', model='induced-decay') \
         .alpha_decay(screening=screening, moles=moles)
-    df = miles.dataframe(seconds=1, moles=moles, active_fraction=active_fraction)
+    scenario = miles.scenario(seconds=1, moles=moles, active_fraction=active_fraction)
 
     def test_elemental_Pt(self):
-        pt = System.load('Pt', model='induced-decay').alpha_decay(moles=1)
-        np.testing.assert_approx_equal(1.0656681343649925, pt.activity(seconds=1, moles=1, active_fraction=1))
+        scenario = System.load('Pt', model='induced-decay').alpha_decay(moles=1).scenario(seconds=1, moles=1, active_fraction=1)
+        np.testing.assert_approx_equal(1.0656681343649925, scenario.activity())
 
     def test_screened_Pt(self):
-        pt = System.load('Pt', model='induced-decay').alpha_decay(screening=11, moles=1)
-        np.testing.assert_approx_equal(115955233.71509394, pt.activity(seconds=1, moles=1, active_fraction=1))
-        np.testing.assert_approx_equal(6.042490391601354e-05, pt.power(seconds=1, moles=1, active_fraction=1).watts)
+        scenario = System.load('Pt', model='induced-decay').alpha_decay(screening=11, moles=1).scenario(seconds=1, moles=1, active_fraction=1)
+        np.testing.assert_approx_equal(115955233.71509394, scenario.activity())
+        np.testing.assert_approx_equal(6.042490391601354e-05, scenario.power().watts)
 
     def test_miles_4He_study(self):
-        activity = self.miles.activity(seconds=1, moles=self.moles, active_fraction=self.active_fraction)
-        np.testing.assert_approx_equal(22522522523, activity, significant=4)
-        power = self.miles.power(seconds=1, moles=self.moles, active_fraction=self.active_fraction)
-        np.testing.assert_approx_equal(0.008740219935185282, power.watts)
+        np.testing.assert_approx_equal(22522522523, self.scenario.activity(), significant=4)
+        np.testing.assert_approx_equal(0.008740219935185282, self.scenario.power().watts)
 
     def test_atomic_number(self):
         np.testing.assert_allclose([
@@ -262,7 +260,7 @@ class AlphaDecayColumnTest(unittest.TestCase):
             78,
             78,
             78,
-        ], self.df.atomic_number)
+        ], self.scenario.df.atomic_number)
 
     def test_isotope(self):
         np.testing.assert_equal([
@@ -272,7 +270,7 @@ class AlphaDecayColumnTest(unittest.TestCase):
             '195Pt',
             '196Pt',
             '198Pt',
-        ], self.df.isotope.values)
+        ], self.scenario.df.isotope.values)
 
     def test_gamow_factor(self):
         np.testing.assert_allclose([
@@ -282,7 +280,7 @@ class AlphaDecayColumnTest(unittest.TestCase):
             52.247275,
             68.578169,
             240.011295,
-        ], self.df.gamow_factor)
+        ], self.scenario.df.gamow_factor)
 
     def test_decay_constant(self):
         np.testing.assert_allclose([
@@ -292,7 +290,7 @@ class AlphaDecayColumnTest(unittest.TestCase):
             1.757218e-025,
             9.529659e-040,
             4.286183e-189
-        ], self.df.decay_constant, rtol=1e-6)
+        ], self.scenario.df.decay_constant, rtol=1e-6)
 
     def test_isotopic_abundance(self):
         np.testing.assert_allclose([
@@ -302,7 +300,7 @@ class AlphaDecayColumnTest(unittest.TestCase):
             3.378000e+01,
             2.521000e+01,
             7.360000e+00,
-        ], self.df.isotopic_abundance)
+        ], self.scenario.df.isotopic_abundance)
 
     def test_isotopic_fraction(self):
         np.testing.assert_allclose([
@@ -312,7 +310,7 @@ class AlphaDecayColumnTest(unittest.TestCase):
             3.378000e-01,
             2.521000e-01,
             7.360000e-02,
-        ], self.df.isotopic_fraction)
+        ], self.scenario.df.isotopic_fraction)
 
     def test_starting_moles(self):
         np.testing.assert_allclose([
@@ -322,7 +320,7 @@ class AlphaDecayColumnTest(unittest.TestCase):
             7.411084e-03,
             5.530889e-03,
             1.614730e-03,
-        ], self.df.starting_moles, rtol=1e-6)
+        ], self.scenario.df.starting_moles, rtol=1e-6)
 
     def test_active_fraction(self):
         np.testing.assert_allclose([
@@ -332,7 +330,7 @@ class AlphaDecayColumnTest(unittest.TestCase):
             1.000000e-06,
             1.000000e-06,
             1.000000e-06,
-        ], self.df.active_fraction, rtol=1e-6)
+        ], self.scenario.df.active_fraction, rtol=1e-6)
 
     def test_starting_active_moles(self):
         np.testing.assert_allclose([
@@ -342,7 +340,7 @@ class AlphaDecayColumnTest(unittest.TestCase):
             7.411084e-09,
             5.530889e-09,
             1.614730e-09,
-        ], self.df.starting_active_moles, rtol=1e-6)
+        ], self.scenario.df.starting_active_moles, rtol=1e-6)
 
     def test_starting_active_atoms(self):
         np.testing.assert_allclose([
@@ -352,7 +350,7 @@ class AlphaDecayColumnTest(unittest.TestCase):
             4.463060e+15,
             3.330780e+15,
             9.724133e+14,
-        ], self.df.starting_active_atoms, rtol=1e-6)
+        ], self.scenario.df.starting_active_atoms, rtol=1e-6)
 
     def test_remaining_active_atoms(self):
         np.testing.assert_allclose([
@@ -362,7 +360,7 @@ class AlphaDecayColumnTest(unittest.TestCase):
             4.463060e+015,
             3.330780e+015,
             9.724133e+014,
-        ], self.df.remaining_active_atoms, rtol=1e-6)
+        ], self.scenario.df.remaining_active_atoms, rtol=1e-6)
 
     def test_activity(self):
         np.testing.assert_allclose([
@@ -372,7 +370,7 @@ class AlphaDecayColumnTest(unittest.TestCase):
             7.842568e-010,
             3.174119e-024,
             4.167941e-174,
-        ], self.df.activity, rtol=1e-6)
+        ], self.scenario.df.activity, rtol=1e-6)
 
     def test_watts(self):
         np.testing.assert_allclose([
@@ -382,12 +380,12 @@ class AlphaDecayColumnTest(unittest.TestCase):
             1.477268e-022,
             4.129855e-037,
             7.117470e-188,
-        ], self.df.watts, rtol=1e-6)
+        ], self.scenario.df.watts, rtol=1e-6)
 
     def test_total_activity(self):
-        df = self.df
+        df = self.scenario.df
         np.testing.assert_approx_equal(22522522523, df.activity.sum(), significant=4)
         np.testing.assert_approx_equal(1.8047361656075522e-284, df.activity[df.isotope == '190Pt'][0])
 
     def test_total_power(self):
-        np.testing.assert_approx_equal(0.008740219935185282, self.df.watts.sum())
+        np.testing.assert_approx_equal(0.008740219935185282, self.scenario.df.watts.sum())

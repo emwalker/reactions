@@ -128,16 +128,12 @@ class Reaction(object):
     def gamow2(self):
         return Gamow2.load(self._alpha_components(), self.q_value)
 
-    def _alpha_decay_calculation(self, **kwargs):
+    def alpha_decay(self, **kwargs):
         return IsotopicAlphaDecayCalculation.load(
             self._alpha_components(),
             self.q_value,
             **kwargs
         )
-
-    def alpha_decay(self, **kwargs):
-        calc = self._alpha_decay_calculation(**kwargs)
-        return calc.decay(**kwargs) if calc else None
 
 
 def vectors3(integer):
