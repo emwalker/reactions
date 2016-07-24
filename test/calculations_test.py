@@ -223,8 +223,13 @@ class ElementalDecayTest(unittest.TestCase):
     def test_screened_Pt(self):
         pt = System.load('Pt', model='induced-decay').alpha_decay(screening=11, moles=1)
         np.testing.assert_approx_equal(11595523371.509394, pt.activity(seconds=1))
+        np.testing.assert_approx_equal(0.006042490391601355, pt.power(seconds=1))
 
     def test_miles_4He_study(self):
-        # Model productino of of 22,522,522,523 4He/s
-        pt = System.load('Pt', model='induced-decay').alpha_decay(screening=11, moles=1)
-        np.testing.assert_approx_equal(11595523371.509394, pt.activity(seconds=1))
+        # Model production of of 22,522,522,523 4He/s from 0.02193926719 mol pt
+        # over a period of 4440 seconds
+        # http://lenr-canr.org/acrobat/MilesMcorrelatio.pdf
+        system = System.load('Pt', model='induced-decay')
+        d = system.alpha_decay(screening=22.2185, moles=0.02193926719 * 1e-6)
+        np.testing.assert_approx_equal(22522522523, d.activity(seconds=1), significant=4)
+        np.testing.assert_approx_equal(0.011739728570763865, d.power(seconds=1))

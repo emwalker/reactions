@@ -213,11 +213,14 @@ class AlphaDecay(object):
         self.kwargs = kwargs
 
     def activity(self, **kwargs):
-        activity = 0
-        for atomic_number, decays in self.decays.items():
-            for decay in decays:
-                activity += decay.isotopic_abundance * decay.activity(**kwargs)
-        return activity
+        return self._sum(lambda d: d.isotopic_abundance * d.activity(**kwargs))
 
     def power(self, **kwargs):
-        return Power.load(watts=1)
+        return self._sum(lambda d: d.isotopic_abundance * d.power(**kwargs).watts)
+
+    def _sum(self, f):
+        total = 0
+        for atomic_number, decays in self.decays.items():
+            for decay in decays:
+                total += f(decay)
+        return total
