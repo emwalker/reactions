@@ -104,67 +104,42 @@ class GamowSuppressionFactor(AlphaCalculationMixin):
         return 0.2708122 * Z * Z4 * G * math.sqrt(m / Q)
 
 
-class IsotopicAlphaDecayCalculation(AlphaCalculationMixin):
+class IsotopicAlphaDecay(AlphaCalculationMixin):
     """From http://hyperphysics.phy-astr.gsu.edu/hbase/nuclear/alpdec.html
     """
 
-    speed_of_light = 3 * math.pow(10, 8)
-    hbarc = 197.33
-
     def __init__(self, parent, daughters, q_value, **kwargs):
         self.parent = parent
+        self.parent_z = parent.atomic_number
         self.daughters = daughters
         self.q_value = q_value
         self.kwargs = kwargs
-        self.parent_isotopic_abundance = parent.isotopic_abundance
-        self.screening = kwargs.get('screening') or 0
         self.smaller, self.larger = daughters
-        self.A4, self.Z4 = self.smaller.mass_number, self.smaller.atomic_number
-        self.A,  self.Z  = self.larger.mass_number,  self.larger.atomic_number
-        self.screened_Z = self.Z - self.screening
-        self.alpha_mass = self.smaller.mass.mev
-        # Ea = Q / (1 + m/M)
-        self.alpha_energy = self.q_value.mev / (1 + self.alpha_mass / self.larger.mass.mev)
-        # Units in fm
-        self.nuclear_separation = 1.2 * (math.pow(self.A4, 1./3) - (-1) * math.pow(self.A, 1./3))
+        self.data = self._data()
 
-    @property
-    def barrier_height(self):
-        "Units in MeV"
-        return 2 * self.screened_Z * 1.44 / self.nuclear_separation
+    def _data(self):
+        heavier_daughter_z = self.larger.atomic_number
+        return {
+            'parent_z': self.parent_z,
+            'heavier_daughter_z': heavier_daughter_z,
+            'lighter_daughter_a': self.smaller.mass_number,
+            'heavier_daughter_a': self.larger.mass_number,
+            'alpha_mass_mev': self.smaller.mass.mev,
+            'heavier_daughter_mass_mev': self.larger.mass.mev,
+            'q_value_mev': self.q_value.mev,
+            'isotope': self.parent.label,
+            'isotopic_abundance': self.parent.isotopic_abundance,
+            'deposited_q_value_joules': self.q_value.joules,
+        }
 
-    @property
-    def alpha_velocity(self):
-        "Units in m/s"
-        return math.sqrt(2 * self.alpha_energy / self.alpha_mass) * self.speed_of_light
-
-    @property
-    def barrier_assault_frequency(self):
-        "Units in s^-1"
-        return self.alpha_velocity * math.pow(10, 15) / (2 * self.nuclear_separation)
-
-    @property
-    def gamow_factor(self):
-        x = self.alpha_energy / self.barrier_height
-        ph = math.sqrt(2 * self.alpha_mass / ((self.hbarc ** 2) * self.alpha_energy))
-        return ph * 2 * self.screened_Z * 1.44 * (math.acos(math.sqrt(x)) - math.sqrt(x * (1 - x)))
-
-    @property
-    def tunneling_probability(self):
-        return math.exp(-2 * self.gamow_factor)
-
-    @property
-    def decay_constant(self):
-        return self.tunneling_probability * self.barrier_assault_frequency
-
-    @property
-    def half_life(self):
-        seconds = 0.693 / self.decay_constant
-        return HalfLife(seconds, 's')
+    def __getitem__(self, key):
+        return self.data[key]
 
 
 class DecayScenario(object):
 
+    speed_of_light = 3 * math.pow(10, 8)
+    hbarc = 197.33
     avogadros_number, _, _ = cs.physical_constants['Avogadro constant']
 
     def __init__(self, base_df, **kwargs):
@@ -173,16 +148,9 @@ class DecayScenario(object):
         self.df = self._calculate(base_df, kwargs)
 
     def _calculate(self, df, kwargs):
-        elapsed = kwargs['seconds']
         df = df.copy()
-        df = self._gamow_factor(df)
-        df['starting_moles'] = kwargs['moles'] * (kwargs.get('isotopic_fraction') or df.isotopic_fraction)
-        df['active_fraction'] = kwargs.get('active_fraction') or 1
-        df['starting_active_moles'] = df.starting_moles * df.active_fraction
-        df['starting_active_atoms'] = df.starting_active_moles * self.avogadros_number
-        df['remaining_active_atoms'] = df.starting_active_atoms * np.exp(-df.decay_constant * elapsed)
-        df['activity'] = df.decay_constant * df.remaining_active_atoms
-        df['watts'] = df.activity * df.deposited_q_value_joules
+        df = self._calculate_gamow_factor(df, kwargs)
+        df = self._calculate_products(df, kwargs)
         return df
 
     def recalculate(self, **kwargs):
@@ -201,20 +169,46 @@ class DecayScenario(object):
     def remaining_active_atoms(self, **kwargs):
         return self.recalculate(**kwargs).df.remaining_active_atoms.sum()
 
-    def _gamow_factor(self, df):
+    def _calculate_products(self, df, kwargs):
+        elapsed = kwargs['seconds']
+        df['starting_moles'] = kwargs['moles'] * (kwargs.get('isotopic_fraction') or df.isotopic_fraction)
+        df['active_fraction'] = kwargs.get('active_fraction') or 1
+        df['starting_active_moles'] = df.starting_moles * df.active_fraction
+        df['starting_active_atoms'] = df.starting_active_moles * self.avogadros_number
+        df['remaining_active_atoms'] = df.starting_active_atoms * np.exp(-df.decay_constant * elapsed)
+        df['activity'] = df.decay_constant * df.remaining_active_atoms
+        df['watts'] = df.activity * df.deposited_q_value_joules
+        return df
+
+    def _calculate_gamow_factor(self, df, kwargs):
+        df['screening'] = kwargs.get('screening') or 0
+        df['screened_heavier_daughter_z'] = df.heavier_daughter_z - df.screening
+        df['nuclear_separation_fm'] = 1.2 * (np.power(df.lighter_daughter_a, 1./3) - (-1) * np.power(df.heavier_daughter_a, 1./3))
+        df['barrier_height_mev'] = 2 * df.screened_heavier_daughter_z * 1.44 / df.nuclear_separation_fm
+        df['alpha_ke_mev'] = df.q_value_mev / (1 + df.alpha_mass_mev / df.heavier_daughter_mass_mev)
+        df['alpha_velocity_m_per_s'] = np.sqrt(2 * df.alpha_ke_mev / df.alpha_mass_mev) * self.speed_of_light
+        df['barrier_assault_frequency'] = df.alpha_velocity_m_per_s * math.pow(10, 15) / (2 * df.nuclear_separation_fm)
+        x = df.alpha_ke_mev / df.barrier_height_mev
+        ph = np.sqrt(2 * df.alpha_mass_mev / ((self.hbarc ** 2) * df.alpha_ke_mev))
+        df['gamow_factor'] = ph * 2 * df.screened_heavier_daughter_z * 1.44 * (np.arccos(np.sqrt(x)) - np.sqrt(x * (1 - x)))
+        df['tunneling_probability'] = np.exp(-2 * df.gamow_factor)
+        df['decay_constant'] = df.tunneling_probability * df.barrier_assault_frequency
+        df['half_life'] = np.where(df.decay_constant > 0, 0.693 / df.decay_constant, math.inf)
         return df
 
 
 class AlphaDecay(object):
 
     initial_column_names = [
-        'atomic_number',
+        'parent_z',
+        'heavier_daughter_z',
+        'lighter_daughter_a',
+        'heavier_daughter_a',
+        'alpha_mass_mev',
+        'heavier_daughter_mass_mev',
+        'q_value_mev',
         'isotope',
-        'screening',
-        'gamow_factor',
-        'decay_constant',
         'isotopic_abundance',
-        'deposited_q_value_kev',
         'deposited_q_value_joules',
     ]
 
@@ -231,24 +225,15 @@ class AlphaDecay(object):
         for d in (r.alpha_decay(**kwargs) for r in self.reactions):
             if d is None:
                 continue
-            self.decays[d.parent.atomic_number].append(d)
+            self.decays[d.parent_z].append(d)
         self.kwargs = kwargs
         self.df = self._initial_dataframe()
 
     def _initial_dataframe(self):
         rows = []
-        for atomic_number, decays in self.decays.items():
+        for parent_z, decays in self.decays.items():
             for d in decays:
-                rows.append([
-                    atomic_number,
-                    d.parent.label,
-                    d.screening,
-                    d.gamow_factor,
-                    d.decay_constant,
-                    d.parent.isotopic_abundance,
-                    d.q_value.kev,
-                    d.q_value.joules,
-                ])
+                rows.append([d[c] for c in self.initial_column_names])
         df = pd.DataFrame(rows, columns=self.initial_column_names)
         df['isotopic_fraction'] = df.isotopic_abundance / 100.
         return df

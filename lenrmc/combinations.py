@@ -11,7 +11,7 @@ from os.path import expanduser
 
 from .nubase import Energy, Nuclides, Electron, ElectronNeutrino
 from .calculations import (
-    IsotopicAlphaDecayCalculation,
+    IsotopicAlphaDecay,
     GamowSuppressionFactor,
     GeigerNuttal,
     Gamow2,
@@ -129,7 +129,7 @@ class Reaction(object):
         return Gamow2.load(self._alpha_components(), self.q_value)
 
     def alpha_decay(self, **kwargs):
-        return IsotopicAlphaDecayCalculation.load(
+        return IsotopicAlphaDecay.load(
             self._alpha_components(),
             self.q_value,
             **kwargs

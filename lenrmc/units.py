@@ -1,3 +1,6 @@
+import math
+
+
 class Energy(object):
 
     @classmethod
@@ -48,6 +51,8 @@ class HalfLife(object):
 
     @property
     def seconds(self):
+        if math.inf == self.value:
+            return self.value
         if 's' == self.unit:
             return float(self.value)
         if 'd' == self.unit:

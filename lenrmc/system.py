@@ -36,4 +36,4 @@ class System(object):
             yield from c.reactions()
 
     def alpha_decay(self, **kwargs):
-        return AlphaDecay.load(reactions=self.reactions(), **kwargs)
+        return AlphaDecay.load(reactions=self.reactions()).scenario(**kwargs)
