@@ -127,7 +127,7 @@ class TerminalLine(object):
         g = self._reaction.gamow()
         if g is None:
             return string
-        return '{} [{:.0f}]'.format(string, g.factor())
+        return '{} [{:.0f}]'.format(string, g.value())
 
     def terminal(self, options):
         kev = self.q_value_kev
