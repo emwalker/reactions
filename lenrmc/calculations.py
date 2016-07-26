@@ -138,8 +138,13 @@ class IsotopicAlphaDecay(AlphaCalculationMixin):
 
 class DecayScenario(object):
 
-    speed_of_light = 3 * math.pow(10, 8)
-    hbarc = 197.33
+    speed_of_light, _, _ = cs.physical_constants['speed of light in vacuum']
+    # hbar * c, in units of MeV.fm
+    hbarc = 197.327
+    # e^2 / 4pi, in units of MeV.fm
+    # Google: (electron charge)^2 / (4 * pi * epsilon_0) -> 2.30707751e-28 m^3 kg / s^2
+    # Wolfram Alpha: 2.30707751e-28 m^3 kg / s^2 in MeV fm -> 1.4399645 MeV fm
+    e2_4pi = 1.4399645
     avogadros_number, _, _ = cs.physical_constants['Avogadro constant']
 
     def __init__(self, base_df, **kwargs):
@@ -184,19 +189,19 @@ class DecayScenario(object):
         df['screening'] = kwargs.get('screening') or 0
         df['screened_heavier_daughter_z'] = df.heavier_daughter_z - df.screening
         df['nuclear_separation_fm'] = 1.2 * (np.power(df.lighter_daughter_a, 1./3) - (-1) * np.power(df.heavier_daughter_a, 1./3))
-        df['barrier_height_mev'] = 2 * df.screened_heavier_daughter_z * 1.44 / df.nuclear_separation_fm
+        df['barrier_height_mev'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.nuclear_separation_fm
         df['alpha_ke_mev'] = df.q_value_mev / (1 + df.alpha_mass_mev / df.heavier_daughter_mass_mev)
-        df['radius_for_alpha_ke_fm'] = 2 * df.screened_heavier_daughter_z * 1.44 / df.alpha_ke_mev
+        df['radius_for_alpha_ke_fm'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.alpha_ke_mev
         df['barrier_width_fm'] = df.radius_for_alpha_ke_fm - df.nuclear_separation_fm
         df['alpha_velocity_m_per_s'] = np.sqrt(2 * df.alpha_ke_mev / df.alpha_mass_mev) * self.speed_of_light
         df['alpha_v_over_c_m_per_s'] = df.alpha_velocity_m_per_s / self.speed_of_light
         df['barrier_assault_frequency'] = df.alpha_velocity_m_per_s * math.pow(10, 15) / (2 * df.nuclear_separation_fm)
         x = df.alpha_ke_mev / df.barrier_height_mev
         ph = np.sqrt(2 * df.alpha_mass_mev / ((self.hbarc ** 2) * df.alpha_ke_mev))
-        df['gamow_factor'] = ph * 2 * df.screened_heavier_daughter_z * 1.44 * (np.arccos(np.sqrt(x)) - np.sqrt(x * (1 - x)))
+        df['gamow_factor'] = ph * 2 * df.screened_heavier_daughter_z * self.e2_4pi * (np.arccos(np.sqrt(x)) - np.sqrt(x * (1 - x)))
         df['tunneling_probability'] = np.exp(-2 * df.gamow_factor)
         df['decay_constant'] = df.tunneling_probability * df.barrier_assault_frequency
-        df['half_life'] = np.where(df.decay_constant > 0, 0.693 / df.decay_constant, math.inf)
+        df['half_life'] = np.where(df.decay_constant > 0, math.log(2) / df.decay_constant, math.inf)
         return df
 
 

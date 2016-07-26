@@ -126,15 +126,15 @@ class AlphaDecayTest(unittest.TestCase):
         np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms())
         np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms(seconds=100))
         np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms(seconds=3.154e7))
-        np.testing.assert_approx_equal(1.378216190464504e+23, self.pt190.remaining_active_atoms(seconds=1e20))
+        np.testing.assert_approx_equal(1.3760309564333265e+23, self.pt190.remaining_active_atoms(seconds=1e20))
 
     def test_activity_190Pt(self):
-        np.testing.assert_approx_equal(8880.567784325336, self.pt190.activity(seconds=1))
-        np.testing.assert_approx_equal(2032.390425843806, self.pt190.activity(seconds=1e20))
+        np.testing.assert_approx_equal(8890.123782859177, self.pt190.activity(seconds=1))
+        np.testing.assert_approx_equal(2031.3514649767333, self.pt190.activity(seconds=1e20))
 
     def test_power_190Pt(self):
-        np.testing.assert_approx_equal(4.627712259789981e-09, self.pt190.power(seconds=1).watts)
-        np.testing.assert_approx_equal(1.05908972475364e-09, self.pt190.power(seconds=1e20).watts)
+        np.testing.assert_approx_equal(4.63269194269355e-09, self.pt190.power(seconds=1).watts)
+        np.testing.assert_approx_equal(1.0585483165848424e-09, self.pt190.power(seconds=1e20).watts)
 
     def test_241Am(self):
         scenario = System.load('241Am', model='induced-decay') \
@@ -142,13 +142,13 @@ class AlphaDecayTest(unittest.TestCase):
         # Remaining
         np.testing.assert_approx_equal(6.022141289646228e+23, scenario.remaining_active_atoms())
         np.testing.assert_approx_equal(6.02214125462277e+23, scenario.remaining_active_atoms(seconds=100))
-        np.testing.assert_approx_equal(6.01099364222362e+23, scenario.remaining_active_atoms(seconds=3.154e7))
+        np.testing.assert_approx_equal(6.0109829989678545e+23, scenario.remaining_active_atoms(seconds=3.154e7))
         np.testing.assert_approx_equal(0.0, scenario.remaining_active_atoms(seconds=1e20))
         # Activity
-        np.testing.assert_approx_equal(35377229832344.93, scenario.activity(seconds=1))
+        np.testing.assert_approx_equal(35411037706734.586, scenario.activity(seconds=1))
         np.testing.assert_approx_equal(0.0, scenario.activity(seconds=1e20))
         # Power
-        np.testing.assert_approx_equal(31.955283773279884, scenario.power(seconds=1).watts)
+        np.testing.assert_approx_equal(31.985821501219938, scenario.power(seconds=1).watts)
         np.testing.assert_approx_equal(0.0, scenario.power(seconds=1e20).watts)
 
     def test_241Am_power(self):
@@ -159,7 +159,7 @@ class AlphaDecayTest(unittest.TestCase):
         scenario = System.load('241Am', model='induced-decay') \
             .alpha_decay(seconds=1, isotopic_fraction=1, moles=moles)
         # Should be 114 watts/kg
-        np.testing.assert_approx_equal(131.50322540444398, scenario.power().watts)
+        np.testing.assert_approx_equal(131.62889506674873, scenario.power().watts)
         np.testing.assert_approx_equal(0.0, scenario.power(seconds=1e20).watts)
 
     def test_screened_190Pt(self):
@@ -171,10 +171,10 @@ class AlphaDecayTest(unittest.TestCase):
         np.testing.assert_approx_equal(6.021836528709286e+23, pt190.remaining_active_atoms(seconds=3.154e7))
         np.testing.assert_approx_equal(0.0, pt190.remaining_active_atoms(seconds=1e20))
         # Activity
-        np.testing.assert_approx_equal(966293603266.9395, pt190.activity(seconds=1))
+        np.testing.assert_approx_equal(967090273179.6211, pt190.activity(seconds=1))
         np.testing.assert_approx_equal(0.0, pt190.activity(seconds=1e20))
         # Power
-        np.testing.assert_approx_equal(0.5035408616876824, pt190.power().watts)
+        np.testing.assert_approx_equal(0.5039560107199808, pt190.power().watts)
         np.testing.assert_approx_equal(0.0, pt190.power(seconds=1e20).watts)
 
 
@@ -186,7 +186,7 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
     # http://lenr-canr.org/acrobat/MilesMcorrelatio.pdf
     #
 
-    screening = 32.045
+    screening = 32.046
     moles = 0.02193926719
     active_fraction = 1e-6
 
@@ -198,18 +198,18 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
             screening=screening,
         )
 
+    def test_miles_4He_study(self):
+        np.testing.assert_approx_equal(22522522523, self.scenario.activity(), significant=3)
+        np.testing.assert_approx_equal(0.00876108327676111, self.scenario.power().watts)
+
     def test_elemental_Pt(self):
         scenario = System.load('Pt', model='induced-decay').alpha_decay(seconds=1, moles=1, active_fraction=1)
-        np.testing.assert_approx_equal(1.0656681343649925, scenario.activity())
+        np.testing.assert_approx_equal(1.0668148541893832, scenario.activity())
 
     def test_screened_Pt(self):
         scenario = System.load('Pt', model='induced-decay').alpha_decay(screening=11, seconds=1, moles=1, active_fraction=1)
-        np.testing.assert_approx_equal(115955233.71509394, scenario.activity())
-        np.testing.assert_approx_equal(6.042490391601354e-05, scenario.power().watts)
-
-    def test_miles_4He_study(self):
-        np.testing.assert_approx_equal(22522522523, self.scenario.activity(), significant=4)
-        np.testing.assert_approx_equal(0.008740219935185282, self.scenario.power().watts)
+        np.testing.assert_approx_equal(116050834.10601069, scenario.activity())
+        np.testing.assert_approx_equal(6.0474721800430736e-05, scenario.power().watts)
 
     def test_parent_z(self):
         np.testing.assert_allclose([
@@ -232,14 +232,7 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
         ], self.scenario.df.heavier_daughter_a)
 
     def test_screened_heavier_z(self):
-        np.testing.assert_allclose([
-            43.955,
-            43.955,
-            43.955,
-            43.955,
-            43.955,
-            43.955,
-        ], self.scenario.df.screened_heavier_daughter_z)
+        np.testing.assert_allclose(43.954, self.scenario.df.screened_heavier_daughter_z[0])
 
     def test_isotope(self):
         np.testing.assert_equal([
@@ -253,12 +246,12 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
 
     def test_barrier_height_mev(self):
         np.testing.assert_allclose([
-            14.459539,
-            14.419246,
-            14.379459,
-            14.359752,
-            14.340168,
-            14.30136,
+            14.458853,
+            14.418562,
+            14.378778,
+            14.359072,
+            14.339488,
+            14.300682
         ], self.scenario.df.barrier_height_mev)
 
     def test_alpha_mass_mev(self):
@@ -293,12 +286,12 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
 
     def test_alpha_velocity_m_per_s(self):
         np.testing.assert_allclose([
-            12398184.853383,
-            10700911.400317,
-            8482772.301298,
-            7456171.354437,
-            6197183.044186,
-            2245362.083005,
+            12389607.706447,
+            10693508.438471,
+            8476903.862868,
+            7451013.125387,
+            6192895.791641,
+            2243808.726547
         ], self.scenario.df.alpha_velocity_m_per_s)
 
     def test_nuclear_separation_fm(self):
@@ -313,52 +306,52 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
 
     def test_barrier_assault_frequency(self):
         np.testing.assert_allclose([
-            7.080791e+20,
-            6.094422e+20,
-            4.817809e+20,
-            4.228945e+20,
-            3.510086e+20,
-            1.268332e+20,
-        ], self.scenario.df.barrier_assault_frequency)
+            7.075892e+20,
+            6.090206e+20,
+            4.814476e+20,
+            4.226020e+20,
+            3.507658e+20,
+            1.267455e+20
+        ], self.scenario.df.barrier_assault_frequency, rtol=1e-6)
 
     def test_gamow_factor(self):
         np.testing.assert_allclose([
-            20.737672,
-            28.145014,
-            42.571041,
-            52.247275,
-            68.578169,
-            240.011295,
+            20.736394,
+            28.143476,
+            42.569015,
+            52.244928,
+            68.575286,
+            240.002875
         ], self.scenario.df.gamow_factor)
 
     def test_tunneling_probability(self):
         np.testing.assert_allclose([
-            9.715996e-019,
-            3.577266e-025,
-            1.055026e-037,
-            4.155215e-046,
-            2.714936e-060,
-            3.379386e-209,
-        ], self.scenario.df.tunneling_probability)
+            9.740854e-019,
+            3.588289e-025,
+            1.059311e-037,
+            4.174765e-046,
+            2.730631e-060,
+            3.436779e-209
+        ], self.scenario.df.tunneling_probability, rtol=1e-6)
 
     def test_decay_constant(self):
         np.testing.assert_allclose([
-            6.879694e+002,
-            2.180137e-004,
-            5.082914e-017,
-            1.757218e-025,
-            9.529659e-040,
-            4.286183e-189
+            6.892524e+002,
+            2.185342e-004,
+            5.100026e-017,
+            1.764264e-025,
+            9.578119e-040,
+            4.355961e-189
         ], self.scenario.df.decay_constant, rtol=1e-6)
 
     def test_half_life(self):
         np.testing.assert_allclose([
-            1.007312e-003,
-            3.178699e+003,
-            1.363391e+016,
-            3.943734e+024,
-            7.272034e+038,
-            1.616823e+188,
+            1.005651e-003,
+            3.171802e+003,
+            1.359105e+016,
+            3.928818e+024,
+            7.236778e+038,
+            1.591261e+188
         ], self.scenario.df.half_life, rtol=1e-6)
 
     def test_isotopic_abundance(self):
@@ -423,41 +416,41 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
 
     def test_remaining_active_atoms(self):
         np.testing.assert_allclose([
-            2.623280e-287,
-            1.032964e+014,
+            7.272133e-288,
+            1.032963e+014,
             4.341508e+015,
             4.463060e+015,
             3.330780e+015,
-            9.724133e+014,
+            9.724133e+014
         ], self.scenario.df.remaining_active_atoms, rtol=1e-6)
 
     def test_activity(self):
         np.testing.assert_allclose([
-            1.804736e-284,
-            2.252003e+010,
-            2.206751e-001,
-            7.842568e-010,
-            3.174119e-024,
-            4.167941e-174,
+            5.012335e-285,
+            2.257378e+010,
+            2.214180e-001,
+            7.874016e-010,
+            3.190260e-024,
+            4.235794e-174
         ], self.scenario.df.activity, rtol=1e-6)
 
     def test_watts(self):
         np.testing.assert_allclose([
-            9.404578e-297,
-            8.740220e-003,
-            5.380783e-014,
-            1.477268e-022,
-            4.129855e-037,
-            7.117470e-188,
+            2.611955e-297,
+            8.761083e-003,
+            5.398897e-014,
+            1.483192e-022,
+            4.150856e-037,
+            7.233340e-188
         ], self.scenario.df.watts, rtol=1e-6)
 
     def test_total_activity(self):
         df = self.scenario.df
-        np.testing.assert_approx_equal(22522522523, df.activity.sum(), significant=4)
-        np.testing.assert_approx_equal(1.8047361656075522e-284, df.activity[df.isotope == '190Pt'][0])
+        np.testing.assert_approx_equal(22522522523, df.activity.sum(), significant=3)
+        np.testing.assert_approx_equal(5.01233468945662e-285, df.activity[df.isotope == '190Pt'][0])
 
     def test_total_power(self):
-        np.testing.assert_approx_equal(0.008740219935185282, self.scenario.df.watts.sum())
+        np.testing.assert_approx_equal(0.00876108327676111, self.scenario.df.watts.sum())
 
 
 class PoloniumAlphaDecayTest(unittest.TestCase):
@@ -469,7 +462,7 @@ class PoloniumAlphaDecayTest(unittest.TestCase):
         np.testing.assert_allclose([9.014871826539528], self.scenario.df.nuclear_separation_fm)
 
     def test_barrier_height(self):
-        np.testing.assert_allclose([26.1967118938676], self.scenario.df.barrier_height_mev)
+        np.testing.assert_allclose([26.1967118938676], self.scenario.df.barrier_height_mev, rtol=1e-4)
 
     def test_alpha_ke(self):
         np.testing.assert_allclose([8.78], self.scenario.df.alpha_ke_mev, rtol=1e-3)
