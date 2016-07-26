@@ -178,7 +178,7 @@ class AlphaDecayTest(unittest.TestCase):
         np.testing.assert_approx_equal(0.0, pt190.power(seconds=1e20).watts)
 
 
-class AlphaDecayColumnTest(unittest.TestCase):
+class PlatinumAlphaDecayTest(unittest.TestCase):
 
     ##
     # Model production of of 22,522,522,523 4He/s from 0.02193926719 mol pt
@@ -458,3 +458,36 @@ class AlphaDecayColumnTest(unittest.TestCase):
 
     def test_total_power(self):
         np.testing.assert_approx_equal(0.008740219935185282, self.scenario.df.watts.sum())
+
+
+class PoloniumAlphaDecayTest(unittest.TestCase):
+
+    scenario = System.load('212Po', model='induced-decay') \
+        .alpha_decay(seconds=1, moles=1, active_fraction=1, isotopic_fraction=1)
+
+    def test_nuclear_separation(self):
+        np.testing.assert_allclose([9.014871826539528], self.scenario.df.nuclear_separation_fm)
+
+    def test_barrier_height(self):
+        np.testing.assert_allclose([26.1967118938676], self.scenario.df.barrier_height_mev)
+
+    def test_alpha_ke(self):
+        np.testing.assert_allclose([8.78], self.scenario.df.alpha_ke_mev, rtol=1e-3)
+
+    def test_radius_for_alpha_ke_fm(self):
+        np.testing.assert_allclose([26.89749430523918], self.scenario.df.radius_for_alpha_ke_fm, rtol=1e-3)
+
+    def test_barrier_width_fm(self):
+        np.testing.assert_allclose([17.882622478699652], self.scenario.df.barrier_width_fm, rtol=1e-3)
+
+    def test_barrier_assault_frequency(self):
+        np.testing.assert_allclose([1.142126641655716e21], self.scenario.df.barrier_assault_frequency, rtol=1e-3)
+
+    def test_alpha_v_over_c_m_per_s(self):
+        np.testing.assert_allclose([0.068648], self.scenario.df.alpha_v_over_c_m_per_s, rtol=1e-5)
+
+    def test_alpha_velocity_m_per_s(self):
+        np.testing.assert_allclose([2.06e7], self.scenario.df.alpha_velocity_m_per_s, rtol=1e-3)
+
+    def test_tunneling_probability(self):
+        np.testing.assert_allclose([2.636693524272448e-15], self.scenario.df.tunneling_probability, rtol=1e-1)
