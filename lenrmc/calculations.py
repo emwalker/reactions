@@ -248,7 +248,10 @@ class AlphaDecay(object):
         for parent_z, decays in self.decays.items():
             for d in decays:
                 rows.append([d[c] for c in self.initial_column_names])
-        df = pd.DataFrame(rows, columns=self.initial_column_names)
+        if len(rows) < 1:
+            df = pd.DataFrame(columns=self.initial_column_names)
+        else:
+            df = pd.DataFrame(rows, columns=self.initial_column_names)
         df['isotopic_fraction'] = df.isotopic_abundance / 100.
         return df
 

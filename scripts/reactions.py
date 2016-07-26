@@ -19,18 +19,43 @@ class App(object):
     def run(self):
         s = System.load(self.kwargs['system'], **self.kwargs)
         if self.kwargs.get('decay_power'):
-            scenario = s.alpha_decay(moles=1, seconds=1)
+            scenario = s.alpha_decay(**self.kwargs)
             if 'csv' == self.kwargs.get('format'):
                 scenario.to_csv(sys.stdout)
             else:
-                with pd.option_context('display.max_rows', 999, 'display.max_columns', 8):
-                    print(scenario.df[['isotope', 'screening', 'gamow_factor', 'half_life', 'activity', 'watts']])
-                print('activity: {}'.format(scenario.activity()))
-                print('watts:    {}'.format(scenario.power().watts))
+                self.print_scenario(scenario)
         else:
             options = Options(**self.kwargs)
             for line in self.view_cls(s).lines(options):
                 print(line)
+
+    def print_scenario(self, scenario):
+        print()
+        print('At second:      {}'.format(self.kwargs.get('seconds')))
+        print('Starting moles: {}'.format(self.kwargs.get('moles')))
+        print('Activity:       {:.2e}'.format(scenario.activity()))
+        print('Watts:          {:.2e}'.format(scenario.power().watts))
+        print()
+
+        df = scenario.df[[
+            'isotope',
+            'isotopic_fraction',
+            'q_value_mev',
+            'starting_moles',
+            'active_fraction',
+            'screening',
+            'gamow_factor',
+            'half_life',
+            'activity',
+            'watts',
+        ]]
+
+        if df.empty:
+            print('No active isotopes.')
+        else:
+            with pd.option_context('display.max_rows', 999, 'display.max_columns', 10):
+                print(df)
+        print()
 
 
 def parse_arguments():
@@ -50,24 +75,32 @@ def parse_arguments():
     parser.add_argument('--simple', dest='simple', action='store_true')
     parser.add_argument('--gamow', dest='gamow', action='store_true')
     parser.add_argument('--decay-power', dest='decay_power', action='store_true')
+    parser.add_argument('--screening', dest='screening', type=float)
+    parser.add_argument('--moles', dest='moles', type=float)
+    parser.add_argument('--seconds', dest='seconds', type=float)
+    parser.add_argument('--active-fraction', dest='active_fraction', type=float)
     parser.add_argument('--format', dest='format')
     parser.add_argument('--daughter-count', dest='daughter_count')
     parser.set_defaults(
-        lower_bound    = 0,
-        upper_bound    = 500000,
-        spins          = False,
-        references     = False,
-        view           = 'default',
-        model          = 'standard',
-        unstable       = False,
-        ascii          = False,
-        excited        = False,
-        simple         = False,
-        gamow          = False,
-        parent_ub      = 1000,
-        daughter_count = '',
-        decay_power    = False,
-        format         = None,
+        lower_bound     = 0,
+        upper_bound     = 500000,
+        spins           = False,
+        references      = False,
+        view            = 'default',
+        model           = 'standard',
+        unstable        = False,
+        ascii           = False,
+        excited         = False,
+        simple          = False,
+        gamow           = False,
+        parent_ub       = 1000,
+        daughter_count  = '',
+        decay_power     = False,
+        screening       = 0,
+        seconds         = 1,
+        moles           = 1,
+        active_fraction = 1,
+        format          = None,
     )
     return parser.parse_args()
 
