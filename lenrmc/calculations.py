@@ -152,6 +152,12 @@ class DecayScenario(object):
         self.kwargs = kwargs
         self.df = self._calculate(base_df, kwargs)
 
+    def to_csv(self, io):
+        self.df.to_csv(io, index=False)
+
+    def to_string(self):
+        return self.df.to_string()
+
     def _calculate(self, df, kwargs):
         df = df.copy()
         df = self._calculate_gamow_factor(df, kwargs)

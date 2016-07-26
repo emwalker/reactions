@@ -1,4 +1,7 @@
 import argparse
+import sys
+
+import pandas as pd
 
 from lenrmc.system import System, Options
 from lenrmc.terminal import TerminalView, StudiesTerminalView
@@ -15,9 +18,19 @@ class App(object):
 
     def run(self):
         s = System.load(self.kwargs['system'], **self.kwargs)
-        options = Options(**self.kwargs)
-        for line in self.view_cls(s).lines(options):
-            print(line)
+        if self.kwargs.get('decay_power'):
+            scenario = s.alpha_decay(moles=1, seconds=1)
+            if 'csv' == self.kwargs.get('format'):
+                scenario.to_csv(sys.stdout)
+            else:
+                with pd.option_context('display.max_rows', 999, 'display.max_columns', 8):
+                    print(scenario.df[['isotope', 'screening', 'gamow_factor', 'half_life', 'activity', 'watts']])
+                print('activity: {}'.format(scenario.activity()))
+                print('watts:    {}'.format(scenario.power().watts))
+        else:
+            options = Options(**self.kwargs)
+            for line in self.view_cls(s).lines(options):
+                print(line)
 
 
 def parse_arguments():
@@ -36,6 +49,8 @@ def parse_arguments():
     parser.add_argument('--parent-ub', dest='parent_ub', type=int)
     parser.add_argument('--simple', dest='simple', action='store_true')
     parser.add_argument('--gamow', dest='gamow', action='store_true')
+    parser.add_argument('--decay-power', dest='decay_power', action='store_true')
+    parser.add_argument('--format', dest='format')
     parser.add_argument('--daughter-count', dest='daughter_count')
     parser.set_defaults(
         lower_bound    = 0,
@@ -51,6 +66,8 @@ def parse_arguments():
         gamow          = False,
         parent_ub      = 1000,
         daughter_count = '',
+        decay_power    = False,
+        format         = None,
     )
     return parser.parse_args()
 
