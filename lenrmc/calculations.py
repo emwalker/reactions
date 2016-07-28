@@ -124,7 +124,7 @@ class IsotopicAlphaDecay(AlphaCalculationMixin):
             'heavier_daughter_z': heavier_daughter_z,
             'lighter_daughter_a': self.smaller.mass_number,
             'heavier_daughter_a': self.larger.mass_number,
-            'alpha_mass_mev': self.smaller.mass.mev,
+            'lighter_mass_mev': self.smaller.mass.mev,
             'heavier_daughter_mass_mev': self.larger.mass.mev,
             'q_value_mev': self.q_value.mev,
             'isotope': self.parent.label,
@@ -196,14 +196,14 @@ class DecayScenario(object):
         df['screened_heavier_daughter_z'] = df.heavier_daughter_z - df.screening
         df['nuclear_separation_fm'] = 1.2 * (np.power(df.lighter_daughter_a, 1./3) - (-1) * np.power(df.heavier_daughter_a, 1./3))
         df['barrier_height_mev'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.nuclear_separation_fm
-        df['alpha_ke_mev'] = df.q_value_mev / (1 + df.alpha_mass_mev / df.heavier_daughter_mass_mev)
-        df['radius_for_alpha_ke_fm'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.alpha_ke_mev
-        df['barrier_width_fm'] = df.radius_for_alpha_ke_fm - df.nuclear_separation_fm
-        df['alpha_velocity_m_per_s'] = np.sqrt(2 * df.alpha_ke_mev / df.alpha_mass_mev) * self.speed_of_light
-        df['alpha_v_over_c_m_per_s'] = df.alpha_velocity_m_per_s / self.speed_of_light
-        df['barrier_assault_frequency'] = df.alpha_velocity_m_per_s * math.pow(10, 15) / (2 * df.nuclear_separation_fm)
-        x = df.alpha_ke_mev / df.barrier_height_mev
-        ph = np.sqrt(2 * df.alpha_mass_mev / ((self.hbarc ** 2) * df.alpha_ke_mev))
+        df['lighter_ke_mev'] = df.q_value_mev / (1 + df.lighter_mass_mev / df.heavier_daughter_mass_mev)
+        df['radius_for_lighter_ke_fm'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.lighter_ke_mev
+        df['barrier_width_fm'] = df.radius_for_lighter_ke_fm - df.nuclear_separation_fm
+        df['lighter_velocity_m_per_s'] = np.sqrt(2 * df.lighter_ke_mev / df.lighter_mass_mev) * self.speed_of_light
+        df['lighter_v_over_c_m_per_s'] = df.lighter_velocity_m_per_s / self.speed_of_light
+        df['barrier_assault_frequency'] = df.lighter_velocity_m_per_s * math.pow(10, 15) / (2 * df.nuclear_separation_fm)
+        x = df.lighter_ke_mev / df.barrier_height_mev
+        ph = np.sqrt(2 * df.lighter_mass_mev / ((self.hbarc ** 2) * df.lighter_ke_mev))
         df['gamow_factor'] = ph * 2 * df.screened_heavier_daughter_z * self.e2_4pi * (np.arccos(np.sqrt(x)) - np.sqrt(x * (1 - x)))
         df['tunneling_probability'] = np.exp(-2 * df.gamow_factor)
         df['decay_constant'] = df.tunneling_probability * df.barrier_assault_frequency
@@ -211,14 +211,14 @@ class DecayScenario(object):
         return df
 
 
-class AlphaDecay(object):
+class Decay(object):
 
     initial_column_names = [
         'parent_z',
         'heavier_daughter_z',
         'lighter_daughter_a',
         'heavier_daughter_a',
-        'alpha_mass_mev',
+        'lighter_mass_mev',
         'heavier_daughter_mass_mev',
         'q_value_mev',
         'isotope',
@@ -236,7 +236,7 @@ class AlphaDecay(object):
     def __init__(self, reactions, **kwargs):
         self.reactions = list(reactions)
         self.decays = defaultdict(list)
-        for d in (r.alpha_decay(**kwargs) for r in self.reactions):
+        for d in (r.decay(**kwargs) for r in self.reactions):
             if d is None:
                 continue
             self.decays[d.parent_z].append(d)

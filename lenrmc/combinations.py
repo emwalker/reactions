@@ -97,11 +97,9 @@ class Reaction(object):
         combined = self.rvalues + self._lvalues
         return any(n.is_excited for num, n in combined)
 
-    def _alpha_components(self):
+    def _decay_components(self):
         values = [p for num, p in self.rvalues if p.is_baryon]
         if 2 != len(values):
-            return None
-        if 0 == len([p for p in values if p.numbers == (4, 2)]):
             return None
         n0, n1 = values
         smaller = min(values, key=lambda v: v.mass_number)
@@ -120,17 +118,17 @@ class Reaction(object):
         return all(num == 1 for num, c in self.rvalues)
 
     def geiger_nuttal(self):
-        return GeigerNuttal.load(self._alpha_components(), self.q_value)
+        return GeigerNuttal.load(self._decay_components(), self.q_value)
 
     def gamow(self):
-        return GamowSuppressionFactor.load(self._alpha_components(), self.q_value)
+        return GamowSuppressionFactor.load(self._decay_components(), self.q_value)
 
     def gamow2(self):
-        return Gamow2.load(self._alpha_components(), self.q_value)
+        return Gamow2.load(self._decay_components(), self.q_value)
 
-    def alpha_decay(self, **kwargs):
+    def decay(self, **kwargs):
         return IsotopicAlphaDecay.load(
-            self._alpha_components(),
+            self._decay_components(),
             self.q_value,
             **kwargs
         )

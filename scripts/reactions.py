@@ -19,7 +19,7 @@ class App(object):
     def run(self):
         s = System.load(self.kwargs['system'], **self.kwargs)
         if self.kwargs.get('decay_power'):
-            scenario = s.alpha_decay(**self.kwargs)
+            scenario = s.decay(**self.kwargs)
             if 'csv' == self.kwargs.get('format'):
                 scenario.to_csv(sys.stdout)
             else:

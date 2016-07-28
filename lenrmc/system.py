@@ -1,6 +1,6 @@
 from .nubase import parse_spec
 from .combinations import Combinations
-from .calculations import AlphaDecay
+from .calculations import Decay
 
 
 class Options(object):
@@ -35,5 +35,5 @@ class System(object):
         for c in self._combinations:
             yield from c.reactions()
 
-    def alpha_decay(self, **kwargs):
-        return AlphaDecay.load(reactions=self.reactions()).scenario(**kwargs)
+    def decay(self, **kwargs):
+        return Decay.load(reactions=self.reactions()).scenario(**kwargs)
