@@ -351,34 +351,7 @@ class Combinations(object):
         self._lower_bound = float(kwargs.get('lower_bound', 0))
         self._upper_bound = float(kwargs.get('upper_bound', 500000))
         self._excited = kwargs.get('excited')
-        self.cache_key = self._cache_key()
         self.daughter_count = {int(c) for c in kwargs.get('daughter_count', '').split(',') if c}
-
-    def _cached_results(self):
-        cursor = self.connection().execute(
-            "select reaction from reactions where parents = ?",
-            (self.cache_key,))
-        array = list(cursor)
-        if array:
-            logging.info('reading previously computed values from cache')
-            return (pickle.loads(r[0]) for r in array)
-        return None
-
-    def _cache_results(self, results):
-        self.connection().executemany("""
-        insert into reactions (parents, reaction) values (?, ?)
-        """, ((self.cache_key, pickle.dumps(r)) for r in results))
-        self.connection().commit()
-
-    def _cache_key(self):
-        parents = [(num, n.signature) for num, n in sorted(self._parents, key=self._sort_key)]
-        signature = {'parents': parents}
-        for field in ('lower_bound', 'upper_bound', 'excited', 'parent_ub', 'daughter_count'):
-            signature[field] = self._kwargs.get(field)
-        signature['model'] = self.model_name
-        string = json.dumps(signature, sort_keys=True).encode('utf-8')
-        key = hashlib.sha1(string).hexdigest()
-        return key
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__, self._parents)
@@ -397,21 +370,14 @@ class Combinations(object):
             yield from itertools.product(*daughters)
 
     def reactions(self):
-        results = self._cached_results()
-        if results:
-            yield from results
-        else:
-            results = []
-            for daughters in self._reactions():
-                all_parents = self._model.parents(self._parents, daughters)
-                for parents in all_parents:
-                    rvalues = ((1, d) for d in daughters)
-                    r = Reaction(parents, rvalues, **self._kwargs)
-                    if not self._allowed(r):
-                        continue
-                    yield r
-                    results.append(r)
-            self._cache_results(results)
+        for daughters in self._reactions():
+            all_parents = self._model.parents(self._parents, daughters)
+            for parents in all_parents:
+                rvalues = ((1, d) for d in daughters)
+                r = Reaction(parents, rvalues, **self._kwargs)
+                if not self._allowed(r):
+                    continue
+                yield r
 
     def _allowed(self, r):
         conditions = [
