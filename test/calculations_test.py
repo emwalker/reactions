@@ -38,7 +38,7 @@ class GamowSuppressionFactorTest(unittest.TestCase):
             reactants=[(1, ('185Re', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('181Ta', '0'))],
         ).gamow()
-        self.assertEqual(52, int(c.value()))
+        np.testing.assert_approx_equal(52.91841068219526, c.value())
 
     def test_gamow_2(self):
         c = Reaction.load(
@@ -52,14 +52,21 @@ class GamowSuppressionFactorTest(unittest.TestCase):
             reactants=[(1, ('190Pt', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('186Os', '0'))],
         ).gamow()
-        self.assertEqual(40, int(c.value()))
+        np.testing.assert_approx_equal(40.3839154493787, c.value())
 
     def test_gamow_4(self):
         c = Reaction.load(
             reactants=[(1, ('241Am', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('237Np', '0'))],
         ).gamow()
-        self.assertEqual(31, int(c.value()))
+        np.testing.assert_approx_equal(31.48734546863171, c.value())
+
+    def test_gamow_5(self):
+        c = Reaction.load(
+            reactants=[(1, ('8Be', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('4He', '0'))],
+        ).gamow()
+        np.testing.assert_approx_equal(5.57714787643263, c.value())
 
 
 class Gamow2Test(unittest.TestCase):
@@ -69,14 +76,21 @@ class Gamow2Test(unittest.TestCase):
             reactants=[(1, ('212Po', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('208Pb', '0'))],
         ).gamow2()
-        self.assertEqual('4.92e+12', '{:.2e}'.format(c.value()))
+        np.testing.assert_approx_equal(4920433262606.988, c.value())
 
     def test_gamow_factor_2(self):
         c = Reaction.load(
             reactants=[(1, ('185Re', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('181Ta', '0'))],
         ).gamow2()
-        self.assertEqual('2.36e+13', '{:.2e}'.format(c.value()))
+        np.testing.assert_approx_equal(23635102096516.79, c.value())
+
+    def test_gamow_factor_3(self):
+        c = Reaction.load(
+            reactants=[(1, ('8Be', '0'))],
+            daughters=[(1, ('4He', '0')), (1, ('4He', '0'))],
+        ).gamow2()
+        np.testing.assert_approx_equal(3725992198095.755, c.value())
 
 
 class GeigerNuttalLawTest(unittest.TestCase):
@@ -484,3 +498,86 @@ class PoloniumAlphaDecayTest(unittest.TestCase):
 
     def test_tunneling_probability(self):
         np.testing.assert_allclose([2.636693524272448e-15], self.scenario.df.tunneling_probability, rtol=1e-1)
+
+
+class InducedFissionTest(unittest.TestCase):
+
+    scenario = System.load('Be', model='induced-fission', unstable_parents=True) \
+        .decay(
+            seconds=1,
+            moles=1,
+            active_fraction=1,
+            isotopic_fraction=1,
+        )
+
+    def test_nuclear_separation(self):
+        np.testing.assert_allclose([
+            3.104881,
+            3.809763,
+            3.947314,
+            4.092171,
+        ], self.scenario.df.nuclear_separation_fm, rtol=1e-6)
+
+    def test_barrier_height(self):
+        np.testing.assert_allclose([
+            2.782647,
+            1.511868,
+            2.918368,
+            2.815062
+        ], self.scenario.df.barrier_height_mev, rtol=1e-6)
+
+    def test_lighter_ke(self):
+        np.testing.assert_allclose([
+            3.624082,
+            0.045919,
+            0.470429,
+            1.622167
+        ], self.scenario.df.lighter_ke_mev, rtol=1e-5)
+
+    def test_radius_for_lighter_ke_fm(self):
+        np.testing.assert_allclose([
+            2.383993,
+            125.434087,
+            24.487668,
+            7.101437
+        ], self.scenario.df.radius_for_lighter_ke_fm)
+
+    def test_barrier_width_fm(self):
+        np.testing.assert_allclose([
+            0,
+            121.624324,
+            20.540353,
+            3.009267
+        ], self.scenario.df.barrier_width_fm)
+
+    def test_barrier_assault_frequency(self):
+        np.testing.assert_allclose([
+            4.242063e+21,
+            1.952741e+20,
+            1.201677e+21,
+            2.152466e+21
+        ], self.scenario.df.barrier_assault_frequency, rtol=1e-6)
+
+    def test_lighter_v_over_c_m_per_s(self):
+        np.testing.assert_allclose([
+            0.087868,
+            0.004963,
+            0.031645,
+            0.058762
+        ], self.scenario.df.lighter_v_over_c_m_per_s, rtol=1e-4)
+
+    def test_lighter_velocity_m_per_s(self):
+        np.testing.assert_allclose([
+            26342204.647916,
+            1487895.690717,
+            9486791.905145,
+            17616513.090885
+        ], self.scenario.df.lighter_velocity_m_per_s)
+
+    def test_tunneling_probability(self):
+        np.testing.assert_allclose([
+            np.nan,
+            3.121839e-13,
+            2.940380e-03,
+            4.260489e-01
+        ], self.scenario.df.tunneling_probability, rtol=1e-6)

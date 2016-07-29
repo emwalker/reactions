@@ -68,7 +68,7 @@ def parse_arguments():
     parser.add_argument('--view', type=str, dest='view')
     parser.add_argument('--studies', dest='studies', action='store_true')
     parser.add_argument('--model', dest='model')
-    parser.add_argument('--unstable', dest='unstable', action='store_true')
+    parser.add_argument('--unstable-parents', dest='unstable_parents', action='store_true')
     parser.add_argument('--excited', dest='excited', action='store_true')
     parser.add_argument('--ascii', dest='ascii', action='store_true')
     parser.add_argument('--parent-ub', dest='parent_ub', type=int)
@@ -82,25 +82,25 @@ def parse_arguments():
     parser.add_argument('--format', dest='format')
     parser.add_argument('--daughter-count', dest='daughter_count')
     parser.set_defaults(
-        lower_bound     = 0,
-        upper_bound     = 500000,
-        spins           = False,
-        references      = False,
-        view            = 'default',
-        model           = 'standard',
-        unstable        = False,
-        ascii           = False,
-        excited         = False,
-        simple          = False,
-        gamow           = False,
-        parent_ub       = 1000,
-        daughter_count  = '',
-        decay_power     = False,
-        screening       = 0,
-        seconds         = 1,
-        moles           = 1,
-        active_fraction = 1,
-        format          = None,
+        lower_bound      = 0,
+        upper_bound      = 500000,
+        spins            = False,
+        references       = False,
+        view             = 'default',
+        model            = 'standard',
+        unstable_parents = False,
+        ascii            = False,
+        excited          = False,
+        simple           = False,
+        gamow            = False,
+        parent_ub        = 1000,
+        daughter_count   = '',
+        decay_power      = False,
+        screening        = 0,
+        seconds          = 1,
+        moles            = 1,
+        active_fraction  = 1,
+        format           = None,
     )
     return parser.parse_args()
 

@@ -9,7 +9,7 @@ from .constants import FINE_STRUCTURE_CONSTANT_MEV_FM, HBAR_MEV_S
 from .units import Energy, Power, HalfLife, Distance
 
 
-class AlphaCalculationMixin(object):
+class FragmentCalculationMixin(object):
 
     @classmethod
     def load(cls, components, q_value, **kwargs):
@@ -53,13 +53,13 @@ class ReactionEnergy(object):
         return lvalues - rvalues
 
 
-class GeigerNuttal(AlphaCalculationMixin):
+class GeigerNuttal(FragmentCalculationMixin):
 
     def value(self):
         return -46.83 + 1.454 * self.larger.atomic_number / math.sqrt(self.q_value.mev)
 
 
-class Gamow2(AlphaCalculationMixin):
+class Gamow2(FragmentCalculationMixin):
     """Gamow factor for alpha particle tunneling.
 
     Assumes one of the daughters is a heavy nucleus and the other an alpha particle.
@@ -74,7 +74,7 @@ class Gamow2(AlphaCalculationMixin):
         return t0 * t1 * t2
 
 
-class GamowSuppressionFactor(AlphaCalculationMixin):
+class GamowSuppressionFactor(FragmentCalculationMixin):
     """Gamow suppression factor in log10 units
 
     From Hermes: https://www.lenr-forum.com/forum/index.php/Thread/3434-Document-Isotopic-Composition
@@ -88,23 +88,24 @@ class GamowSuppressionFactor(AlphaCalculationMixin):
     """
 
     def value(self):
+        screening = self.kwargs.get('screening') or 0
         A  = self.larger.mass_number
-        Z  = self.larger.atomic_number
+        Z  = self.larger.atomic_number - screening
         A4 = self.smaller.mass_number
         Z4 = self.smaller.atomic_number
         Q  = self.q_value.mev
-        if Q < 0:
+        if Q <= 0:
             return math.nan
         # Distances in fm
         rs = 1.1 * (pow(A, .333333) + pow(A4, .333333))
         rc = float(Z) * Z4 * 1.43998 / Q
-        r  = rs / rc
+        r  = 1 if rc <= 0 else rs / rc
         G  = 0 if r >= 1 else math.acos(math.sqrt(r)) - math.sqrt(r * (1. - r))
         m  = (float(A) * A4) / (A + A4)
         return 0.2708122 * Z * Z4 * G * math.sqrt(m / Q)
 
 
-class IsotopicAlphaDecay(AlphaCalculationMixin):
+class IsotopicDecay(FragmentCalculationMixin):
     """From http://hyperphysics.phy-astr.gsu.edu/hbase/nuclear/alpdec.html
     """
 
@@ -198,7 +199,10 @@ class DecayScenario(object):
         df['barrier_height_mev'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.nuclear_separation_fm
         df['lighter_ke_mev'] = df.q_value_mev / (1 + df.lighter_mass_mev / df.heavier_daughter_mass_mev)
         df['radius_for_lighter_ke_fm'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.lighter_ke_mev
-        df['barrier_width_fm'] = df.radius_for_lighter_ke_fm - df.nuclear_separation_fm
+        df['barrier_width_fm'] = np.where(
+            df.radius_for_lighter_ke_fm >= df.nuclear_separation_fm,
+            df.radius_for_lighter_ke_fm -  df.nuclear_separation_fm,
+            0)
         df['lighter_velocity_m_per_s'] = np.sqrt(2 * df.lighter_ke_mev / df.lighter_mass_mev) * self.speed_of_light
         df['lighter_v_over_c_m_per_s'] = df.lighter_velocity_m_per_s / self.speed_of_light
         df['barrier_assault_frequency'] = df.lighter_velocity_m_per_s * math.pow(10, 15) / (2 * df.nuclear_separation_fm)
@@ -236,7 +240,7 @@ class Decay(object):
     def __init__(self, reactions, **kwargs):
         self.reactions = list(reactions)
         self.decays = defaultdict(list)
-        for d in (r.decay(**kwargs) for r in self.reactions):
+        for d in (r.decay(**kwargs) for c, r in self.reactions):
             if d is None:
                 continue
             self.decays[d.parent_z].append(d)

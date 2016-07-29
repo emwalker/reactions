@@ -13,23 +13,11 @@ class TerminalView(object):
     def __init__(self, system):
         self._system = system
 
-    _desirable = {
-        'n-transfer': 2,
-        'stable':     3,
-        '4He':        1,
-        'ɣ':         -4,
-        'n':         -5,
-    }
-
     _kwargs = {'selective': True}
 
-    def _sort_key(self, line):
-        desirable = sum(self._desirable.get(n, 0) for n in line.notes)
-        return line.q_value_kev > 0, desirable, line.q_value_kev
-
-    def _reactions(self, line_cls):
-        reactions = (line_cls(r, **self._kwargs) for r in self._system.reactions())
-        return sorted(self._filter(reactions), key=self._sort_key, reverse=True)
+    def reactions(self, cls):
+        reactions = (cls(c, r, **self._kwargs) for c, r in self._system.reactions())
+        return sorted(self._filter(reactions), key=lambda l: l.sort_key, reverse=True)
 
     def _filter(self, reactions):
         return reactions
@@ -37,8 +25,8 @@ class TerminalView(object):
     def lines(self, options):
         refs = set()
         lines = []
-        line_cls = AsciiTerminalLine if options.ascii else UnicodeTerminalLine
-        for r in self._reactions(line_cls):
+        cls = AsciiTerminalLine if options.ascii else UnicodeTerminalLine
+        for r in self.reactions(cls):
             line, _refs = r.terminal(options)
             lines.append(line)
             refs |= set(_refs)
@@ -70,8 +58,10 @@ class TerminalLine(object):
 
     _notes_template = '{:<55} {:<25}'
 
-    def __init__(self, reaction, **kwargs):
-        self._reaction = reaction
+    def __init__(self, combinations, reaction, **kwargs):
+        self.combinations = combinations
+        self.reaction = reaction
+        self.sort_key = combinations.sort_key(reaction)
         self.q_value_kev = reaction.q_value.kev
         self.notes = [self.format(s) for s in reaction.notes]
         self._lvalues = reaction.lvalues
@@ -124,17 +114,17 @@ class TerminalLine(object):
         return ' {} '.format(delim).join(values)
 
     def _add_gamow(self, string):
-        g = self._reaction.gamow()
-        if g is None:
+        G = self.reaction._gamow
+        if G is None:
             return string
-        return '{} [{:.0f}]'.format(string, g.value())
+        return '{} [{:.0f}]'.format(string, G)
 
     def terminal(self, options):
         kev = self.q_value_kev
         sign = '+' if kev >= 0 else '-'
         string = self._reaction_template.format(
-            self._fancy_side(self._reaction.lvalue_delim, self._lvalues),
-            self._fancy_side(self._reaction.rvalue_delim, self._rvalues),
+            self._fancy_side(self.reaction.lvalue_delim, self._lvalues),
+            self._fancy_side(self.reaction.rvalue_delim, self._rvalues),
             kev,
         )
         if options.gamow:

@@ -11,7 +11,7 @@ from os.path import expanduser
 
 from .nubase import Energy, Nuclides, Electron, ElectronNeutrino
 from .calculations import (
-    IsotopicAlphaDecay,
+    IsotopicDecay,
     GamowSuppressionFactor,
     GeigerNuttal,
     Gamow2,
@@ -30,6 +30,7 @@ class GammaPhoton(object):
 
     def __init__(self):
         self.mass_number = 0
+        self.is_baryon = False
         self.full_label = self.label = 'ɣ'
         self.is_stable = False
         self.spin_and_parity = '1-'
@@ -64,6 +65,8 @@ class Reaction(object):
         self.daughter_count = sum(n for (n, d) in self.rvalues)
         if self.is_single_body and 1 < len(self._lvalues):
             self.rvalues.append((1, GammaPhoton()))
+        g = self.gamow(**kwargs)
+        self._gamow = g.value() if g else -1
 
     @property
     def lvalues(self):
@@ -120,14 +123,17 @@ class Reaction(object):
     def geiger_nuttal(self):
         return GeigerNuttal.load(self._decay_components(), self.q_value)
 
-    def gamow(self):
-        return GamowSuppressionFactor.load(self._decay_components(), self.q_value)
+    def gamow(self, **kwargs):
+        return GamowSuppressionFactor.load(
+            self._decay_components(),
+            self.q_value,
+        )
 
     def gamow2(self):
         return Gamow2.load(self._decay_components(), self.q_value)
 
     def decay(self, **kwargs):
-        return IsotopicAlphaDecay.load(
+        return IsotopicDecay.load(
             self._decay_components(),
             self.q_value,
             **kwargs
@@ -198,6 +204,10 @@ def normalize(pair):
 
 
 class Model(object):
+
+    def sort_key(self, reaction):
+        kev = reaction.q_value.kev
+        return kev > 0, kev
 
     def parents(self, parents, daughters):
         yield parents
@@ -318,12 +328,27 @@ class SeparatedNuclideModel(Model):
             yield tuple([n0.numbers, n1.numbers])
 
 
+class ElectronMediatedFissionModel(Model):
+
+    def sort_key(self, reaction):
+        g = reaction._gamow
+        kev = reaction.q_value.kev
+        return -g, kev > 0, kev
+
+    def __call__(self, reactants):
+        assert 1 == len(reactants)
+        num, n0 = reactants[0]
+        assert 1 == num
+        return regular_combinations(n0.numbers)
+
+
 MODELS = {
     'standard':              StandardModel(),
     'pion-exchange':         PionExchangeAndDecayModel(),
     'strict-pion-exchange':  StrictPionExchangeModel(),
     'induced-decay':         ElectronMediatedDecayModel(),
     'separated-nuclide':     SeparatedNuclideModel(),
+    'induced-fission':       ElectronMediatedFissionModel(),
 }
 
 
@@ -356,9 +381,8 @@ class Combinations(object):
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__, self._parents)
 
-    def _sort_key(self, pair):
-        num, nuclide = pair
-        return nuclide.signature
+    def sort_key(self, reactions):
+        return self._model.sort_key(reactions)
 
     def _reactions(self):
         nuclides = Nuclides.db()

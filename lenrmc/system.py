@@ -28,12 +28,13 @@ class System(object):
         return cls(combinations, **kwargs)
 
     def __init__(self, combinations, **kwargs):
-        self._combinations = list(combinations)
+        self.combinations = list(combinations)
         self._kwargs = kwargs
 
     def reactions(self):
-        for c in self._combinations:
-            yield from c.reactions()
+        for c in self.combinations:
+            for r in c.reactions():
+                yield c, r
 
     def decay(self, **kwargs):
         return Decay.load(reactions=self.reactions()).scenario(**kwargs)

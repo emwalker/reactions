@@ -482,7 +482,7 @@ def stable_nuclides(nuclides, unstable):
 
 
 def parse_spec(spec, **kwargs):
-    unstable = kwargs.get('unstable')
+    unstable_parents = kwargs.get('unstable_parents')
     nuclides = Nuclides.db()
     reactants = []
     for label in (l.strip() for l in spec.split('+')):
@@ -496,11 +496,11 @@ def parse_spec(spec, **kwargs):
                 if number > parent_ub:
                     continue
                 ns = nuclides.atomic_number(number)
-                row.extend(stable_nuclides(ns, unstable))
+                row.extend(stable_nuclides(ns, unstable_parents))
             reactants.append(row)
         else:
             number = ELEMENTS[label]
             ns = nuclides.atomic_number(number)
-            it = stable_nuclides(ns, unstable)
+            it = stable_nuclides(ns, unstable_parents)
             reactants.append(it)
     return itertools.product(*reactants)
