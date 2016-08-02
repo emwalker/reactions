@@ -16,6 +16,8 @@ class FragmentCalculationMixin(object):
         if components is None:
             return None
         parent, daughters = components
+        if 'daughters' in kwargs:
+            del kwargs['daughters']
         return cls(parent, daughters, q_value, **kwargs)
 
     def __init__(self, parent, daughters, q_value, **kwargs):

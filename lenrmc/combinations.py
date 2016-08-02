@@ -127,6 +127,7 @@ class Reaction(object):
         return GamowSuppressionFactor.load(
             self._decay_components(),
             self.q_value,
+            **kwargs,
         )
 
     def gamow2(self):
@@ -155,35 +156,80 @@ def make_connection():
     conn = sqlite3.connect('{}/lenrmc.db'.format(LENRMC_DIR))
     try:
         conn.execute("""
-        create table reactions (parents text, reaction text, q_value_kev real)
+        create table combinations (cache_key text, result text)
         """)
     except sqlite3.OperationalError:
         pass
     return conn
 
 
-def regular_combinations(totals):
-    mass_number, atomic_number = totals
-    seen = set()
-    for masses in vectors3(mass_number):
-        for protons in vectors3(atomic_number):
-            daughters = []
-            try:
-                for i, m in enumerate(masses):
-                    p = protons[i]
-                    if m < p:
-                        raise RejectCombination
-                    pair = (m, p)
-                    if (0, 0) == pair:
+class RegularCombinations(object):
+
+    _connection = None
+
+    @classmethod
+    def connection(cls):
+        if cls._connection is None:
+            cls._connection = make_connection()
+        return cls._connection
+
+    def __init__(self, totals):
+        self.totals = totals
+        self.cache_key = self._cache_key(totals)
+
+    def iterator(self):
+        it = self._cached_results()
+        if it:
+            yield from it
+        else:
+            mass_number, atomic_number = self.totals
+            results, seen = [], set()
+            for masses in vectors3(mass_number):
+                for protons in vectors3(atomic_number):
+                    daughters = []
+                    try:
+                        for i, m in enumerate(masses):
+                            p = protons[i]
+                            if m < p:
+                                raise RejectCombination
+                            pair = (m, p)
+                            if (0, 0) == pair:
+                                continue
+                            daughters.append(pair)
+                    except RejectCombination:
                         continue
-                    daughters.append(pair)
-            except RejectCombination:
-                continue
-            daughters = tuple(sorted(daughters))
-            if daughters in seen:
-                continue
-            seen.add(daughters)
-            yield daughters
+                    daughters = tuple(sorted(daughters))
+                    if daughters in seen:
+                        continue
+                    seen.add(daughters)
+                    results.append(daughters)
+                    yield daughters
+            self._cache_results(results)
+
+    def _cache_key(self, totals):
+        string = json.dumps(totals, sort_keys=True).encode('utf-8')
+        return hashlib.sha1(string).hexdigest()
+
+    def _cache_results(self, results):
+        self.connection().execute("""
+        insert into combinations (cache_key, result) values (?, ?)
+        """, (self.cache_key, pickle.dumps(results)))
+        self.connection().commit()
+
+    def _cached_results(self):
+        cursor = self.connection().execute(
+            "select result from combinations where cache_key = ?",
+            (self.cache_key,))
+        array = list(cursor)
+        if not array:
+            return None
+        logging.info('reading previously computed values from cache')
+        combinations = (pickle.loads(result[0]) for result in array)
+        return (c for array in combinations for c in array)
+
+
+def regular_combinations(totals):
+    return RegularCombinations(totals).iterator()
 
 
 def add_numbers(*numbers):
@@ -354,19 +400,11 @@ MODELS = {
 
 class Combinations(object):
 
-    _connection = None
-
     @classmethod
     def load(cls, **kwargs):
         parents = kwargs['reactants']
         del kwargs['reactants']
         return cls(parents, **kwargs)
-
-    @classmethod
-    def connection(cls):
-        if cls._connection is None:
-            cls._connection = make_connection()
-        return cls._connection
 
     def __init__(self, parents, **kwargs):
         self.model_name = kwargs.get('model') or 'standard'
