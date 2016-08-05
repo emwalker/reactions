@@ -68,6 +68,20 @@ class GamowSuppressionFactorTest(unittest.TestCase):
         ).gamow()
         np.testing.assert_approx_equal(5.57714787643263, c.value())
 
+    def test_gamow_6(self):
+        c = Reaction.load(
+            reactants=[(1, ('106Pd', '0'))],
+            daughters=[(1, ('46Ca', '0')), (1, ('60Fe', '0'))],
+        ).gamow()
+        np.testing.assert_approx_equal(148.29823894720775, c.value())
+
+    def test_gamow_7(self):
+        c = Reaction.load(
+            reactants=[(1, ('106Pd', '0'))],
+            daughters=[(1, ('90Sr', '0')), (1, ('16O', '0'))],
+        ).gamow()
+        np.testing.assert_approx_equal(459.89628372138634, c.value())
+
 
 class Gamow2Test(unittest.TestCase):
 
@@ -248,7 +262,7 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
     def test_screened_heavier_z(self):
         np.testing.assert_allclose(43.954, self.scenario.df.screened_heavier_daughter_z[0])
 
-    def test_isotope(self):
+    def test_parent(self):
         np.testing.assert_equal([
             '190Pt',
             '192Pt',
@@ -256,7 +270,7 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
             '195Pt',
             '196Pt',
             '198Pt',
-        ], self.scenario.df.isotope.values)
+        ], self.scenario.df.parent.values)
 
     def test_barrier_height_mev(self):
         np.testing.assert_allclose([
@@ -388,7 +402,7 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
             7.360000e+00,
         ], self.scenario.df.isotopic_abundance)
 
-    def test_isotopic_fraction(self):
+    def test_parent_fraction(self):
         np.testing.assert_allclose([
             1.200000e-04,
             7.820000e-03,
@@ -396,7 +410,7 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
             3.378000e-01,
             2.521000e-01,
             7.360000e-02,
-        ], self.scenario.df.isotopic_fraction)
+        ], self.scenario.df.parent_fraction)
 
     def test_starting_moles(self):
         np.testing.assert_allclose([
@@ -471,7 +485,7 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
     def test_total_activity(self):
         df = self.scenario.df
         np.testing.assert_approx_equal(22522522523, df.partial_activity.sum(), significant=3)
-        np.testing.assert_approx_equal(5.01233468945662e-285, df.partial_activity[df.isotope == '190Pt'][0])
+        np.testing.assert_approx_equal(5.01233468945662e-285, df.partial_activity[df.parent == '190Pt'][0])
 
     def test_total_power(self):
         np.testing.assert_approx_equal(0.00876108327676111, self.scenario.df.watts.sum())
@@ -591,3 +605,86 @@ class InducedFissionTest(unittest.TestCase):
             2.940380e-03,
             4.260489e-01
         ], self.scenario.df.tunneling_probability, rtol=1e-6)
+
+
+class InducedFission106PdTest(unittest.TestCase):
+
+    scenario = System.load('106Pd', model='induced-fission') \
+        .decay(
+            seconds=1,
+            moles=1,
+            active_fraction=1,
+            isotopic_fraction=1,
+        )
+
+    def test_daughters(self):
+        np.testing.assert_equal([
+            '90Sr, 16O',
+            '86Kr, 20Ne',
+            '84Kr, 22Ne',
+            '82Se, 24Mg'
+        ], self.scenario.df.daughters[0:4].values)
+
+    def test_nuclear_separation(self):
+        np.testing.assert_allclose([
+            8.401496,
+            8.554107,
+            8.61787,
+            8.674777
+        ], self.scenario.df.nuclear_separation_fm[0:4])
+
+    def test_barrier_height(self):
+        np.testing.assert_allclose([
+            13.02593,
+            12.120195,
+            12.030518,
+            11.28762
+        ], self.scenario.df.barrier_height_mev[0:4])
+
+    def test_lighter_ke(self):
+        np.testing.assert_allclose([
+            0.660921,
+            0.324646,
+            0.441057,
+            1.253149
+        ], self.scenario.df.lighter_ke_mev[0:4], rtol=1e-5)
+
+    def test_radius_for_lighter_ke_fm(self):
+        np.testing.assert_allclose([
+            165.583023,
+            319.354939,
+            235.065643,
+            78.137199
+        ], self.scenario.df.radius_for_lighter_ke_fm[0:4])
+
+    def test_barrier_width_fm(self):
+        np.testing.assert_allclose([
+            157.181527,
+            310.800832,
+            226.447773,
+            69.462423
+        ], self.scenario.df.barrier_width_fm[0:4])
+
+    def test_barrier_assault_frequency(self):
+        np.testing.assert_allclose([
+            1.680517e+20,
+            1.034697e+20,
+            1.141398e+20,
+            1.830158e+20
+        ], self.scenario.df.barrier_assault_frequency[0:4], rtol=1e-5)
+
+    def test_lighter_v_over_c_m_per_s(self):
+        np.testing.assert_allclose([
+            0.009419,
+            0.005905,
+            0.006562,
+            0.010591
+        ], self.scenario.df.lighter_v_over_c_m_per_s[0:4], rtol=1e-4)
+
+    def test_gamow_factor(self):
+        np.testing.assert_allclose([
+            132.378215,
+            221.553158,
+            190.591429,
+            85.919703
+        ], self.scenario.df.gamow_factor[0:4])

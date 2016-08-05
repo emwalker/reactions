@@ -124,6 +124,8 @@ class IsotopicDecay(FragmentCalculationMixin):
     def _data(self):
         heavier_daughter_z = self.larger.atomic_number
         return {
+            'parent': self.parent.label,
+            'daughters': ', '.join([self.larger.label, self.smaller.label]),
             'parent_z': self.parent_z,
             'parent_a': self.parent_a,
             'heavier_daughter_z': heavier_daughter_z,
@@ -132,7 +134,6 @@ class IsotopicDecay(FragmentCalculationMixin):
             'lighter_mass_mev': self.smaller.mass.mev,
             'heavier_daughter_mass_mev': self.larger.mass.mev,
             'q_value_mev': self.q_value.mev,
-            'isotope': self.parent.label,
             'isotopic_abundance': self.parent.isotopic_abundance,
             'deposited_q_value_joules': self.q_value.joules,
         }
@@ -187,7 +188,7 @@ class DecayScenario(object):
 
     def _calculate_products(self, df, kwargs):
         elapsed = kwargs['seconds']
-        df['starting_moles'] = kwargs['moles'] * (kwargs.get('isotopic_fraction') or df.isotopic_fraction)
+        df['starting_moles'] = kwargs['moles'] * (kwargs.get('isotopic_fraction') or df.parent_fraction)
         df['active_fraction'] = kwargs.get('active_fraction') or 1
         df['starting_active_moles'] = df.starting_moles * df.active_fraction
         df['starting_active_atoms'] = df.starting_active_moles * self.avogadros_number
@@ -225,13 +226,14 @@ class Decay(object):
     initial_column_names = [
         'parent_z',
         'parent_a',
+        'parent',
+        'daughters',
         'heavier_daughter_z',
         'lighter_daughter_a',
         'heavier_daughter_a',
         'lighter_mass_mev',
         'heavier_daughter_mass_mev',
         'q_value_mev',
-        'isotope',
         'isotopic_abundance',
         'deposited_q_value_joules',
     ]
@@ -261,7 +263,7 @@ class Decay(object):
             df = pd.DataFrame(columns=self.initial_column_names)
         else:
             df = pd.DataFrame(rows, columns=self.initial_column_names)
-        df['isotopic_fraction'] = df.isotopic_abundance / 100.
+        df['parent_fraction'] = df.isotopic_abundance / 100.
         return df
 
     def scenario(self, **kwargs):

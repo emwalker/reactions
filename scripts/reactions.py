@@ -38,12 +38,11 @@ class App(object):
         print()
 
         df = scenario.df[[
-            'isotope',
-            'isotopic_fraction',
+            'parent',
+            'daughters',
+            'parent_fraction',
             'q_value_mev',
             'starting_moles',
-            'active_fraction',
-            'screening',
             'gamow_factor',
             'partial_half_life',
             'partial_activity',
