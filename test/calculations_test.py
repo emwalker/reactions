@@ -348,7 +348,7 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
             3.436779e-209
         ], self.scenario.df.tunneling_probability, rtol=1e-6)
 
-    def test_decay_constant(self):
+    def test_partial_decay_constant(self):
         np.testing.assert_allclose([
             6.892524e+002,
             2.185342e-004,
@@ -356,9 +356,19 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
             1.764264e-025,
             9.578119e-040,
             4.355961e-189
-        ], self.scenario.df.decay_constant, rtol=1e-6)
+        ], self.scenario.df.partial_decay_constant, rtol=1e-6)
 
-    def test_half_life(self):
+    def test_isotope_decay_constant(self):
+        np.testing.assert_allclose([
+            6.892524e+002,
+            2.185342e-004,
+            5.100026e-017,
+            1.764264e-025,
+            9.578119e-040,
+            4.355961e-189
+        ], self.scenario.df.isotope_decay_constant, rtol=1e-6)
+
+    def test_partial_half_life(self):
         np.testing.assert_allclose([
             1.005651e-003,
             3.171802e+003,
@@ -366,7 +376,7 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
             3.928818e+024,
             7.236778e+038,
             1.591261e+188
-        ], self.scenario.df.half_life, rtol=1e-6)
+        ], self.scenario.df.partial_half_life, rtol=1e-6)
 
     def test_isotopic_abundance(self):
         np.testing.assert_allclose([
@@ -438,7 +448,7 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
             9.724133e+014
         ], self.scenario.df.remaining_active_atoms, rtol=1e-6)
 
-    def test_activity(self):
+    def test_partial_activity(self):
         np.testing.assert_allclose([
             5.012335e-285,
             2.257378e+010,
@@ -446,7 +456,7 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
             7.874016e-010,
             3.190260e-024,
             4.235794e-174
-        ], self.scenario.df.activity, rtol=1e-6)
+        ], self.scenario.df.partial_activity, rtol=1e-6)
 
     def test_watts(self):
         np.testing.assert_allclose([
@@ -460,8 +470,8 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
 
     def test_total_activity(self):
         df = self.scenario.df
-        np.testing.assert_approx_equal(22522522523, df.activity.sum(), significant=3)
-        np.testing.assert_approx_equal(5.01233468945662e-285, df.activity[df.isotope == '190Pt'][0])
+        np.testing.assert_approx_equal(22522522523, df.partial_activity.sum(), significant=3)
+        np.testing.assert_approx_equal(5.01233468945662e-285, df.partial_activity[df.isotope == '190Pt'][0])
 
     def test_total_power(self):
         np.testing.assert_approx_equal(0.00876108327676111, self.scenario.df.watts.sum())

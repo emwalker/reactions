@@ -45,8 +45,8 @@ class App(object):
             'active_fraction',
             'screening',
             'gamow_factor',
-            'half_life',
-            'activity',
+            'partial_half_life',
+            'partial_activity',
             'watts',
         ]]
 
@@ -54,6 +54,7 @@ class App(object):
             print('No active isotopes.')
         else:
             with pd.option_context('display.max_rows', 999, 'display.max_columns', 10):
+                df = df.dropna().sort(['watts', 'gamow_factor'], ascending=[0, 1])
                 print(df)
         print()
 

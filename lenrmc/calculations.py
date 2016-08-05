@@ -114,6 +114,7 @@ class IsotopicDecay(FragmentCalculationMixin):
     def __init__(self, parent, daughters, q_value, **kwargs):
         self.parent = parent
         self.parent_z = parent.atomic_number
+        self.parent_a = parent.mass_number
         self.daughters = daughters
         self.q_value = q_value
         self.kwargs = kwargs
@@ -124,6 +125,7 @@ class IsotopicDecay(FragmentCalculationMixin):
         heavier_daughter_z = self.larger.atomic_number
         return {
             'parent_z': self.parent_z,
+            'parent_a': self.parent_a,
             'heavier_daughter_z': heavier_daughter_z,
             'lighter_daughter_a': self.smaller.mass_number,
             'heavier_daughter_a': self.larger.mass_number,
@@ -174,7 +176,7 @@ class DecayScenario(object):
         return DecayScenario(self.base_df, **merged)
 
     def activity(self, **kwargs):
-        return self.recalculate(**kwargs).df.activity.sum()
+        return self.recalculate(**kwargs).df.partial_activity.sum()
 
     def power(self, **kwargs):
         watts = self.recalculate(**kwargs).df.watts.sum()
@@ -189,9 +191,9 @@ class DecayScenario(object):
         df['active_fraction'] = kwargs.get('active_fraction') or 1
         df['starting_active_moles'] = df.starting_moles * df.active_fraction
         df['starting_active_atoms'] = df.starting_active_moles * self.avogadros_number
-        df['remaining_active_atoms'] = df.starting_active_atoms * np.exp(-df.decay_constant * elapsed)
-        df['activity'] = df.decay_constant * df.remaining_active_atoms
-        df['watts'] = df.activity * df.deposited_q_value_joules
+        df['remaining_active_atoms'] = df.starting_active_atoms * np.exp(-df.isotope_decay_constant * elapsed)
+        df['partial_activity'] = df.partial_decay_constant * df.remaining_active_atoms
+        df['watts'] = df.partial_activity * df.deposited_q_value_joules
         return df
 
     def _calculate_gamow_factor(self, df, kwargs):
@@ -212,8 +214,9 @@ class DecayScenario(object):
         ph = np.sqrt(2 * df.lighter_mass_mev / ((self.hbarc ** 2) * df.lighter_ke_mev))
         df['gamow_factor'] = ph * 2 * df.screened_heavier_daughter_z * self.e2_4pi * (np.arccos(np.sqrt(x)) - np.sqrt(x * (1 - x)))
         df['tunneling_probability'] = np.exp(-2 * df.gamow_factor)
-        df['decay_constant'] = df.tunneling_probability * df.barrier_assault_frequency
-        df['half_life'] = np.where(df.decay_constant > 0, math.log(2) / df.decay_constant, math.inf)
+        df['partial_decay_constant'] = df.tunneling_probability * df.barrier_assault_frequency
+        df['isotope_decay_constant'] = df.groupby(['parent_a', 'parent_z']).partial_decay_constant.transform(np.sum)
+        df['partial_half_life'] = np.where(df.partial_decay_constant > 0, math.log(2) / df.partial_decay_constant, math.inf)
         return df
 
 
@@ -221,6 +224,7 @@ class Decay(object):
 
     initial_column_names = [
         'parent_z',
+        'parent_a',
         'heavier_daughter_z',
         'lighter_daughter_a',
         'heavier_daughter_a',
@@ -241,19 +245,18 @@ class Decay(object):
 
     def __init__(self, reactions, **kwargs):
         self.reactions = list(reactions)
-        self.decays = defaultdict(list)
+        self.decays = []
         for d in (r.decay(**kwargs) for c, r in self.reactions):
             if d is None:
                 continue
-            self.decays[d.parent_z].append(d)
+            self.decays.append(d)
         self.kwargs = kwargs
         self.df = self._initial_dataframe()
 
     def _initial_dataframe(self):
         rows = []
-        for parent_z, decays in self.decays.items():
-            for d in decays:
-                rows.append([d[c] for c in self.initial_column_names])
+        for d in self.decays:
+            rows.append([d[c] for c in self.initial_column_names])
         if len(rows) < 1:
             df = pd.DataFrame(columns=self.initial_column_names)
         else:
