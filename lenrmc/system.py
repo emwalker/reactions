@@ -19,8 +19,8 @@ class System(object):
 
     @classmethod
     def load(cls, string, **kwargs):
-        system = filter(None, (rs.strip() for rs in string.split(',')))
         combinations = []
+        system = filter(None, (rs.strip() for rs in string.split(',')))
         for spec in system:
             for reactants in parse_spec(spec, **kwargs):
                 c = Combinations.load(reactants=reactants, **kwargs)

@@ -425,21 +425,30 @@ class Combinations(object):
     def _reactions(self):
         nuclides = Nuclides.db()
         pairs = []
-        for _daughters in self._model(self._parents):
-            daughters = [nuclides.isomers[pair] for pair in _daughters]
+        for ds in self._daughters():
+            daughters = [nuclides.isomers[pair] for pair in ds]
             if not all(daughters):
                 continue
             yield from itertools.product(*daughters)
 
+    def _daughters(self):
+        return self._model(self._parents)
+
     def reactions(self):
-        for daughters in self._reactions():
-            all_parents = self._model.parents(self._parents, daughters)
-            for parents in all_parents:
-                rvalues = ((1, d) for d in daughters)
-                r = Reaction(parents, rvalues, **self._kwargs)
-                if not self._allowed(r):
-                    continue
+        if 'daughters' in self._kwargs:
+            reactants = [(num, (n.label, '0')) for num, n in self._parents]
+            r = Reaction.load(reactants=reactants, **self._kwargs)
+            if self._allowed(r):
                 yield r
+        else:
+            for daughters in self._reactions():
+                all_parents = self._model.parents(self._parents, daughters)
+                for parents in all_parents:
+                    rvalues = ((1, d) for d in daughters)
+                    r = Reaction(parents, rvalues, **self._kwargs)
+                    if not self._allowed(r):
+                        continue
+                    yield r
 
     def _allowed(self, r):
         conditions = [
