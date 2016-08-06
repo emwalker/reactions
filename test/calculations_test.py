@@ -463,7 +463,6 @@ class PoloniumAlphaDecayTest(unittest.TestCase):
         np.testing.assert_allclose([2.636693524272448e-15], self.scenario.df.tunneling_probability, rtol=1e-1)
 
 
-
 class InducedFission106PdTest(unittest.TestCase):
 
     @classmethod

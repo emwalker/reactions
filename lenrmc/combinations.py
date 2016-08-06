@@ -1,7 +1,6 @@
 import os
 import json
 import math
-import sqlite3
 import hashlib
 import logging
 import pickle
@@ -151,30 +150,9 @@ def vectors3(integer):
             yield (j - k, k, i)
 
 
-def make_connection():
-    try:
-        os.mkdir(LENRMC_DIR, 0o755)
-    except OSError:
-        pass
-    conn = sqlite3.connect('{}/lenrmc.db'.format(LENRMC_DIR))
-    try:
-        conn.execute("""
-        create table combinations (cache_key text, result text)
-        """)
-    except sqlite3.OperationalError:
-        pass
-    return conn
-
-
 class RegularCombinations(object):
 
-    _connection = None
-
-    @classmethod
-    def connection(cls):
-        if cls._connection is None:
-            cls._connection = make_connection()
-        return cls._connection
+    basedir = os.path.expanduser('~/.lenrmc/objects')
 
     def __init__(self, totals):
         self.totals = totals
@@ -214,21 +192,25 @@ class RegularCombinations(object):
         return hashlib.sha1(string).hexdigest()
 
     def _cache_results(self, results):
-        self.connection().execute("""
-        insert into combinations (cache_key, result) values (?, ?)
-        """, (self.cache_key, pickle.dumps(results)))
-        self.connection().commit()
+        try:
+            os.makedirs(self.basedir)
+        except FileExistsError:
+            pass
+        with open(self.cache_path, 'wb+') as fh:
+            string = pickle.dumps(results)
+            fh.write(string)
+
+    @property
+    def cache_path(self):
+        return os.path.join(self.basedir, self.cache_key)
 
     def _cached_results(self):
-        cursor = self.connection().execute(
-            "select result from combinations where cache_key = ?",
-            (self.cache_key,))
-        array = list(cursor)
-        if not array:
+        if not os.path.exists(self.cache_path):
             return None
         logging.info('reading previously computed values from cache')
-        combinations = (pickle.loads(result[0]) for result in array)
-        return (c for array in combinations for c in array)
+        with open(self.cache_path, 'rb') as fh:
+            combinations = pickle.loads(fh.read())
+        return combinations
 
 
 def regular_combinations(totals):

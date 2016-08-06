@@ -39,8 +39,8 @@ class System(object):
     def hp(self, **kwargs):
         return self._decay().hp(**kwargs)
 
-    def hermese(self, **kwargs):
-        return self._decay().hermese(**kwargs)
+    def hermes(self, **kwargs):
+        return self._decay().hermes(**kwargs)
 
     def _decay(self):
         return Decay.load(reactions=self.reactions())
