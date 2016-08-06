@@ -212,19 +212,20 @@ class AlphaDecayTest(unittest.TestCase):
         np.testing.assert_approx_equal(0.0, pt190.power(seconds=1e20).watts)
 
 
-class PlatinumAlphaDecayTest(unittest.TestCase):
+##
+# Model production of of 22,522,522,523 4He/s from 0.02193926719 mol pt
+# over a period of 4440 seconds
+# http://lenr-canr.org/acrobat/MilesMcorrelatio.pdf
+#
+screening = 32.046
+moles = 0.02193926719
+active_fraction = 1e-6
 
-    ##
-    # Model production of of 22,522,522,523 4He/s from 0.02193926719 mol pt
-    # over a period of 4440 seconds
-    # http://lenr-canr.org/acrobat/MilesMcorrelatio.pdf
-    #
+
+class HyperphysicsPlatinumAlphaDecayTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        screening = 32.046
-        moles = 0.02193926719
-        active_fraction = 1e-6
         cls.scenario = System.load('Pt', model='induced-decay') \
             .hp(
                 seconds=1,
@@ -428,7 +429,7 @@ class PlatinumAlphaDecayTest(unittest.TestCase):
         np.testing.assert_approx_equal(0.00876108327676111, self.scenario.df.watts.sum())
 
 
-class PoloniumAlphaDecayTest(unittest.TestCase):
+class HyperphysicsPoloniumAlphaDecayTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -482,3 +483,91 @@ class InducedFission106PdTest(unittest.TestCase):
 
     def test_gamow_factor(self):
         np.testing.assert_allclose([132.378215], self.scenario.df.gamow_factor)
+
+
+class HermesDecayTest(unittest.TestCase):
+
+    ##
+    # Others:
+    # 218Rn, 219Rn, 220Rn, 222Rn, 226Rn
+    # 221Fr
+    # 223Ra, 224Ra, 226Ra
+    # 225Ac, 227Ac
+    # 227Th, 228Th, 229Th, 230Th, 232Th
+    # 231Pa
+    # 233U, 234U, 235U, 236U, 238U
+    # 237Np
+    # 238Pu, 239Pu, 240Pu, 244Pu
+    # 244Cm, 245Cm, 248Cm
+    # 249Cf, 252Cf
+    #
+
+    @classmethod
+    def setUpClass(cls):
+        cls.parameters = dict(seconds=1, moles=1, active_fraction=1, isotopic_fraction=1)
+
+    def compare(self, isotope):
+        system = System.load(isotope, model='induced-decay')
+        hp_scenario = system.hp(**self.parameters)
+        hm_scenario = system.hermes(**self.parameters)
+        return hp_scenario, hm_scenario
+
+    def test_209Bi(self):
+        dfe, dfa = self.compare('209Bi')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 7.0, rtol=1e-2)
+
+    def test_211Bi(self):
+        dfe, dfa = self.compare('211Bi')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.7, rtol=1e-2)
+
+    def test_212Bi(self):
+        dfe, dfa = self.compare('212Bi')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 3.0, rtol=1e-2)
+
+    def test_213Bi(self):
+        dfe, dfa = self.compare('213Bi')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 3.3, rtol=1e-2)
+
+    def test_210Po(self):
+        dfe, dfa = self.compare('210Po')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 4.0, rtol=1e-2)
+
+    def test_211Po(self):
+        dfe, dfa = self.compare('211Po')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.4, rtol=1e-2)
+
+    def test_212Po(self):
+        dfe, dfa = self.compare('212Po')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 1.7, rtol=1e-2)
+
+    def test_214Po(self):
+        dfe, dfa = self.compare('214Po')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.0, rtol=1e-2)
+
+    def test_215Po(self):
+        dfe, dfa = self.compare('215Po')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.3, rtol=1e-2)
+
+    def test_216Po(self):
+        dfe, dfa = self.compare('216Po')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.7, rtol=1e-2)
+
+    def test_218Po(self):
+        dfe, dfa = self.compare('218Po')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 3.3, rtol=1e-2)
+
+    def test_215At(self):
+        dfe, dfa = self.compare('215At')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.2, rtol=1e-2)
+
+    def test_217At(self):
+        dfe, dfa = self.compare('217At')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.6, rtol=1e-2)
+
+    def test_218At(self):
+        dfe, dfa = self.compare('218At')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.7, rtol=1e-2)
+
+    def test_241Am(self):
+        dfe, dfa = self.compare('241Am')
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 4.4, rtol=1e-2)
