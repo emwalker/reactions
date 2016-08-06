@@ -196,7 +196,7 @@ class DecayScenario(object):
     def calculate_preliminaries(self, df, kwargs):
         df['screening'] = kwargs.get('screening') or 0
         df['lighter_ke_mev'] = df.q_value_mev / (1 + df.lighter_mass_mev / df.heavier_daughter_mass_mev)
-        df['nuclear_separation_fm'] = 1.2 * (np.power(df.lighter_daughter_a, 1./3) - (-1) * np.power(df.heavier_daughter_a, 1./3))
+        df['nuclear_separation_fm'] = 1.2 * (np.power(df.lighter_daughter_a, 1./3) + np.power(df.heavier_daughter_a, 1./3))
         df['screened_heavier_daughter_z'] = df.heavier_daughter_z - df.screening
         df['lighter_velocity_m_per_s'] = np.sqrt(2 * df.lighter_ke_mev / df.lighter_mass_mev) * self.speed_of_light
         df['lighter_v_over_c_m_per_s'] = df.lighter_velocity_m_per_s / self.speed_of_light
@@ -241,6 +241,10 @@ class HermesDecayScenario(DecayScenario):
 
     def calculate_gamow_factor(self, df, kwargs):
         df['gamow_factor'] = df.hermes_gamow_factor
+        df['nuclear_separation_fm'] = 1.1 * (
+            np.power(df.heavier_daughter_a, .333333) +
+            np.power(df.lighter_daughter_a, .333333)
+            )
         return df
 
 

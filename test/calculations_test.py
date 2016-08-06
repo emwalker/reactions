@@ -571,3 +571,8 @@ class HermesDecayTest(unittest.TestCase):
     def test_241Am(self):
         dfe, dfa = self.compare('241Am')
         np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 4.4, rtol=1e-2)
+
+    def test_nuclear_separation(self):
+        dfe, dfa = self.compare('241Am')
+        errors = 1 - dfe.df.nuclear_separation_fm / dfa.df.nuclear_separation_fm
+        np.testing.assert_allclose(errors, [-0.090911], rtol=1e-5)
