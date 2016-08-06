@@ -40,7 +40,7 @@ class GamowSuppressionFactorTest(unittest.TestCase):
             reactants=[(1, ('185Re', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('181Ta', '0'))],
         ).gamow()
-        np.testing.assert_approx_equal(52.91841068219526, c.value())
+        np.testing.assert_approx_equal(51.6243422304808, c.value())
 
     def test_gamow_2(self):
         c = Reaction.load(
@@ -54,35 +54,35 @@ class GamowSuppressionFactorTest(unittest.TestCase):
             reactants=[(1, ('190Pt', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('186Os', '0'))],
         ).gamow()
-        np.testing.assert_approx_equal(40.3839154493787, c.value())
+        np.testing.assert_approx_equal(39.086112497598315, c.value())
 
     def test_gamow_4(self):
         c = Reaction.load(
             reactants=[(1, ('241Am', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('237Np', '0'))],
         ).gamow()
-        np.testing.assert_approx_equal(31.48734546863171, c.value())
+        np.testing.assert_approx_equal(30.05677680959287, c.value())
 
     def test_gamow_5(self):
         c = Reaction.load(
             reactants=[(1, ('8Be', '0'))],
             daughters=[(1, ('4He', '0')), (1, ('4He', '0'))],
         ).gamow()
-        np.testing.assert_approx_equal(5.57714787643263, c.value())
+        np.testing.assert_approx_equal(5.474197090566792, c.value())
 
     def test_gamow_6(self):
         c = Reaction.load(
             reactants=[(1, ('106Pd', '0'))],
             daughters=[(1, ('46Ca', '0')), (1, ('60Fe', '0'))],
         ).gamow()
-        np.testing.assert_approx_equal(148.29823894720775, c.value())
+        np.testing.assert_approx_equal(142.1826806102932, c.value())
 
     def test_gamow_7(self):
         c = Reaction.load(
             reactants=[(1, ('106Pd', '0'))],
             daughters=[(1, ('90Sr', '0')), (1, ('16O', '0'))],
         ).gamow()
-        np.testing.assert_approx_equal(459.89628372138634, c.value())
+        np.testing.assert_approx_equal(456.3426542907934, c.value())
 
 
 class Gamow2Test(unittest.TestCase):
@@ -160,15 +160,15 @@ class AlphaDecayTest(unittest.TestCase):
         np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms())
         np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms(seconds=100))
         np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms(seconds=3.154e7))
-        np.testing.assert_approx_equal(1.3760309564333265e+23, self.pt190.remaining_active_atoms(seconds=1e20))
+        np.testing.assert_approx_equal(1.3788626498604035e+23, self.pt190.remaining_active_atoms(seconds=1e20))
 
     def test_activity_190Pt(self):
-        np.testing.assert_approx_equal(8890.123782859177, self.pt190.activity(seconds=1))
-        np.testing.assert_approx_equal(2031.3514649767333, self.pt190.activity(seconds=1e20))
+        np.testing.assert_approx_equal(8877.743730232462, self.pt190.activity(seconds=1))
+        np.testing.assert_approx_equal(2032.697118046182, self.pt190.activity(seconds=1e20))
 
     def test_power_190Pt(self):
-        np.testing.assert_approx_equal(4.63269194269355e-09, self.pt190.power(seconds=1).watts)
-        np.testing.assert_approx_equal(1.0585483165848424e-09, self.pt190.power(seconds=1e20).watts)
+        np.testing.assert_approx_equal(4.626240629814815e-09, self.pt190.power(seconds=1).watts)
+        np.testing.assert_approx_equal(1.0592495437313659e-09, self.pt190.power(seconds=1e20).watts)
 
     def test_241Am(self):
         scenario = System.load('241Am', model='induced-decay') \
@@ -176,13 +176,13 @@ class AlphaDecayTest(unittest.TestCase):
         # Remaining
         np.testing.assert_approx_equal(6.022141289646228e+23, scenario.remaining_active_atoms())
         np.testing.assert_approx_equal(6.02214125462277e+23, scenario.remaining_active_atoms(seconds=100))
-        np.testing.assert_approx_equal(6.0109829989678545e+23, scenario.remaining_active_atoms(seconds=3.154e7))
+        np.testing.assert_approx_equal(6.010996320511956e+23, scenario.remaining_active_atoms(seconds=3.154e7))
         np.testing.assert_approx_equal(0.0, scenario.remaining_active_atoms(seconds=1e20))
         # Activity
-        np.testing.assert_approx_equal(35411037706734.586, scenario.activity(seconds=1))
+        np.testing.assert_approx_equal(35368722366460.305, scenario.activity(seconds=1))
         np.testing.assert_approx_equal(0.0, scenario.activity(seconds=1e20))
         # Power
-        np.testing.assert_approx_equal(31.985821501219938, scenario.power(seconds=1).watts)
+        np.testing.assert_approx_equal(31.94759921211376, scenario.power(seconds=1).watts)
         np.testing.assert_approx_equal(0.0, scenario.power(seconds=1e20).watts)
 
     def test_241Am_power(self):
@@ -193,7 +193,7 @@ class AlphaDecayTest(unittest.TestCase):
         scenario = System.load('241Am', model='induced-decay') \
             .hp(seconds=1, isotopic_fraction=1, moles=moles)
         # Should be 114 watts/kg
-        np.testing.assert_approx_equal(131.62889506674873, scenario.power().watts)
+        np.testing.assert_approx_equal(131.4716016959414, scenario.power().watts)
         np.testing.assert_approx_equal(0.0, scenario.power(seconds=1e20).watts)
 
     def test_screened_190Pt(self):
@@ -205,10 +205,10 @@ class AlphaDecayTest(unittest.TestCase):
         np.testing.assert_approx_equal(6.021836528709286e+23, pt190.remaining_active_atoms(seconds=3.154e7))
         np.testing.assert_approx_equal(0.0, pt190.remaining_active_atoms(seconds=1e20))
         # Activity
-        np.testing.assert_approx_equal(967090273179.6211, pt190.activity(seconds=1))
+        np.testing.assert_approx_equal(965968183447.2651, pt190.activity(seconds=1))
         np.testing.assert_approx_equal(0.0, pt190.activity(seconds=1e20))
         # Power
-        np.testing.assert_approx_equal(0.5039560107199808, pt190.power().watts)
+        np.testing.assert_approx_equal(0.5033712836465414, pt190.power().watts)
         np.testing.assert_approx_equal(0.0, pt190.power(seconds=1e20).watts)
 
 
@@ -236,16 +236,16 @@ class HyperphysicsPlatinumAlphaDecayTest(unittest.TestCase):
 
     def test_miles_4He_study(self):
         np.testing.assert_approx_equal(22522522523, self.scenario.activity(), significant=3)
-        np.testing.assert_approx_equal(0.00876108327676111, self.scenario.power().watts)
+        np.testing.assert_approx_equal(0.008753265223103896, self.scenario.power().watts)
 
     def test_elemental_Pt(self):
         scenario = System.load('Pt', model='induced-decay').hp(seconds=1, moles=1, active_fraction=1)
-        np.testing.assert_approx_equal(1.0668148541893832, scenario.activity())
+        np.testing.assert_approx_equal(1.0653292478737635, scenario.activity())
 
     def test_screened_Pt(self):
         scenario = System.load('Pt', model='induced-decay').hp(screening=11, seconds=1, moles=1, active_fraction=1)
-        np.testing.assert_approx_equal(116050834.10601069, scenario.activity())
-        np.testing.assert_approx_equal(6.0474721800430736e-05, scenario.power().watts)
+        np.testing.assert_approx_equal(115916183.33626266, scenario.activity())
+        np.testing.assert_approx_equal(6.040455455089407e-05, scenario.power().watts)
 
     def test_parent_z(self):
         np.testing.assert_allclose([
@@ -282,52 +282,52 @@ class HyperphysicsPlatinumAlphaDecayTest(unittest.TestCase):
 
     def test_gamow_factor(self):
         np.testing.assert_allclose([
-            20.736394,
-            28.143476,
-            42.569015,
-            52.244928,
-            68.575286,
-            240.002875
+            20.736756,
+            28.143922,
+            42.569622,
+            52.245641,
+            68.576178,
+            240.005615
         ], self.scenario.df.gamow_factor)
 
     def test_tunneling_probability(self):
         np.testing.assert_allclose([
-            9.740854e-019,
-            3.588289e-025,
-            1.059311e-037,
-            4.174765e-046,
-            2.730631e-060,
-            3.436779e-209
+            9.733810e-019,
+            3.585087e-025,
+            1.058025e-037,
+            4.168814e-046,
+            2.725768e-060,
+            3.417993e-209
         ], self.scenario.df.tunneling_probability, rtol=1e-6)
 
     def test_partial_decay_constant(self):
         np.testing.assert_allclose([
-            6.892524e+002,
-            2.185342e-004,
-            5.100026e-017,
-            1.764264e-025,
-            9.578119e-040,
-            4.355961e-189
+            6.887539e+002,
+            2.183392e-004,
+            5.093837e-017,
+            1.761749e-025,
+            9.561062e-040,
+            4.332151e-189
         ], self.scenario.df.partial_decay_constant, rtol=1e-6)
 
     def test_isotope_decay_constant(self):
         np.testing.assert_allclose([
-            6.892524e+002,
-            2.185342e-004,
-            5.100026e-017,
-            1.764264e-025,
-            9.578119e-040,
-            4.355961e-189
+            6.887539e+002,
+            2.183392e-004,
+            5.093837e-017,
+            1.761749e-025,
+            9.561062e-040,
+            4.332151e-189
         ], self.scenario.df.isotope_decay_constant, rtol=1e-6)
 
     def test_partial_half_life(self):
         np.testing.assert_allclose([
-            1.005651e-003,
-            3.171802e+003,
-            1.359105e+016,
-            3.928818e+024,
-            7.236778e+038,
-            1.591261e+188
+            1.006379e-003,
+            3.174635e+003,
+            1.360756e+016,
+            3.934426e+024,
+            7.249688e+038,
+            1.600007e+188
         ], self.scenario.df.partial_half_life, rtol=1e-6)
 
     def test_isotopic_abundance(self):
@@ -392,8 +392,8 @@ class HyperphysicsPlatinumAlphaDecayTest(unittest.TestCase):
 
     def test_remaining_active_atoms(self):
         np.testing.assert_allclose([
-            7.272133e-288,
-            1.032963e+014,
+            1.197061e-287,
+            1.032964e+014,
             4.341508e+015,
             4.463060e+015,
             3.330780e+015,
@@ -402,31 +402,31 @@ class HyperphysicsPlatinumAlphaDecayTest(unittest.TestCase):
 
     def test_partial_activity(self):
         np.testing.assert_allclose([
-            5.012335e-285,
-            2.257378e+010,
-            2.214180e-001,
-            7.874016e-010,
-            3.190260e-024,
-            4.235794e-174
+            8.244806e-285,
+            2.255364e+010,
+            2.211493e-001,
+            7.862791e-010,
+            3.184579e-024,
+            4.212641e-174
         ], self.scenario.df.partial_activity, rtol=1e-6)
 
     def test_watts(self):
         np.testing.assert_allclose([
-            2.611955e-297,
-            8.761083e-003,
-            5.398897e-014,
-            1.483192e-022,
-            4.150856e-037,
-            7.233340e-188
+            4.296413e-297,
+            8.753265e-003,
+            5.392346e-014,
+            1.481078e-022,
+            4.143464e-037,
+            7.193802e-188
         ], self.scenario.df.watts, rtol=1e-6)
 
     def test_total_activity(self):
         df = self.scenario.df
         np.testing.assert_approx_equal(22522522523, df.partial_activity.sum(), significant=3)
-        np.testing.assert_approx_equal(5.01233468945662e-285, df.partial_activity[df.parent == '190Pt'][0])
+        np.testing.assert_approx_equal(8.244805816629383e-285, df.partial_activity[df.parent == '190Pt'][0])
 
     def test_total_power(self):
-        np.testing.assert_approx_equal(0.00876108327676111, self.scenario.df.watts.sum())
+        np.testing.assert_approx_equal(0.008753265223103896, self.scenario.df.watts.sum())
 
 
 class HyperphysicsPoloniumAlphaDecayTest(unittest.TestCase):
@@ -482,7 +482,7 @@ class InducedFission106PdTest(unittest.TestCase):
         np.testing.assert_equal(['90Sr, 16O'], self.scenario.df.daughters.values)
 
     def test_gamow_factor(self):
-        np.testing.assert_allclose([132.378215], self.scenario.df.gamow_factor)
+        np.testing.assert_allclose([132.379918], self.scenario.df.gamow_factor)
 
 
 class HermesDecayTest(unittest.TestCase):
@@ -514,65 +514,60 @@ class HermesDecayTest(unittest.TestCase):
 
     def test_209Bi(self):
         dfe, dfa = self.compare('209Bi')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 7.0, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 8.5, rtol=1e-2)
 
     def test_211Bi(self):
         dfe, dfa = self.compare('211Bi')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.7, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 4.0, rtol=1e-2)
 
     def test_212Bi(self):
         dfe, dfa = self.compare('212Bi')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 3.0, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 4.4, rtol=1e-2)
 
     def test_213Bi(self):
         dfe, dfa = self.compare('213Bi')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 3.3, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 4.6, rtol=1e-2)
 
     def test_210Po(self):
         dfe, dfa = self.compare('210Po')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 4.0, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 5.2, rtol=1e-2)
 
     def test_211Po(self):
         dfe, dfa = self.compare('211Po')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.4, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 3.6, rtol=1e-2)
 
     def test_212Po(self):
         dfe, dfa = self.compare('212Po')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 1.7, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.9, rtol=1e-2)
 
     def test_214Po(self):
         dfe, dfa = self.compare('214Po')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.0, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 3.4, rtol=1e-2)
 
     def test_215Po(self):
         dfe, dfa = self.compare('215Po')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.3, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 3.6, rtol=1e-2)
 
     def test_216Po(self):
         dfe, dfa = self.compare('216Po')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.7, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 3.9, rtol=1e-2)
 
     def test_218Po(self):
         dfe, dfa = self.compare('218Po')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 3.3, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 4.6, rtol=1e-2)
 
     def test_215At(self):
         dfe, dfa = self.compare('215At')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.2, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 3.3, rtol=1e-2)
 
     def test_217At(self):
         dfe, dfa = self.compare('217At')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.6, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 3.9, rtol=1e-2)
 
     def test_218At(self):
         dfe, dfa = self.compare('218At')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 2.7, rtol=1e-2)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 4.0, rtol=1e-2)
 
     def test_241Am(self):
         dfe, dfa = self.compare('241Am')
-        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 4.4, rtol=1e-2)
-
-    def test_nuclear_separation(self):
-        dfe, dfa = self.compare('241Am')
-        errors = 1 - dfe.df.nuclear_separation_fm / dfa.df.nuclear_separation_fm
-        np.testing.assert_allclose(errors, [-0.090911], rtol=1e-5)
+        np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 5.8, rtol=1e-2)

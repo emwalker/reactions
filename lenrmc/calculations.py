@@ -9,6 +9,28 @@ from .constants import FINE_STRUCTURE_CONSTANT_MEV_FM, HBAR_MEV_S
 from .units import Energy, Power, HalfLife, Distance
 
 
+##
+# Choices of constant
+# r0 -- Fermi model nuclear radius
+#
+#   1.1 fm
+#   https://goo.gl/1OVppU
+#
+#   1.14 fm
+#   http://www.iaea.org/inis/collection/NCLCollectionStore/_Public/26/031/26031671.pdf
+#
+#   1.2 fm
+#   http://hyperphysics.phy-astr.gsu.edu/hbase/nuclear/nucuni.html#c4
+#   http://inside.mines.edu/~fsarazin/phgn310/PDFs/NukeLect1.pdf
+#   http://www.physics.umd.edu/courses/Phys741/xji/chapter7.pdf
+#   http://www.jpoffline.com/physics_docs/y3s6/nuclearphysics_ln.pdf
+#   https://www.southampton.ac.uk/~ab1u06//teaching/phys3002/course/03_diffraction.pdf
+#
+#   1.25 fm
+#   https://en.wikipedia.org/wiki/Atomic_nucleus#Nuclear_models
+#
+
+
 class FragmentCalculationMixin(object):
 
     @classmethod
@@ -99,7 +121,8 @@ class GamowSuppressionFactor(FragmentCalculationMixin):
         if Q <= 0:
             return math.nan
         # Distances in fm
-        rs = 1.1 * (pow(A, .333333) + pow(A4, .333333))
+        # Changed from 1.1 to 1.2, and from .333333 to 1/3
+        rs = 1.2 * (pow(A, 1/3) + pow(A4, 1/3))
         rc = float(Z) * Z4 * 1.43998 / Q
         r  = 1 if rc <= 0 else rs / rc
         G  = 0 if r >= 1 else math.acos(math.sqrt(r)) - math.sqrt(r * (1. - r))
@@ -151,7 +174,8 @@ class DecayScenario(object):
     # e^2 / 4pi, in units of MeV.fm
     # Google: (electron charge)^2 / (4 * pi * epsilon_0) -> 2.30707751e-28 m^3 kg / s^2
     # Wolfram Alpha: 2.30707751e-28 m^3 kg / s^2 in MeV fm -> 1.4399645 MeV fm
-    e2_4pi = 1.4399645
+    # Changed to 1.43998 to match Hermes's value
+    e2_4pi = 1.43998
     avogadros_number, _, _ = cs.physical_constants['Avogadro constant']
 
     def __init__(self, base_df, reactions, **kwargs):
@@ -224,6 +248,10 @@ class DecayScenario(object):
 
 class HyperphysicsDecayScenario(DecayScenario):
 
+    ##
+    # From http://hyperphysics.phy-astr.gsu.edu/hbase/nuclear/alpdec.html.
+    #
+
     def calculate_gamow_factor(self, df, kwargs):
         df['barrier_height_mev'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.nuclear_separation_fm
         df['radius_for_lighter_ke_fm'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.lighter_ke_mev
@@ -241,10 +269,6 @@ class HermesDecayScenario(DecayScenario):
 
     def calculate_gamow_factor(self, df, kwargs):
         df['gamow_factor'] = df.hermes_gamow_factor
-        df['nuclear_separation_fm'] = 1.1 * (
-            np.power(df.heavier_daughter_a, .333333) +
-            np.power(df.lighter_daughter_a, .333333)
-            )
         return df
 
 
