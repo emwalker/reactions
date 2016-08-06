@@ -139,7 +139,6 @@ class Reaction(object):
         return IsotopicDecay.load(
             self._decay_components(),
             self.q_value,
-            hermes_gamow_factor=gamow,
             **kwargs
         )
 

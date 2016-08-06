@@ -29,6 +29,9 @@ from .units import Energy, Power, HalfLife, Distance
 #   1.25 fm
 #   https://en.wikipedia.org/wiki/Atomic_nucleus#Nuclear_models
 #
+#   1.57 fm
+#   https://goo.gl/nNFgSA
+#
 
 
 class FragmentCalculationMixin(object):
@@ -151,15 +154,15 @@ class IsotopicDecay(FragmentCalculationMixin):
             'daughters': ', '.join([self.larger.label, self.smaller.label]),
             'parent_z': self.parent_z,
             'parent_a': self.parent_a,
-            'heavier_daughter_z': heavier_daughter_z,
+            'lighter_daughter_z': self.smaller.atomic_number,
             'lighter_daughter_a': self.smaller.mass_number,
+            'heavier_daughter_z': heavier_daughter_z,
             'heavier_daughter_a': self.larger.mass_number,
             'lighter_mass_mev': self.smaller.mass.mev,
             'heavier_daughter_mass_mev': self.larger.mass.mev,
             'q_value_mev': self.q_value.mev,
             'isotopic_abundance': self.parent.isotopic_abundance,
             'deposited_q_value_joules': self.q_value.joules,
-            'hermes_gamow_factor': self.kwargs.get('hermes_gamow_factor'),
         }
 
     def __getitem__(self, key):
@@ -219,12 +222,15 @@ class DecayScenario(object):
 
     def calculate_preliminaries(self, df, kwargs):
         df['screening'] = kwargs.get('screening') or 0
-        df['lighter_ke_mev'] = df.q_value_mev / (1 + df.lighter_mass_mev / df.heavier_daughter_mass_mev)
-        df['nuclear_separation_fm'] = 1.2 * (np.power(df.lighter_daughter_a, 1./3) + np.power(df.heavier_daughter_a, 1./3))
         df['screened_heavier_daughter_z'] = df.heavier_daughter_z - df.screening
+        df['lighter_ke_mev'] = df.q_value_mev / (1 + df.lighter_mass_mev / df.heavier_daughter_mass_mev)
+        df['nuclear_separation_radius_fm'] = 1.2 * (np.power(df.lighter_daughter_a, 1./3) + np.power(df.heavier_daughter_a, 1./3))
         df['lighter_velocity_m_per_s'] = np.sqrt(2 * df.lighter_ke_mev / df.lighter_mass_mev) * self.speed_of_light
-        df['lighter_v_over_c_m_per_s'] = df.lighter_velocity_m_per_s / self.speed_of_light
-        df['barrier_assault_frequency'] = df.lighter_velocity_m_per_s * math.pow(10, 15) / (2 * df.nuclear_separation_fm)
+        df['barrier_assault_frequency'] = df.lighter_velocity_m_per_s * math.pow(10, 15) / (2 * df.nuclear_separation_radius_fm)
+        # rc = float(Z) * Z4 * 1.43998 / Q
+        df['coulomb_barrier_radius_fm'] = df.screened_heavier_daughter_z * df.lighter_daughter_z * self.e2_4pi / df.q_value_mev
+        # r  = rs / rc
+        df['radius_ratio'] = df.nuclear_separation_radius_fm / df.coulomb_barrier_radius_fm
         return df
 
     def calculate_decay_constant(self, df, kwargs):
@@ -253,22 +259,23 @@ class HyperphysicsDecayScenario(DecayScenario):
     #
 
     def calculate_gamow_factor(self, df, kwargs):
-        df['barrier_height_mev'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.nuclear_separation_fm
-        df['radius_for_lighter_ke_fm'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.lighter_ke_mev
-        df['barrier_width_fm'] = np.where(
-            df.radius_for_lighter_ke_fm >= df.nuclear_separation_fm,
-            df.radius_for_lighter_ke_fm -  df.nuclear_separation_fm,
-            0)
-        x = df.lighter_ke_mev / df.barrier_height_mev
-        ph = np.sqrt(2 * df.lighter_mass_mev / ((self.hbarc ** 2) * df.lighter_ke_mev))
-        df['gamow_factor'] = ph * 2 * df.screened_heavier_daughter_z * self.e2_4pi * (np.arccos(np.sqrt(x)) - np.sqrt(x * (1 - x)))
+        df['barrier_height_mev'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.nuclear_separation_radius_fm
+        r = df.lighter_ke_mev / df.barrier_height_mev
+        ph = math.sqrt(2) * np.sqrt(df.lighter_mass_mev / df.lighter_ke_mev)
+        G = np.where(r >= 1, 0, np.arccos(np.sqrt(r)) - np.sqrt(r * (1 - r)))
+        df['gamow_factor'] = self.e2_4pi / self.hbarc * df.screened_heavier_daughter_z * df.lighter_daughter_z * G * ph
         return df
 
 
 class HermesDecayScenario(DecayScenario):
 
     def calculate_gamow_factor(self, df, kwargs):
-        df['gamow_factor'] = df.hermes_gamow_factor
+        # m  = (float(A) * A4) / (A + A4)
+        m = (df.heavier_daughter_a * df.lighter_daughter_a) / (df.heavier_daughter_a + df.lighter_daughter_a)
+        # G  = 0 if r >= 1 else math.acos(math.sqrt(r)) - math.sqrt(r * (1. - r))
+        G = np.where(df.radius_ratio >= 1, 0, np.arccos(np.sqrt(df.radius_ratio)) - np.sqrt(df.radius_ratio * (1 - df.radius_ratio)))
+        # return 0.2708122 * Z * Z4 * G * math.sqrt(m / Q)
+        df['gamow_factor'] = 0.2708122 * df.screened_heavier_daughter_z * df.lighter_daughter_z * G * np.sqrt(m / df.q_value_mev)
         return df
 
 
@@ -282,12 +289,12 @@ class Decay(object):
         'heavier_daughter_z',
         'lighter_daughter_a',
         'heavier_daughter_a',
+        'lighter_daughter_z',
         'lighter_mass_mev',
         'heavier_daughter_mass_mev',
         'q_value_mev',
         'isotopic_abundance',
         'deposited_q_value_joules',
-        'hermes_gamow_factor',
     ]
 
     @classmethod

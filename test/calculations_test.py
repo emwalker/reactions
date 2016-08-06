@@ -436,8 +436,8 @@ class HyperphysicsPoloniumAlphaDecayTest(unittest.TestCase):
         cls.scenario = System.load('212Po', model='induced-decay') \
             .hp(seconds=1, moles=1, active_fraction=1, isotopic_fraction=1)
 
-    def test_nuclear_separation(self):
-        np.testing.assert_allclose([9.014871826539528], self.scenario.df.nuclear_separation_fm)
+    def test_nuclear_separation_radius_fm(self):
+        np.testing.assert_allclose([9.014871826539528], self.scenario.df.nuclear_separation_radius_fm)
 
     def test_barrier_height(self):
         np.testing.assert_allclose([26.1967118938676], self.scenario.df.barrier_height_mev, rtol=1e-4)
@@ -445,17 +445,8 @@ class HyperphysicsPoloniumAlphaDecayTest(unittest.TestCase):
     def test_lighter_ke(self):
         np.testing.assert_allclose([8.78], self.scenario.df.lighter_ke_mev, rtol=1e-3)
 
-    def test_radius_for_lighter_ke_fm(self):
-        np.testing.assert_allclose([26.89749430523918], self.scenario.df.radius_for_lighter_ke_fm, rtol=1e-3)
-
-    def test_barrier_width_fm(self):
-        np.testing.assert_allclose([17.882622478699652], self.scenario.df.barrier_width_fm, rtol=1e-3)
-
     def test_barrier_assault_frequency(self):
         np.testing.assert_allclose([1.142126641655716e21], self.scenario.df.barrier_assault_frequency, rtol=1e-3)
-
-    def test_lighter_v_over_c_m_per_s(self):
-        np.testing.assert_allclose([0.068648], self.scenario.df.lighter_v_over_c_m_per_s, rtol=1e-5)
 
     def test_lighter_velocity_m_per_s(self):
         np.testing.assert_allclose([2.06e7], self.scenario.df.lighter_velocity_m_per_s, rtol=1e-3)
@@ -482,7 +473,7 @@ class InducedFission106PdTest(unittest.TestCase):
         np.testing.assert_equal(['90Sr, 16O'], self.scenario.df.daughters.values)
 
     def test_gamow_factor(self):
-        np.testing.assert_allclose([132.379918], self.scenario.df.gamow_factor)
+        np.testing.assert_allclose([529.519671], self.scenario.df.gamow_factor)
 
 
 class HermesDecayTest(unittest.TestCase):
