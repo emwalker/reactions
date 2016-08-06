@@ -136,6 +136,7 @@ class IsotopicDecay(FragmentCalculationMixin):
             'q_value_mev': self.q_value.mev,
             'isotopic_abundance': self.parent.isotopic_abundance,
             'deposited_q_value_joules': self.q_value.joules,
+            'hermes_gamow_factor': self.kwargs.get('hermes_gamow_factor'),
         }
 
     def __getitem__(self, key):
@@ -153,10 +154,11 @@ class DecayScenario(object):
     e2_4pi = 1.4399645
     avogadros_number, _, _ = cs.physical_constants['Avogadro constant']
 
-    def __init__(self, base_df, **kwargs):
+    def __init__(self, base_df, reactions, **kwargs):
         self.base_df = base_df.copy()
+        self.reactions = reactions
         self.kwargs = kwargs
-        self.df = self._calculate(base_df, kwargs)
+        self.df = self.calculate(base_df, kwargs)
 
     def to_csv(self, io):
         self.df.to_csv(io, index=False)
@@ -164,17 +166,22 @@ class DecayScenario(object):
     def to_string(self):
         return self.df.to_string()
 
-    def _calculate(self, df, kwargs):
+    def calculate(self, df, kwargs):
         df = df.copy()
-        df = self._calculate_gamow_factor(df, kwargs)
-        df = self._calculate_products(df, kwargs)
+        df = self.calculate_preliminaries(df, kwargs)
+        df = self.calculate_gamow_factor(df, kwargs)
+        df = self.calculate_decay_constant(df, kwargs)
+        df = self.calculate_products(df, kwargs)
         return df
+
+    def calculate_gamow_factor(self, df, kwargs):
+        raise NotImplementedError
 
     def recalculate(self, **kwargs):
         merged = {**self.kwargs, **kwargs}
         if merged == self.kwargs:
             return self
-        return DecayScenario(self.base_df, **merged)
+        return self.__class__(self.base_df, self.reactions, **merged)
 
     def activity(self, **kwargs):
         return self.recalculate(**kwargs).df.partial_activity.sum()
@@ -186,7 +193,24 @@ class DecayScenario(object):
     def remaining_active_atoms(self, **kwargs):
         return self.recalculate(**kwargs).df.remaining_active_atoms.sum()
 
-    def _calculate_products(self, df, kwargs):
+    def calculate_preliminaries(self, df, kwargs):
+        df['screening'] = kwargs.get('screening') or 0
+        df['lighter_ke_mev'] = df.q_value_mev / (1 + df.lighter_mass_mev / df.heavier_daughter_mass_mev)
+        df['nuclear_separation_fm'] = 1.2 * (np.power(df.lighter_daughter_a, 1./3) - (-1) * np.power(df.heavier_daughter_a, 1./3))
+        df['screened_heavier_daughter_z'] = df.heavier_daughter_z - df.screening
+        df['lighter_velocity_m_per_s'] = np.sqrt(2 * df.lighter_ke_mev / df.lighter_mass_mev) * self.speed_of_light
+        df['lighter_v_over_c_m_per_s'] = df.lighter_velocity_m_per_s / self.speed_of_light
+        df['barrier_assault_frequency'] = df.lighter_velocity_m_per_s * math.pow(10, 15) / (2 * df.nuclear_separation_fm)
+        return df
+
+    def calculate_decay_constant(self, df, kwargs):
+        df['tunneling_probability'] = np.exp(-2 * df.gamow_factor)
+        df['partial_decay_constant'] = df.tunneling_probability * df.barrier_assault_frequency
+        df['isotope_decay_constant'] = df.groupby(['parent_a', 'parent_z']).partial_decay_constant.transform(np.sum)
+        df['partial_half_life'] = np.where(df.partial_decay_constant > 0, math.log(2) / df.partial_decay_constant, math.inf)
+        return df
+
+    def calculate_products(self, df, kwargs):
         elapsed = kwargs['seconds']
         df['starting_moles'] = kwargs['moles'] * (kwargs.get('isotopic_fraction') or df.parent_fraction)
         df['active_fraction'] = kwargs.get('active_fraction') or 1
@@ -197,27 +221,26 @@ class DecayScenario(object):
         df['watts'] = df.partial_activity * df.deposited_q_value_joules
         return df
 
-    def _calculate_gamow_factor(self, df, kwargs):
-        df['screening'] = kwargs.get('screening') or 0
-        df['screened_heavier_daughter_z'] = df.heavier_daughter_z - df.screening
-        df['nuclear_separation_fm'] = 1.2 * (np.power(df.lighter_daughter_a, 1./3) - (-1) * np.power(df.heavier_daughter_a, 1./3))
+
+class HyperphysicsDecayScenario(DecayScenario):
+
+    def calculate_gamow_factor(self, df, kwargs):
         df['barrier_height_mev'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.nuclear_separation_fm
-        df['lighter_ke_mev'] = df.q_value_mev / (1 + df.lighter_mass_mev / df.heavier_daughter_mass_mev)
         df['radius_for_lighter_ke_fm'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.lighter_ke_mev
         df['barrier_width_fm'] = np.where(
             df.radius_for_lighter_ke_fm >= df.nuclear_separation_fm,
             df.radius_for_lighter_ke_fm -  df.nuclear_separation_fm,
             0)
-        df['lighter_velocity_m_per_s'] = np.sqrt(2 * df.lighter_ke_mev / df.lighter_mass_mev) * self.speed_of_light
-        df['lighter_v_over_c_m_per_s'] = df.lighter_velocity_m_per_s / self.speed_of_light
-        df['barrier_assault_frequency'] = df.lighter_velocity_m_per_s * math.pow(10, 15) / (2 * df.nuclear_separation_fm)
         x = df.lighter_ke_mev / df.barrier_height_mev
         ph = np.sqrt(2 * df.lighter_mass_mev / ((self.hbarc ** 2) * df.lighter_ke_mev))
         df['gamow_factor'] = ph * 2 * df.screened_heavier_daughter_z * self.e2_4pi * (np.arccos(np.sqrt(x)) - np.sqrt(x * (1 - x)))
-        df['tunneling_probability'] = np.exp(-2 * df.gamow_factor)
-        df['partial_decay_constant'] = df.tunneling_probability * df.barrier_assault_frequency
-        df['isotope_decay_constant'] = df.groupby(['parent_a', 'parent_z']).partial_decay_constant.transform(np.sum)
-        df['partial_half_life'] = np.where(df.partial_decay_constant > 0, math.log(2) / df.partial_decay_constant, math.inf)
+        return df
+
+
+class HermesDecayScenario(DecayScenario):
+
+    def calculate_gamow_factor(self, df, kwargs):
+        df['gamow_factor'] = df.hermes_gamow_factor
         return df
 
 
@@ -236,6 +259,7 @@ class Decay(object):
         'q_value_mev',
         'isotopic_abundance',
         'deposited_q_value_joules',
+        'hermes_gamow_factor',
     ]
 
     @classmethod
@@ -266,6 +290,10 @@ class Decay(object):
         df['parent_fraction'] = df.isotopic_abundance / 100.
         return df
 
-    def scenario(self, **kwargs):
+    def hp(self, **kwargs):
         merged = {**self.kwargs, **kwargs}
-        return DecayScenario(self.df, **merged)
+        return HyperphysicsDecayScenario(self.df, self.reactions, **merged)
+
+    def hermes(self, **kwargs):
+        merged = {**self.kwargs, **kwargs}
+        return HermesDecayScenario(self.df, self.reactions, **merged)

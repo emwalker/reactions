@@ -134,9 +134,12 @@ class Reaction(object):
         return Gamow2.load(self._decay_components(), self.q_value)
 
     def decay(self, **kwargs):
+        g = self.gamow()
+        gamow = g.value() if g else None
         return IsotopicDecay.load(
             self._decay_components(),
             self.q_value,
+            hermes_gamow_factor=gamow,
             **kwargs
         )
 

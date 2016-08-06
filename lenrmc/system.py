@@ -36,5 +36,11 @@ class System(object):
             for r in c.reactions():
                 yield c, r
 
-    def decay(self, **kwargs):
-        return Decay.load(reactions=self.reactions()).scenario(**kwargs)
+    def hp(self, **kwargs):
+        return self._decay().hp(**kwargs)
+
+    def hermese(self, **kwargs):
+        return self._decay().hermese(**kwargs)
+
+    def _decay(self):
+        return Decay.load(reactions=self.reactions())
