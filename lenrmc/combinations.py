@@ -1,5 +1,6 @@
 import os
 import json
+import gzip
 import math
 import hashlib
 import logging
@@ -196,9 +197,8 @@ class RegularCombinations(object):
             os.makedirs(self.basedir)
         except FileExistsError:
             pass
-        with open(self.cache_path, 'wb+') as fh:
-            string = pickle.dumps(results)
-            fh.write(string)
+        with gzip.open(self.cache_path, 'wb+') as fh:
+            pickle.dump(results, fh)
 
     @property
     def cache_path(self):
@@ -208,7 +208,7 @@ class RegularCombinations(object):
         if not os.path.exists(self.cache_path):
             return None
         logging.info('reading previously computed values from cache')
-        with open(self.cache_path, 'rb') as fh:
+        with gzip.open(self.cache_path, 'rb') as fh:
             combinations = pickle.loads(fh.read())
         return combinations
 
