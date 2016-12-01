@@ -109,4 +109,7 @@ def parse_arguments():
 
 if '__main__' == __name__:
     opts = parse_arguments()
-    App(**vars(opts)).run()
+    try:
+        App(**vars(opts)).run()
+    except KeyboardInterrupt:
+        print('command canceled.')
