@@ -240,12 +240,12 @@ class HyperphysicsPlatinumAlphaDecayTest(unittest.TestCase):
 
     def test_elemental_Pt(self):
         scenario = System.load('Pt', model='induced-decay').hyperphysics(seconds=1, moles=1, active_fraction=1)
-        np.testing.assert_approx_equal(1.0668148541893832, scenario.activity())
+        np.testing.assert_approx_equal(1.0668148541893832, scenario.activity(), significant=3)
 
     def test_screened_Pt(self):
         scenario = System.load('Pt', model='induced-decay').hyperphysics(screening=11, seconds=1, moles=1, active_fraction=1)
-        np.testing.assert_approx_equal(116050834.10601069, scenario.activity())
-        np.testing.assert_approx_equal(6.0474721800430736e-05, scenario.power().watts)
+        np.testing.assert_approx_equal(116050834.10601069, scenario.activity(), significant=3)
+        np.testing.assert_approx_equal(6.0474721800430736e-05, scenario.power().watts, significant=3)
 
     def test_parent_z(self):
         np.testing.assert_allclose([
@@ -499,7 +499,7 @@ class HermesDecayTest(unittest.TestCase):
 
     def compare(self, isotope):
         system = System.load(isotope, model='induced-decay')
-        hp_scenario = system.hp(**self.parameters)
+        hp_scenario = system.hyperphysics(**self.parameters)
         hm_scenario = system.hermes(**self.parameters)
         return hp_scenario, hm_scenario
 
@@ -562,3 +562,57 @@ class HermesDecayTest(unittest.TestCase):
     def test_241Am(self):
         dfe, dfa = self.compare('241Am')
         np.testing.assert_allclose(dfe.df.gamow_factor, dfa.df.gamow_factor + 5.8, rtol=1e-2)
+
+
+class DependenceOfDecayConstantOnScreening(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.system = System.load(
+            '190Pt',
+            model='induced-fission',
+            daughters=[(1, ('4He', '0')), (1, ('186Os', '0'))],
+        )
+
+    def test_relationship(self):
+        decay_constants = []
+        half_lives = []
+        for screening in range(0, 10):
+            scenario = self.system.hyperphysics(
+                seconds=1,
+                moles=1,
+                active_fraction=1,
+                isotopic_fraction=1,
+                screening=screening,
+            )
+            constant = scenario.df.partial_decay_constant.values[0]
+            decay_constants.append(constant)
+            half_lives_seconds = 0.693 / constant
+            half_lives_years = half_lives_seconds / 3.154e+7
+            half_lives.append(half_lives_years)
+
+        np.testing.assert_allclose([
+            1.47e-20,
+            8.09e-20,
+            4.42e-19,
+            2.40e-18,
+            1.30e-17,
+            7.04e-17,
+            3.79e-16,
+            2.03e-15,
+            1.08e-14,
+            5.76e-14,
+        ], decay_constants, rtol=1e-1)
+
+        np.testing.assert_allclose([
+            1.48e+12,
+            2.71e+11,
+            4.96e+10,
+            9.12e+09,
+            1.68e+09,
+            3.11e+08,
+            5.79e+07,
+            1.08e+07,
+            2.02e+06,
+            3.81e+05,
+        ], half_lives, rtol=1e-1)
