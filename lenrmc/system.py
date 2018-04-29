@@ -36,8 +36,8 @@ class System(object):
             for r in c.reactions():
                 yield c, r
 
-    def hp(self, **kwargs):
-        return self._decay().hp(**kwargs)
+    def hyperphysics(self, **kwargs):
+        return self._decay().hyperphysics(**kwargs)
 
     def hermes(self, **kwargs):
         return self._decay().hermes(**kwargs)

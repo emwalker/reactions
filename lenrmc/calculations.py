@@ -325,7 +325,7 @@ class Decay(object):
         df['parent_fraction'] = df.isotopic_abundance / 100.
         return df
 
-    def hp(self, **kwargs):
+    def hyperphysics(self, **kwargs):
         merged = {**self.kwargs, **kwargs}
         return HyperphysicsDecayScenario(self.df, self.reactions, **merged)
 

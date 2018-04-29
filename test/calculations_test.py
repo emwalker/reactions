@@ -154,7 +154,7 @@ class AlphaDecayTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.pt190 = System.load('190Pt', model='induced-decay') \
-            .hp(moles=1, seconds=1, isotopic_fraction=1)
+            .hyperphysics(moles=1, seconds=1, isotopic_fraction=1)
 
     def test_remaining_190Pt(self):
         np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms())
@@ -172,7 +172,7 @@ class AlphaDecayTest(unittest.TestCase):
 
     def test_241Am(self):
         scenario = System.load('241Am', model='induced-decay') \
-            .hp(isotopic_fraction=1, moles=1, seconds=1)
+            .hyperphysics(isotopic_fraction=1, moles=1, seconds=1)
         # Remaining
         np.testing.assert_approx_equal(6.022141289646228e+23, scenario.remaining_active_atoms())
         np.testing.assert_approx_equal(6.02214125462277e+23, scenario.remaining_active_atoms(seconds=100))
@@ -191,14 +191,14 @@ class AlphaDecayTest(unittest.TestCase):
         # (1 kg * 1000 g/kg) / (243 g/mole)
         moles = 1e3 / 243
         scenario = System.load('241Am', model='induced-decay') \
-            .hp(seconds=1, isotopic_fraction=1, moles=moles)
+            .hyperphysics(seconds=1, isotopic_fraction=1, moles=moles)
         # Should be 114 watts/kg
         np.testing.assert_approx_equal(131.4716016959414, scenario.power().watts)
         np.testing.assert_approx_equal(0.0, scenario.power(seconds=1e20).watts)
 
     def test_screened_190Pt(self):
         pt190 = System.load('190Pt', model='induced-decay') \
-            .hp(seconds=1, screening=11, moles=1, isotopic_fraction=1)
+            .hyperphysics(seconds=1, screening=11, moles=1, isotopic_fraction=1)
         # Remaining
         np.testing.assert_approx_equal(6.02214129e+23, pt190.remaining_active_atoms())
         np.testing.assert_approx_equal(6.02214129e+23, pt190.remaining_active_atoms(seconds=100))
@@ -227,7 +227,7 @@ class HyperphysicsPlatinumAlphaDecayTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.scenario = System.load('Pt', model='induced-decay') \
-            .hp(
+            .hyperphysics(
                 seconds=1,
                 moles=moles,
                 active_fraction=active_fraction,
@@ -239,13 +239,13 @@ class HyperphysicsPlatinumAlphaDecayTest(unittest.TestCase):
         np.testing.assert_approx_equal(0.008753265223103896, self.scenario.power().watts)
 
     def test_elemental_Pt(self):
-        scenario = System.load('Pt', model='induced-decay').hp(seconds=1, moles=1, active_fraction=1)
-        np.testing.assert_approx_equal(1.0653292478737635, scenario.activity())
+        scenario = System.load('Pt', model='induced-decay').hyperphysics(seconds=1, moles=1, active_fraction=1)
+        np.testing.assert_approx_equal(1.0668148541893832, scenario.activity())
 
     def test_screened_Pt(self):
-        scenario = System.load('Pt', model='induced-decay').hp(screening=11, seconds=1, moles=1, active_fraction=1)
-        np.testing.assert_approx_equal(115916183.33626266, scenario.activity())
-        np.testing.assert_approx_equal(6.040455455089407e-05, scenario.power().watts)
+        scenario = System.load('Pt', model='induced-decay').hyperphysics(screening=11, seconds=1, moles=1, active_fraction=1)
+        np.testing.assert_approx_equal(116050834.10601069, scenario.activity())
+        np.testing.assert_approx_equal(6.0474721800430736e-05, scenario.power().watts)
 
     def test_parent_z(self):
         np.testing.assert_allclose([
@@ -434,7 +434,7 @@ class HyperphysicsPoloniumAlphaDecayTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.scenario = System.load('212Po', model='induced-decay') \
-            .hp(seconds=1, moles=1, active_fraction=1, isotopic_fraction=1)
+            .hyperphysics(seconds=1, moles=1, active_fraction=1, isotopic_fraction=1)
 
     def test_nuclear_separation_radius_fm(self):
         np.testing.assert_allclose([9.014871826539528], self.scenario.df.nuclear_separation_radius_fm)
@@ -462,7 +462,7 @@ class InducedFission106PdTest(unittest.TestCase):
         cls.scenario = System.load('106Pd',
             model='induced-fission',
             daughters=[(1, ('90Sr', '0')), (1, ('16O', '0'))],
-        ).hp(
+        ).hyperphysics(
             seconds=1,
             moles=1,
             active_fraction=1,
