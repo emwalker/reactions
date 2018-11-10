@@ -1,6 +1,6 @@
 import unittest
 
-from lenrmc.koonin import LogLambda
+from reactions.koonin import LogLambda
 
 
 class LogLambdaTest(unittest.TestCase):

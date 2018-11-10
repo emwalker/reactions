@@ -2,8 +2,8 @@ import unittest
 import os.path
 import sys
 
-from lenrmc.nubase import NUBASE_PATH, Nuclide, Nuclides, Energy
-from lenrmc.system import System
+from reactions.nubase import NUBASE_PATH, Nuclide, Nuclides, Energy
+from reactions.system import System
 
 
 class NuclideTest(unittest.TestCase):

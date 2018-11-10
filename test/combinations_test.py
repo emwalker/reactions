@@ -1,9 +1,9 @@
 import unittest
 import math
 
-from lenrmc.nubase import parse_spec
-from lenrmc.system import System
-from lenrmc.combinations import (
+from reactions.nubase import parse_spec
+from reactions.system import System
+from reactions.combinations import (
     ElectronMediatedDecayModel,
     PionExchangeAndDecayModel,
     Reaction,

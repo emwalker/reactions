@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from lenrmc.units import Energy
+from reactions.units import Energy
 
 
 class EnergyTest(unittest.TestCase):

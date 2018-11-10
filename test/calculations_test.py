@@ -5,11 +5,11 @@ import numpy as np
 import pandas as pd
 import pandas.util.testing as pdt
 
-from lenrmc.units import Energy, Distance
-from lenrmc.nubase import Nuclides
-from lenrmc.system import System
-from lenrmc.combinations import Reaction
-from lenrmc.calculations import CoulombBarrier
+from reactions.units import Energy, Distance
+from reactions.nubase import Nuclides
+from reactions.system import System
+from reactions.combinations import Reaction
+from reactions.calculations import CoulombBarrier
 
 
 nuclides = Nuclides.db()

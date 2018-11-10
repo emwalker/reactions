@@ -19,7 +19,7 @@ from .calculations import (
 )
 
 
-LENRMC_DIR = os.path.join(expanduser('~'), '.lenrmc')
+LENRMC_DIR = os.path.join(expanduser('~'), '.reactions')
 
 
 class RejectCombination(RuntimeError):
@@ -152,7 +152,7 @@ def vectors3(integer):
 
 class RegularCombinations(object):
 
-    basedir = os.path.expanduser('~/.lenrmc/objects')
+    basedir = os.path.expanduser('~/.reactions/objects')
 
     def __init__(self, totals):
         self.totals = totals

@@ -5,8 +5,8 @@ import os
 import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from lenrmc.system import System, Options
-from lenrmc.terminal import TerminalView, StudiesTerminalView
+from reactions.system import System, Options
+from reactions.terminal import TerminalView, StudiesTerminalView
 
 
 class App(object):

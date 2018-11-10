@@ -1,7 +1,7 @@
 import unittest
 
-from lenrmc.system import System, Options
-from lenrmc.terminal import TerminalView, TerminalLine, StudiesTerminalView
+from reactions.system import System, Options
+from reactions.terminal import TerminalView, TerminalLine, StudiesTerminalView
 
 
 class SystemTest(unittest.TestCase):

@@ -8,4 +8,4 @@ setup: check
 
 clean:
 	@echo "removing cached data"
-	rm -rf ~/.lenrmc
+	rm -rf ~/.reactions

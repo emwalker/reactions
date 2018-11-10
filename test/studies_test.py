@@ -1,6 +1,6 @@
 import unittest
 
-from lenrmc.studies import Studies
+from reactions.studies import Studies
 
 
 class StudiesTest(unittest.TestCase):
