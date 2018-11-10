@@ -1,3 +1,4 @@
+# pylint: disable=missing-docstring
 import unittest
 
 import numpy as np
@@ -6,7 +7,6 @@ from reactions.units import Energy
 
 
 class EnergyTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.q = Energy.load(mev=3)

@@ -1,15 +1,16 @@
+"""
+Calculate various quantities of interest for an input reaction or decay.
+"""
+# pylint: disable=no-self-use, invalid-name, too-many-instance-attributes
+# pylint: disable=too-few-public-methods
 import math
-from collections import defaultdict
-
 import numpy as np
 import pandas as pd
 import scipy.constants as cs
 
 from .constants import FINE_STRUCTURE_CONSTANT_MEV_FM, HBAR_MEV_S
-from .units import Energy, Power, HalfLife, Distance
+from .units import Energy, Power, Distance
 
-
-##
 # Choices of constant
 # r0 -- Fermi model nuclear radius
 #
@@ -31,13 +32,16 @@ from .units import Energy, Power, HalfLife, Distance
 #
 #   1.57 fm
 #   https://goo.gl/nNFgSA
-#
 
 
-class FragmentCalculationMixin(object):
+class Calculation:
+    """Model various calculations."""
 
     @classmethod
     def load(cls, components, q_value, **kwargs):
+        """Generic factory method that returns a given calculation for a given
+        set of inputs.  Inherited by subclasses.
+        """
         if components is None:
             return None
         parent, daughters = components
@@ -52,60 +56,69 @@ class FragmentCalculationMixin(object):
         self.kwargs = kwargs
 
 
-class CoulombBarrier(object):
-
-    def __init__(self, n0, n1):
-        self.n0 = n0
-        self.n1 = n1
-        self._base = FINE_STRUCTURE_CONSTANT_MEV_FM * n0.atomic_number * n1.atomic_number
+class CoulombBarrier:
+    """Calculate height and width of the Coulomb barrier as nuclide 1 approaches
+    nuclide 0.
+    """
+    def __init__(self, nuclide0, nuclide1):
+        self.nuclide0 = nuclide0
+        self.nuclide1 = nuclide1
+        self._base = FINE_STRUCTURE_CONSTANT_MEV_FM * nuclide0.atomic_number * \
+            nuclide1.atomic_number
 
     def height(self, radius):
+        """Height of the Coulomb barrier."""
         height = self._base / float(radius.fermis)
         return Energy.load(mev=height)
 
     def width(self, q_value):
+        """Width of the Coulomb barrier."""
         width = self._base / q_value.mev
         return Distance.load(fermis=width)
 
 
-class ReactionEnergy(object):
+class ReactionEnergy:
+    """Compute the amount of energy released by a given reaction."""
 
     def __init__(self, reaction):
         self.reaction = reaction
         self.value = Energy.load(kev=self._kev())
 
     def _kev(self):
-        lvalues = sum(num * i.mass_excess_kev for num, i in self.reaction._lvalues)
+        lvalues = sum(num * i.mass_excess_kev for num, i in self.reaction.initial_lvalues)
         rvalues = sum(num * i.mass_excess_kev for num, i in self.reaction.rvalues)
         return lvalues - rvalues
 
 
-class GeigerNuttal(FragmentCalculationMixin):
+class GeigerNuttal(Calculation):
+    """Model the Geiger-Nuttal law."""
 
     def value(self):
+        """Carry out the computation."""
         return -46.83 + 1.454 * self.larger.atomic_number / math.sqrt(self.q_value.mev)
 
 
-class Gamow2(FragmentCalculationMixin):
+class Gamow2(Calculation):
     """Gamow factor for alpha particle tunneling.
 
     Assumes one of the daughters is a heavy nucleus and the other an alpha particle.
     """
-
     def value(self):
+        """Compute the Gamow factor."""
         Q = self.q_value.mev
         x = Q / CoulombBarrier(self.smaller, self.larger).width(self.q_value).fermis
         t0 = math.sqrt((2 * self.smaller.mass.mev)/(HBAR_MEV_S**2 * Q))
-        t1 = self.smaller.atomic_number * self.larger.atomic_number * FINE_STRUCTURE_CONSTANT_MEV_FM
+        t1 = self.smaller.atomic_number * self.larger.atomic_number * \
+            FINE_STRUCTURE_CONSTANT_MEV_FM
         t2 = math.acos(math.sqrt(x)) - math.sqrt(x * (1 - x))
         return t0 * t1 * t2
 
 
-class GamowSuppressionFactor(FragmentCalculationMixin):
+class GamowSuppressionFactor(Calculation):
     """Gamow suppression factor in log10 units
 
-    From Hermes: https://www.lenr-forum.com/forum/index.php/Thread/3434-Document-Isotopic-Composition
-    -of-Rossi-Fuel-Sample-Unverified/?postID=29085#post29085.
+    From Hermes: https://www.lenr-forum.com/forum/index.php/Thread/3434-Document-
+    Isotopic-Composition-of-Rossi-Fuel-Sample-Unverified/?postID=29085#post29085.
 
     Estimate distance between 2 spherical nuclei when they touch
     Estimate distance when supplied energy has overcome Coulomb barrier
@@ -113,31 +126,31 @@ class GamowSuppressionFactor(FragmentCalculationMixin):
 
     - from Hermes's comments
     """
-
     def value(self):
+        """Compute the Gamow factor."""
         screening = self.kwargs.get('screening') or 0
-        A  = self.larger.mass_number
-        Z  = self.larger.atomic_number - screening
+        A = self.larger.mass_number
+        Z = self.larger.atomic_number - screening
         A4 = self.smaller.mass_number
         Z4 = self.smaller.atomic_number
-        Q  = self.q_value.mev
+        Q = self.q_value.mev
         if Q <= 0:
             return math.nan
         # Distances in fm
         # Changed from 1.1 to 1.2, and from .333333 to 1/3
         rs = 1.2 * (pow(A, 1/3) + pow(A4, 1/3))
         rc = float(Z) * Z4 * 1.43998 / Q
-        r  = 1 if rc <= 0 else rs / rc
-        G  = 0 if r >= 1 else math.acos(math.sqrt(r)) - math.sqrt(r * (1. - r))
-        m  = (float(A) * A4) / (A + A4)
+        r = 1 if rc <= 0 else rs / rc
+        G = 0 if r >= 1 else math.acos(math.sqrt(r)) - math.sqrt(r * (1. - r))
+        m = (float(A) * A4) / (A + A4)
         return 0.2708122 * Z * Z4 * G * math.sqrt(m / Q)
 
 
-class IsotopicDecay(FragmentCalculationMixin):
+class IsotopicDecay(Calculation):
     """From http://hyperphysics.phy-astr.gsu.edu/hbase/nuclear/alpdec.html
     """
-
     def __init__(self, parent, daughters, q_value, **kwargs):
+        Calculation.__init__(self, parent, daughters, q_value, **kwargs)
         self.parent = parent
         self.parent_z = parent.atomic_number
         self.parent_a = parent.mass_number
@@ -169,7 +182,10 @@ class IsotopicDecay(FragmentCalculationMixin):
         return self.data[key]
 
 
-class DecayScenario(object):
+class DecayScenario:
+    """Compute various quantities for a given radioactive system at different
+    points in time.
+    """
 
     speed_of_light, _, _ = cs.physical_constants['speed of light in vacuum']
     # hbar * c, in units of MeV.fm
@@ -188,12 +204,17 @@ class DecayScenario(object):
         self.df = self.calculate(base_df, kwargs)
 
     def to_csv(self, io):
+        """Convert the calculated dataframe to .csv."""
         self.df.to_csv(io, index=False)
 
     def to_string(self):
+        """Conver the calculated dataframe to a string that can be printed
+        to the console.
+        """
         return self.df.to_string()
 
     def calculate(self, df, kwargs):
+        """Return a Pandas dataframe with various steps in the calculation."""
         df = df.copy()
         df = self.calculate_preliminaries(df, kwargs)
         df = self.calculate_gamow_factor(df, kwargs)
@@ -202,84 +223,110 @@ class DecayScenario(object):
         return df
 
     def calculate_gamow_factor(self, df, kwargs):
+        """Gamow factor to be calculated by subclasses."""
         raise NotImplementedError
 
     def recalculate(self, **kwargs):
+        """What does this scenario look like under different assumptions?"""
         merged = {**self.kwargs, **kwargs}
         if merged == self.kwargs:
             return self
         return self.__class__(self.base_df, self.reactions, **merged)
 
     def activity(self, **kwargs):
+        """What is the activity of this decay?"""
         return self.recalculate(**kwargs).df.partial_activity.sum()
 
     def power(self, **kwargs):
+        """What is the power in watts given off by this decay?"""
         watts = self.recalculate(**kwargs).df.watts.sum()
         return Power.load(watts=watts)
 
     def remaining_active_atoms(self, **kwargs):
+        """How many active nuclides are left?"""
         return self.recalculate(**kwargs).df.remaining_active_atoms.sum()
 
     def calculate_preliminaries(self, df, kwargs):
+        """Compute various starting quantities for this result."""
         df['screening'] = kwargs.get('screening') or 0
         df['screened_heavier_daughter_z'] = df.heavier_daughter_z - df.screening
-        df['lighter_ke_mev'] = df.q_value_mev / (1 + df.lighter_mass_mev / df.heavier_daughter_mass_mev)
-        df['nuclear_separation_radius_fm'] = 1.2 * (np.power(df.lighter_daughter_a, 1./3) + np.power(df.heavier_daughter_a, 1./3))
-        df['lighter_velocity_m_per_s'] = np.sqrt(2 * df.lighter_ke_mev / df.lighter_mass_mev) * self.speed_of_light
-        df['barrier_assault_frequency'] = df.lighter_velocity_m_per_s * math.pow(10, 15) / (2 * df.nuclear_separation_radius_fm)
+        df['lighter_ke_mev'] = df.q_value_mev / \
+            (1 + df.lighter_mass_mev / df.heavier_daughter_mass_mev)
+        df['nuclear_separation_radius_fm'] = 1.2 * (np.power(df.lighter_daughter_a, 1./3) + \
+            np.power(df.heavier_daughter_a, 1./3))
+        df['lighter_velocity_m_per_s'] = np.sqrt(2 * df.lighter_ke_mev / df.lighter_mass_mev) * \
+            self.speed_of_light
+        df['barrier_assault_frequency'] = df.lighter_velocity_m_per_s * math.pow(10, 15) / \
+            (2 * df.nuclear_separation_radius_fm)
         # rc = float(Z) * Z4 * 1.43998 / Q
-        df['coulomb_barrier_radius_fm'] = df.screened_heavier_daughter_z * df.lighter_daughter_z * self.e2_4pi / df.q_value_mev
+        df['coulomb_barrier_radius_fm'] = df.screened_heavier_daughter_z * df.lighter_daughter_z * \
+            self.e2_4pi / df.q_value_mev
         # r  = rs / rc
         df['radius_ratio'] = df.nuclear_separation_radius_fm / df.coulomb_barrier_radius_fm
         return df
 
-    def calculate_decay_constant(self, df, kwargs):
+    def calculate_decay_constant(self, df, _):
+        """Compute intermediate values for this result."""
         df['tunneling_probability'] = np.exp(-2 * df.gamow_factor)
         df['partial_decay_constant'] = df.tunneling_probability * df.barrier_assault_frequency
-        df['isotope_decay_constant'] = df.groupby(['parent_a', 'parent_z']).partial_decay_constant.transform(np.sum)
-        df['partial_half_life'] = np.where(df.partial_decay_constant > 0, math.log(2) / df.partial_decay_constant, math.inf)
+        df['isotope_decay_constant'] = df.groupby(['parent_a', 'parent_z']) \
+            .partial_decay_constant.transform(np.sum)
+        df['partial_half_life'] = np.where(
+            df.partial_decay_constant > 0,
+            math.log(2) / df.partial_decay_constant,
+            math.inf,
+        )
         return df
 
     def calculate_products(self, df, kwargs):
+        """Compute various final metrics of interest."""
         elapsed = kwargs['seconds']
-        df['starting_moles'] = kwargs['moles'] * (kwargs.get('isotopic_fraction') or df.parent_fraction)
+        df['starting_moles'] = kwargs['moles'] * \
+            (kwargs.get('isotopic_fraction') or df.parent_fraction)
         df['active_fraction'] = kwargs.get('active_fraction') or 1
         df['starting_active_moles'] = df.starting_moles * df.active_fraction
         df['starting_active_atoms'] = df.starting_active_moles * self.avogadros_number
-        df['remaining_active_atoms'] = df.starting_active_atoms * np.exp(-df.isotope_decay_constant * elapsed)
+        df['remaining_active_atoms'] = df.starting_active_atoms * \
+            np.exp(-df.isotope_decay_constant * elapsed)
         df['partial_activity'] = df.partial_decay_constant * df.remaining_active_atoms
         df['watts'] = df.partial_activity * df.deposited_q_value_joules
         return df
 
 
 class HyperphysicsDecayScenario(DecayScenario):
-
-    ##
-    # From http://hyperphysics.phy-astr.gsu.edu/hbase/nuclear/alpdec.html.
-    #
+    """From http://hyperphysics.phy-astr.gsu.edu/hbase/nuclear/alpdec.html."""
 
     def calculate_gamow_factor(self, df, kwargs):
-        df['barrier_height_mev'] = 2 * df.screened_heavier_daughter_z * self.e2_4pi / df.nuclear_separation_radius_fm
+        df['barrier_height_mev'] = 2 * df.screened_heavier_daughter_z * \
+            self.e2_4pi / df.nuclear_separation_radius_fm
         r = df.lighter_ke_mev / df.barrier_height_mev
         ph = math.sqrt(2) * np.sqrt(df.lighter_mass_mev / df.lighter_ke_mev)
         G = np.where(r >= 1, 0, np.arccos(np.sqrt(r)) - np.sqrt(r * (1 - r)))
-        df['gamow_factor'] = self.e2_4pi / self.hbarc * df.screened_heavier_daughter_z * df.lighter_daughter_z * G * ph
+        df['gamow_factor'] = self.e2_4pi / self.hbarc * df.screened_heavier_daughter_z * \
+            df.lighter_daughter_z * G * ph
         return df
 
 
 class HermesDecayScenario(DecayScenario):
+    """Hermes's calculation of the Gamow factor."""
 
     def calculate_gamow_factor(self, df, kwargs):
         # m  = (float(A) * A4) / (A + A4)
-        m = (df.heavier_daughter_a * df.lighter_daughter_a) / (df.heavier_daughter_a + df.lighter_daughter_a)
+        m = (df.heavier_daughter_a * df.lighter_daughter_a) / \
+            (df.heavier_daughter_a + df.lighter_daughter_a)
         # G  = 0 if r >= 1 else math.acos(math.sqrt(r)) - math.sqrt(r * (1. - r))
-        G = np.where(df.radius_ratio >= 1, 0, np.arccos(np.sqrt(df.radius_ratio)) - np.sqrt(df.radius_ratio * (1 - df.radius_ratio)))
+        G = np.where(df.radius_ratio >= 1, 0, np.arccos(np.sqrt(df.radius_ratio)) - \
+            np.sqrt(df.radius_ratio * (1 - df.radius_ratio)))
         # return 0.2708122 * Z * Z4 * G * math.sqrt(m / Q)
-        df['gamow_factor'] = 0.2708122 * df.screened_heavier_daughter_z * df.lighter_daughter_z * G * np.sqrt(m / df.q_value_mev)
+        df['gamow_factor'] = 0.2708122 * df.screened_heavier_daughter_z * \
+            df.lighter_daughter_z * G * np.sqrt(m / df.q_value_mev)
         return df
 
 
-class Decay(object):
+class Decay:
+    """Calculate the various decay pathways of a given parent nuclide under
+    different assumptions.
+    """
 
     initial_column_names = [
         'parent_z',
@@ -299,6 +346,9 @@ class Decay(object):
 
     @classmethod
     def load(cls, **kwargs):
+        """Factory method that returns the possible decays for a given parent
+        nuclide under different models.
+        """
         copy = kwargs.copy()
         reactions = copy['reactions']
         del copy['reactions']
@@ -307,28 +357,30 @@ class Decay(object):
     def __init__(self, reactions, **kwargs):
         self.reactions = list(reactions)
         self.decays = []
-        for d in (r.decay(**kwargs) for c, r in self.reactions):
-            if d is None:
+        for decay in (r.decay(**kwargs) for c, r in self.reactions):
+            if decay is None:
                 continue
-            self.decays.append(d)
+            self.decays.append(decay)
         self.kwargs = kwargs
         self.df = self._initial_dataframe()
 
     def _initial_dataframe(self):
         rows = []
-        for d in self.decays:
-            rows.append([d[c] for c in self.initial_column_names])
-        if len(rows) < 1:
-            df = pd.DataFrame(columns=self.initial_column_names)
-        else:
+        for decay in self.decays:
+            rows.append([decay[c] for c in self.initial_column_names])
+        if rows:
             df = pd.DataFrame(rows, columns=self.initial_column_names)
+        else:
+            df = pd.DataFrame(columns=self.initial_column_names)
         df['parent_fraction'] = df.isotopic_abundance / 100.
         return df
 
     def hyperphysics(self, **kwargs):
+        """Return the Hyperphyscics calculation of the Gamow factor."""
         merged = {**self.kwargs, **kwargs}
         return HyperphysicsDecayScenario(self.df, self.reactions, **merged)
 
     def hermes(self, **kwargs):
+        """Return Hermes's calculation of the Gamow suppression factor."""
         merged = {**self.kwargs, **kwargs}
         return HermesDecayScenario(self.df, self.reactions, **merged)

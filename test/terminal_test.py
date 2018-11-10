@@ -1,11 +1,11 @@
+# pylint: disable=missing-docstring, invalid-name
 import unittest
 
 from reactions.system import System, Options
-from reactions.terminal import TerminalView, TerminalLine, StudiesTerminalView
+from reactions.terminal import TerminalView
 
 
 class SystemTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
@@ -22,7 +22,6 @@ class SystemTest(unittest.TestCase):
 
 
 class TestAscii(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
@@ -33,5 +32,6 @@ class TestAscii(unittest.TestCase):
         self.assertEqual(
             ['p + d => gamma + 3He + 5493 keV                         gamma, in nature',
              'p + d => p + d + 0 keV                                  in nature, n-transfer',
-             'p + d => n + 2*p + -2225 keV                            ->B-, n']
-        , v.lines(Options(ascii=True)))
+             'p + d => n + 2*p + -2225 keV                            ->B-, n'],
+            v.lines(Options(ascii=True)),
+        )

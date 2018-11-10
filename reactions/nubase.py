@@ -1,17 +1,19 @@
+"""
+Provide a Python interface into the Nubase isotope file.
+"""
+# pylint: disable=too-many-instance-attributes, too-few-public-methods
 from __future__ import absolute_import
 import os
-import sys
 import re
-import operator
 import itertools
 from collections import defaultdict
 
-from .units import Energy, Distance, HalfLife
+from .units import Energy, HalfLife
 from .constants import DALTON_KEV
 
 
-basepath = os.path.dirname(__file__)
-NUBASE_PATH = os.path.abspath(os.path.join(basepath, "../db/nubtab12.asc"))
+BASEPATH = os.path.dirname(__file__)
+NUBASE_PATH = os.path.abspath(os.path.join(BASEPATH, "../db/nubtab12.asc"))
 
 
 ALTERNATE_LABELS = {
@@ -198,11 +200,12 @@ TRACE_ISOTOPES = {
 }
 
 
-class Electron(object):
+class Electron:
+    """Model an electron."""
 
     def __init__(self):
         self.mass_number = 0
-        self.full_label = self._label = self.label = 'e-'
+        self.full_label = self.label = self.initial_label = 'e-'
         self.is_stable = True
         self.spin_and_parity = '1/2+'
         self.atomic_number = 0
@@ -219,11 +222,12 @@ class Electron(object):
         return 'Electron'
 
 
-class ElectronNeutrino(object):
+class ElectronNeutrino:
+    """Model an electon neutrino."""
 
     def __init__(self):
         self.mass_number = 0
-        self.full_label = self._label = self.label = 'ν'
+        self.full_label = self.label = self.initial_label = 'ν'
         self.is_stable = False
         self.spin_and_parity = '1/2+'
         self.atomic_number = 0
@@ -241,33 +245,36 @@ class ElectronNeutrino(object):
 
 
 class BadNubaseRow(RuntimeError):
+    """Sentinel exception raised when a row in the Nubase file cannot be parsed."""
     pass
 
 
 def first_match(pattern, string):
+    """Return the first match of <pattern>"""
     match = re.search(pattern, string)
     if not match:
         return None
     return match.group()
 
 
-class Nuclide(object):
+class Nuclide:
+    """Model an individual nuclide that will participate in reactions."""
 
     _columns = (
-        (  4, 'massNumber'              ),
-        (  7, 'atomicNumber'            ),
-        (  9, 'atomicNumberExtra'       ),
-        ( 18, 'nuclide'                 ),
-        ( 39, 'massExcess'              ),
-        ( 61, 'excitationEnergy'        ),
-        ( 69, 'halfLife'                ),
-        ( 71, 'halfLifeUnit'            ),
-        ( 79, 'unknown'                 ),
-        ( 93, 'spinAndParity'           ),
-        ( 96, 'ensdfArchiveFileYear'    ),
-        (105, 'reference'               ),
-        (110, 'yearOfDiscovery'         ),
-        ( -1, 'decayModesAndIntensities'),
+        (4, 'massNumber'),
+        (7, 'atomicNumber'),
+        (9, 'atomicNumberExtra'),
+        (18, 'nuclide'),
+        (39, 'massExcess'),
+        (61, 'excitationEnergy'),
+        (69, 'halfLife'),
+        (71, 'halfLifeUnit'),
+        (79, 'unknown'),
+        (93, 'spinAndParity'),
+        (96, 'ensdfArchiveFileYear'),
+        (105, 'reference'),
+        (110, 'yearOfDiscovery'),
+        (-1, 'decayModesAndIntensities'),
     )
 
     _not_excited = {
@@ -314,6 +321,7 @@ class Nuclide(object):
 
     @classmethod
     def load(cls, **kwargs):
+        """Load the nuclide from a line in the Nubase file."""
         line = kwargs['line']
         row = {}
         endcol_prev = 0
@@ -327,33 +335,45 @@ class Nuclide(object):
     def __init__(self, row):
         if not 'massExcess' in row:
             raise BadNubaseRow('no mass excess: {}'.format(row))
-        self._row = row
-        self._label = row['nuclide']
-        self.atomic_number = int(first_match(r'\d+', self._row['atomicNumber']))
+        self.row = row
+        self._initialize_basic_fields()
+        self._initialize_isotope_fields()
+        self._initialize_isomer_fields()
+        self._initialize_calculated_fields()
+
+    def _initialize_basic_fields(self):
+        self.initial_label = self.row['nuclide']
+        self.atomic_number = int(first_match(r'\d+', self.row['atomicNumber']))
         self.is_baryon = True
-        self.mass_number = int(self._row['massNumber'])
+        self.mass_number = int(self.row['massNumber'])
         self.neutron_number = self.mass_number - self.atomic_number
-        decays = self._row.get('decayModesAndIntensities', '')
-        g = re.search(r'IS=([\d\.]+)', decays)
-        self.isotopic_abundance = float(g.group(1)) if g else 0.
-        self.is_stable = g is not None
-        self.is_trace = self._label in TRACE_ISOTOPES
-        self.in_nature = self.is_stable or self.is_trace
         self.numbers = (self.mass_number, self.atomic_number)
+        self.spin_and_parity = None
+        if 'spinAndParity' in self.row:
+            self.spin_and_parity = ' '.join(self.row['spinAndParity'].split())
+
+    def _initialize_isotope_fields(self):
+        decays = self.row.get('decayModesAndIntensities', '')
+        matches = re.search(r'IS=([\d\.]+)', decays)
+        self.isotopic_abundance = float(matches.group(1)) if matches else 0.
+        self.is_stable = matches is not None
+        self.is_trace = self.initial_label in TRACE_ISOTOPES
+        self.in_nature = self.is_stable or self.is_trace
+
+    def _initialize_isomer_fields(self):
         if self.is_excited:
-            label, self._excitation_level = self._label[:-1], self._label[-1]
+            label, self._excitation_level = self.initial_label[:-1], self.initial_label[-1]
             self.label = ALTERNATE_LABELS.get(label, label)
             self.full_label = '{} ({})'.format(self.label, self._excitation_level)
         else:
-            label, self._excitation_level = self._label, '0'
+            label, self._excitation_level = self.initial_label, '0'
             self.label = ALTERNATE_LABELS.get(label, label)
             self.full_label = self.label
         self.signature = (self.label, self._excitation_level)
-        kev = first_match(r'[\d\.\-]+', self._row['massExcess'])
+
+    def _initialize_calculated_fields(self):
+        kev = first_match(r'[\d\.\-]+', self.row['massExcess'])
         self.mass_excess_kev = float(kev)
-        self.spin_and_parity = None
-        if 'spinAndParity' in self._row:
-            self.spin_and_parity = ' '.join(self._row['spinAndParity'].split())
         self.mass = Energy.load(kev=self.mass_number * DALTON_KEV + self.mass_excess_kev)
 
     _noteworthy = {
@@ -380,30 +400,32 @@ class Nuclide(object):
 
     @property
     def notes(self):
-        it = re.split(r'[;=~<]', self._row.get('decayModesAndIntensities', ''))
-        notes = {self._noteworthy.get(token) for token in filter(None, it)} - {None}
+        """Are there any notes to include with this isotope?"""
+        matches = re.split(r'[;=~<]', self.row.get('decayModesAndIntensities', ''))
+        notes = {self._noteworthy.get(token) for token in filter(None, matches)} - {None}
         if self.is_trace:
             notes.add('trace')
         return notes
 
     @property
     def is_excited(self):
+        """Is the isomer in an excited state?"""
         if self.isotopic_abundance:
             return False
-        # TODO -- remove.  But add in tests!
-        if self._label in self._not_excited:
+        if self.initial_label in self._not_excited:
             return False
-        matching_suffix = any(self._label.endswith(s) for s in 'ijmnpqrx')
-        matches = re.findall('[a-z]', self._label)
-        if 1 < len(matches):
+        matches = re.findall('[a-z]', self.initial_label)
+        if len(matches) > 1:
             return True
         return False
 
     @property
     def half_life(self):
-        return HalfLife(self._row['halfLife'], self._row['halfLifeUnit'])
+        """What is the half-life of this nuclide?"""
+        return HalfLife(self.row['halfLife'], self.row['halfLifeUnit'])
 
     def json(self):
+        """Return a JSON-serializable dict."""
         return {
             'halfLife':     self.half_life.seconds,
             'atomicNumber': self.atomic_number,
@@ -411,7 +433,7 @@ class Nuclide(object):
         }
 
     def __iter__(self):
-        return self.json().iteritems()
+        return iter(self.json().items())
 
     def __eq__(self, o):
         if isinstance(o, self.__class__):
@@ -425,25 +447,28 @@ class Nuclide(object):
         return 'Nuclide({})'.format(self.full_label)
 
 
-class Nuclides(object):
+class Nuclides:
+    """Model a database of nuclides by atomic number, mass number, etc."""
 
     _nuclides = None
 
     @classmethod
-    def db(cls):
+    def data(cls):
+        """Return a memoized singleton of the database of nuclides."""
         if cls._nuclides is None:
             cls._nuclides = cls.load(path=NUBASE_PATH)
         return cls._nuclides
 
     @classmethod
     def load(cls, **kwargs):
+        """Load the database of nuclides from a file."""
         path = kwargs['path']
         nuclides = []
-        with open(path) as fh:
-            for line in fh:
+        with open(path) as file:
+            for line in file:
                 try:
-                    n = Nuclide.load(line=line)
-                    nuclides.append(n)
+                    nuclide = Nuclide.load(line=line)
+                    nuclides.append(nuclide)
                 except BadNubaseRow:
                     continue
         nuclides.extend([Electron(), ElectronNeutrino()])
@@ -456,16 +481,21 @@ class Nuclides(object):
         self._by_atomic_number = defaultdict(list)
         self.isomers = defaultdict(list)
         self.trace = {}
-        for n in self._nuclides:
-            self._by_label[n._label] = n
-            self._by_signature[n.signature] = n
-            self._by_atomic_number[n.atomic_number].append(n)
-            self.isomers[n.numbers].append(n)
+        self._index_nuclides()
 
-    def atomic_number(self, number):
-        return self._by_atomic_number[number]
+    def _index_nuclides(self):
+        for nuclide in self._nuclides:
+            self._by_label[nuclide.initial_label] = nuclide
+            self._by_signature[nuclide.signature] = nuclide
+            self._by_atomic_number[nuclide.atomic_number].append(nuclide)
+            self.isomers[nuclide.numbers].append(nuclide)
+
+    def atomic_number(self, atomic_number):
+        """What is the nuclide for this number?"""
+        return self._by_atomic_number[atomic_number]
 
     def get(self, signature):
+        """Return a nuclide for a given signature."""
         return self._by_signature.get(signature)
 
     def __iter__(self):
@@ -475,32 +505,40 @@ class Nuclides(object):
         return self._by_signature[signature]
 
 
-def stable_nuclides(nuclides, unstable):
-    if unstable:
+def stable_nuclides(nuclides, unstable_parents):
+    """Return an interateor of (1, nuclide) tuples."""
+    if unstable_parents:
         return ((1, n) for n in nuclides)
     return ((1, n) for n in nuclides if n.in_nature and not n.is_excited)
 
 
 def parse_spec(spec, **kwargs):
+    """Parse the reaction spec provided from the command line."""
+
     unstable_parents = kwargs.get('unstable_parents')
-    nuclides = Nuclides.db()
+    database = Nuclides.data()
     reactants = []
+
     for label in (l.strip() for l in spec.split('+')):
-        n = nuclides.get((label, '0'))
-        if n:
-            reactants.append([(1, n)])
-        elif 'all' == label:
+        nuclide = database.get((label, '0'))
+        if nuclide:
+            reactants.append([(1, nuclide)])
+            continue
+
+        if label == 'all':
             row = []
             parent_ub = kwargs.get('parent_ub', 1000)
             for number in ELEMENTS.values():
                 if number > parent_ub:
                     continue
-                ns = nuclides.atomic_number(number)
-                row.extend(stable_nuclides(ns, unstable_parents))
+                nuclides = database.atomic_number(number)
+                row.extend(stable_nuclides(nuclides, unstable_parents))
             reactants.append(row)
-        else:
-            number = ELEMENTS[label]
-            ns = nuclides.atomic_number(number)
-            it = stable_nuclides(ns, unstable_parents)
-            reactants.append(it)
+            continue
+
+        number = ELEMENTS[label]
+        nuclides = database.atomic_number(number)
+        iterator = stable_nuclides(nuclides, unstable_parents)
+        reactants.append(iterator)
+
     return itertools.product(*reactants)

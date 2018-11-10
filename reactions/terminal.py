@@ -1,14 +1,22 @@
+"""
+Various helper classes for representing different kinds of output to a
+terminal.
+"""
+# pylint: disable=no-self-use, too-few-public-methods, too-many-instance-attributes
+# pylint: disable=no-member
 import re
-import math
 from collections import defaultdict
 
 from .studies import Studies
 
 
-_studies = Studies.db()
+STUDIES = Studies.data()
 
 
-class TerminalView(object):
+class TerminalView:
+    """Base class responsible for formatting reactions for printing out
+    to the console.
+    """
 
     def __init__(self, system):
         self._system = system
@@ -16,6 +24,7 @@ class TerminalView(object):
     _kwargs = {'selective': True}
 
     def reactions(self, cls):
+        """Return a sorted list consisting of one line per reaction in the system."""
         reactions = (cls(c, r, **self._kwargs) for c, r in self._system.reactions())
         return sorted(self._filter(reactions), key=lambda l: l.sort_key, reverse=True)
 
@@ -23,11 +32,14 @@ class TerminalView(object):
         return reactions
 
     def lines(self, options):
+        """Return all of the lies to be printed out to the terminal, together with references
+        if any.
+        """
         refs = set()
         lines = []
         cls = AsciiTerminalLine if options.ascii else UnicodeTerminalLine
-        for r in self.reactions(cls):
-            line, _refs = r.terminal(options)
+        for reaction in self.reactions(cls):
+            line, _refs = reaction.terminal(options)
             lines.append(line)
             refs |= set(_refs)
         if refs and options.references:
@@ -36,25 +48,27 @@ class TerminalView(object):
 
 
 class StudiesTerminalView(TerminalView):
+    """Terminal view that includes references to relevant studies."""
 
     _not_observed = {'ɣ', 'n'}
     _kwargs = {}
 
     def _sort_key(self, reaction):
-        length = len(reaction._agreements)
+        length = len(reaction.agreements)
         sign = 1 if reaction.agreement > 0 else -1
         return reaction.agreement, sign * length
 
     def _filter(self, reactions):
-        for r in reactions:
-            if r.agreement is None:
+        for reaction in reactions:
+            if reaction.agreement is None:
                 continue
-            if any(n in self._not_observed for n in r.notes):
+            if any(n in self._not_observed for n in reaction.notes):
                 continue
-            yield r
+            yield reaction
 
 
-class TerminalLine(object):
+class TerminalLine:
+    """Abstract base class representing a single line of terminal output."""
 
     _notes_template = '{:<55} {:<25}'
 
@@ -68,11 +82,11 @@ class TerminalLine(object):
         self._rvalues = reaction.rvalues
         self.references = []
         self.marks = []
-        self._agreements = []
+        self.agreements = []
         self._add_references(self._lvalues, 'decrease', **kwargs)
         self._add_references(self._rvalues, 'increase')
         # Cases where a daughter was found in a study
-        self.agreement = sum(self._agreements) if self._agreements else None
+        self.agreement = sum(self.agreements) if self.agreements else None
 
     def _spin_and_parity(self, string, values):
         spins_and_parities = (n.spin_and_parity for num, n in sorted(values, key=self._sort_key))
@@ -82,9 +96,9 @@ class TerminalLine(object):
 
     def _add_references(self, values, expected, **kwargs):
         selective = kwargs.get('selective')
-        for result in _studies.isotopes(n.label for num, n in values):
+        for result in STUDIES.isotopes(n.label for num, n in values):
             agreement, mark = result.reference_mark(expected)
-            self._agreements.append(1 if agreement else -1)
+            self.agreements.append(1 if agreement else -1)
             if selective and agreement:
                 continue
             self.marks.append(mark)
@@ -98,30 +112,32 @@ class TerminalLine(object):
         return '{:>13}'.format(self.format(mark))
 
     def _sort_key(self, pair):
-        num, n = pair
-        return n.mass_number, n.label
+        _, nuclide = pair
+        return nuclide.mass_number, nuclide.label
 
     def _fancy_side(self, delim, side):
         isotopes = defaultdict(lambda: 0)
-        for num, n in side:
-            isotopes[n] += num
+        for num, nuclide in side:
+            isotopes[nuclide] += num
         values = []
         nuclides = sorted(((num, n) for n, num in isotopes.items()), key=self._sort_key)
-        for num, n in nuclides:
-            label = self.format(n.full_label)
+        for num, nuclide in nuclides:
+            label = self.format(nuclide.full_label)
             string = self._multi_daughter_template.format(num, label) if num > 1 else label
             values.append(string)
         return ' {} '.format(delim).join(values)
 
     def _add_gamow(self, string):
-        G = self.reaction._gamow
-        if G is None:
+        gamow = self.reaction.gamow_value
+        if gamow is None:
             return string
-        return '{} [{:.0f}]'.format(string, G)
+        return '{} [{:.0f}]'.format(string, gamow)
 
     def terminal(self, options):
+        """Returns a single line of terminal output together with any relevant
+        academic references.
+        """
         kev = self.q_value_kev
-        sign = '+' if kev >= 0 else '-'
         string = self._reaction_template.format(
             self._fancy_side(self.reaction.lvalue_delim, self._lvalues),
             self._fancy_side(self.reaction.rvalue_delim, self._rvalues),
@@ -140,31 +156,35 @@ class TerminalLine(object):
 
 
 class UnicodeTerminalLine(TerminalLine):
+    """A terminal line for a terminal that supports unicode characters."""
 
     _multi_daughter_template = '{}·{}'
     _reaction_template = '{} → {} + {:.0f} keV'
 
     def format(self, string):
+        """No-op method that returns the unmodified string."""
         return string
 
 
 class AsciiTerminalLine(TerminalLine):
+    """A terminal line that includes only ASCII characters."""
 
     _multi_daughter_template = '{}*{}'
     _reaction_template = '{} => {} + {:.0f} keV'
 
     _translated_patterns = [
-        ('→',   '->'),
-        ('β',   'B'),
-        ('ε',   'EC'),
-        ('α',   'A'),
-        ('ɣ',   'gamma'),
-        ('ν',   'neutrino'),
-        ('✗',   'x'),
-        ('✓'    'a'),
+        ('→', '->'),
+        ('β', 'B'),
+        ('ε', 'EC'),
+        ('α', 'A'),
+        ('ɣ', 'gamma'),
+        ('ν', 'neutrino'),
+        ('✗', 'x'),
+        ('✓' 'a'),
     ]
 
     def format(self, string):
+        """Replaces unicode characters with ASCII representations."""
         for before, after in self._translated_patterns:
             string = re.sub(before, after, string)
         return string

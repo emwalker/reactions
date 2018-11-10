@@ -1,9 +1,9 @@
+# pylint: disable=missing-docstring, invalid-name, too-many-public-methods
+# pylint: disable=no-self-use
 import unittest
 import math
 
 import numpy as np
-import pandas as pd
-import pandas.util.testing as pdt
 
 from reactions.units import Energy, Distance
 from reactions.nubase import Nuclides
@@ -12,11 +12,10 @@ from reactions.combinations import Reaction
 from reactions.calculations import CoulombBarrier
 
 
-nuclides = Nuclides.db()
+nuclides = Nuclides.data()
 
 
 class CoulombBarrierTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.c = CoulombBarrier(
@@ -34,7 +33,6 @@ class CoulombBarrierTest(unittest.TestCase):
 
 
 class GamowSuppressionFactorTest(unittest.TestCase):
-
     def test_gamow_1(self):
         c = Reaction.load(
             reactants=[(1, ('185Re', '0'))],
@@ -86,7 +84,6 @@ class GamowSuppressionFactorTest(unittest.TestCase):
 
 
 class Gamow2Test(unittest.TestCase):
-
     def test_gamow_factor_1(self):
         c = Reaction.load(
             reactants=[(1, ('212Po', '0'))],
@@ -110,7 +107,6 @@ class Gamow2Test(unittest.TestCase):
 
 
 class GeigerNuttalLawTest(unittest.TestCase):
-
     def test_geiger_nuttal_law_1(self):
         c = Reaction.load(
             reactants=[(1, ('185Re', '0'))],
@@ -134,7 +130,6 @@ class GeigerNuttalLawTest(unittest.TestCase):
 
 
 class DecayTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.pt190 = Reaction.load(
@@ -150,7 +145,6 @@ class DecayTest(unittest.TestCase):
 
 
 class AlphaDecayTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.pt190 = System.load('190Pt', model='induced-decay') \
@@ -158,9 +152,18 @@ class AlphaDecayTest(unittest.TestCase):
 
     def test_remaining_190Pt(self):
         np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms())
-        np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms(seconds=100))
-        np.testing.assert_approx_equal(6.02214129e+23, self.pt190.remaining_active_atoms(seconds=3.154e7))
-        np.testing.assert_approx_equal(1.3788626498604035e+23, self.pt190.remaining_active_atoms(seconds=1e20))
+        np.testing.assert_approx_equal(
+            6.02214129e+23,
+            self.pt190.remaining_active_atoms(seconds=100),
+        )
+        np.testing.assert_approx_equal(
+            6.02214129e+23,
+            self.pt190.remaining_active_atoms(seconds=3.154e7),
+        )
+        np.testing.assert_approx_equal(
+            1.3788626498604035e+23,
+            self.pt190.remaining_active_atoms(seconds=1e20),
+        )
 
     def test_activity_190Pt(self):
         np.testing.assert_approx_equal(8877.743730232462, self.pt190.activity(seconds=1))
@@ -173,14 +176,23 @@ class AlphaDecayTest(unittest.TestCase):
     def test_241Am(self):
         scenario = System.load('241Am', model='induced-decay') \
             .hyperphysics(isotopic_fraction=1, moles=1, seconds=1)
+
         # Remaining
         np.testing.assert_approx_equal(6.022141289646228e+23, scenario.remaining_active_atoms())
-        np.testing.assert_approx_equal(6.02214125462277e+23, scenario.remaining_active_atoms(seconds=100))
-        np.testing.assert_approx_equal(6.010996320511956e+23, scenario.remaining_active_atoms(seconds=3.154e7))
+        np.testing.assert_approx_equal(
+            6.02214125462277e+23,
+            scenario.remaining_active_atoms(seconds=100),
+        )
+        np.testing.assert_approx_equal(
+            6.010996320511956e+23,
+            scenario.remaining_active_atoms(seconds=3.154e7),
+        )
         np.testing.assert_approx_equal(0.0, scenario.remaining_active_atoms(seconds=1e20))
+
         # Activity
         np.testing.assert_approx_equal(35368722366460.305, scenario.activity(seconds=1))
         np.testing.assert_approx_equal(0.0, scenario.activity(seconds=1e20))
+
         # Power
         np.testing.assert_approx_equal(31.94759921211376, scenario.power(seconds=1).watts)
         np.testing.assert_approx_equal(0.0, scenario.power(seconds=1e20).watts)
@@ -189,9 +201,9 @@ class AlphaDecayTest(unittest.TestCase):
         # Sanity check against a number found in Wikipedia
         # https://en.wikipedia.org/wiki/Isotopes_of_americium
         # (1 kg * 1000 g/kg) / (243 g/mole)
-        moles = 1e3 / 243
+        mol = 1e3 / 243
         scenario = System.load('241Am', model='induced-decay') \
-            .hyperphysics(seconds=1, isotopic_fraction=1, moles=moles)
+            .hyperphysics(seconds=1, isotopic_fraction=1, moles=mol)
         # Should be 114 watts/kg
         np.testing.assert_approx_equal(131.4716016959414, scenario.power().watts)
         np.testing.assert_approx_equal(0.0, scenario.power(seconds=1e20).watts)
@@ -199,31 +211,35 @@ class AlphaDecayTest(unittest.TestCase):
     def test_screened_190Pt(self):
         pt190 = System.load('190Pt', model='induced-decay') \
             .hyperphysics(seconds=1, screening=11, moles=1, isotopic_fraction=1)
+
         # Remaining
         np.testing.assert_approx_equal(6.02214129e+23, pt190.remaining_active_atoms())
         np.testing.assert_approx_equal(6.02214129e+23, pt190.remaining_active_atoms(seconds=100))
-        np.testing.assert_approx_equal(6.021836528709286e+23, pt190.remaining_active_atoms(seconds=3.154e7))
+        np.testing.assert_approx_equal(
+            6.021836528709286e+23,
+            pt190.remaining_active_atoms(seconds=3.154e7),
+        )
         np.testing.assert_approx_equal(0.0, pt190.remaining_active_atoms(seconds=1e20))
+
         # Activity
         np.testing.assert_approx_equal(965968183447.2651, pt190.activity(seconds=1))
         np.testing.assert_approx_equal(0.0, pt190.activity(seconds=1e20))
+
         # Power
         np.testing.assert_approx_equal(0.5033712836465414, pt190.power().watts)
         np.testing.assert_approx_equal(0.0, pt190.power(seconds=1e20).watts)
 
 
-##
+
 # Model production of of 22,522,522,523 4He/s from 0.02193926719 mol pt
 # over a period of 4440 seconds
 # http://lenr-canr.org/acrobat/MilesMcorrelatio.pdf
-#
 screening = 32.046
 moles = 0.02193926719
 active_fraction = 1e-6
 
 
 class HyperphysicsPlatinumAlphaDecayTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.scenario = System.load('Pt', model='induced-decay') \
@@ -239,13 +255,16 @@ class HyperphysicsPlatinumAlphaDecayTest(unittest.TestCase):
         np.testing.assert_approx_equal(0.008753265223103896, self.scenario.power().watts)
 
     def test_elemental_Pt(self):
-        scenario = System.load('Pt', model='induced-decay').hyperphysics(seconds=1, moles=1, active_fraction=1)
+        scenario = System.load('Pt', model='induced-decay') \
+            .hyperphysics(seconds=1, moles=1, active_fraction=1)
         np.testing.assert_approx_equal(1.0668148541893832, scenario.activity(), significant=3)
 
     def test_screened_Pt(self):
-        scenario = System.load('Pt', model='induced-decay').hyperphysics(screening=11, seconds=1, moles=1, active_fraction=1)
+        scenario = System.load('Pt', model='induced-decay') \
+            .hyperphysics(screening=11, seconds=1, moles=1, active_fraction=1)
         np.testing.assert_approx_equal(116050834.10601069, scenario.activity(), significant=3)
-        np.testing.assert_approx_equal(6.0474721800430736e-05, scenario.power().watts, significant=3)
+        np.testing.assert_approx_equal(
+            6.0474721800430736e-05, scenario.power().watts, significant=3)
 
     def test_parent_z(self):
         np.testing.assert_allclose([
@@ -422,8 +441,15 @@ class HyperphysicsPlatinumAlphaDecayTest(unittest.TestCase):
 
     def test_total_activity(self):
         df = self.scenario.df
-        np.testing.assert_approx_equal(22522522523, df.partial_activity.sum(), significant=3)
-        np.testing.assert_approx_equal(8.244805816629383e-285, df.partial_activity[df.parent == '190Pt'][0])
+        np.testing.assert_approx_equal(
+            22522522523,
+            df.partial_activity.sum(),
+            significant=3,
+        )
+        np.testing.assert_approx_equal(
+            8.244805816629383e-285,
+            df.partial_activity[df.parent == '190Pt'][0],
+        )
 
     def test_total_power(self):
         np.testing.assert_approx_equal(0.008753265223103896, self.scenario.df.watts.sum())
@@ -437,32 +463,53 @@ class HyperphysicsPoloniumAlphaDecayTest(unittest.TestCase):
             .hyperphysics(seconds=1, moles=1, active_fraction=1, isotopic_fraction=1)
 
     def test_nuclear_separation_radius_fm(self):
-        np.testing.assert_allclose([9.014871826539528], self.scenario.df.nuclear_separation_radius_fm)
+        np.testing.assert_allclose(
+            [9.014871826539528],
+            self.scenario.df.nuclear_separation_radius_fm,
+        )
 
     def test_barrier_height(self):
-        np.testing.assert_allclose([26.1967118938676], self.scenario.df.barrier_height_mev, rtol=1e-4)
+        np.testing.assert_allclose(
+            [26.1967118938676],
+            self.scenario.df.barrier_height_mev,
+            rtol=1e-4,
+        )
 
     def test_lighter_ke(self):
         np.testing.assert_allclose([8.78], self.scenario.df.lighter_ke_mev, rtol=1e-3)
 
     def test_barrier_assault_frequency(self):
-        np.testing.assert_allclose([1.142126641655716e21], self.scenario.df.barrier_assault_frequency, rtol=1e-3)
+        np.testing.assert_allclose(
+            [1.142126641655716e21],
+            self.scenario.df.barrier_assault_frequency,
+            rtol=1e-3,
+        )
 
     def test_lighter_velocity_m_per_s(self):
-        np.testing.assert_allclose([2.06e7], self.scenario.df.lighter_velocity_m_per_s, rtol=1e-3)
+        np.testing.assert_allclose(
+            [2.06e7],
+            self.scenario.df.lighter_velocity_m_per_s,
+            rtol=1e-3,
+        )
 
     def test_tunneling_probability(self):
-        np.testing.assert_allclose([2.636693524272448e-15], self.scenario.df.tunneling_probability, rtol=1e-1)
+        np.testing.assert_allclose(
+            [2.636693524272448e-15],
+            self.scenario.df.tunneling_probability,
+            rtol=1e-1,
+        )
 
 
 class InducedFission106PdTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.scenario = System.load('106Pd',
+        system = System.load(
+            '106Pd',
             model='induced-fission',
             daughters=[(1, ('90Sr', '0')), (1, ('16O', '0'))],
-        ).hyperphysics(
+        )
+        cls.scenario = system.hyperphysics(
             seconds=1,
             moles=1,
             active_fraction=1,
@@ -477,8 +524,6 @@ class InducedFission106PdTest(unittest.TestCase):
 
 
 class HermesDecayTest(unittest.TestCase):
-
-    ##
     # Others:
     # 218Rn, 219Rn, 220Rn, 222Rn, 226Rn
     # 221Fr
@@ -491,7 +536,6 @@ class HermesDecayTest(unittest.TestCase):
     # 238Pu, 239Pu, 240Pu, 244Pu
     # 244Cm, 245Cm, 248Cm
     # 249Cf, 252Cf
-    #
 
     @classmethod
     def setUpClass(cls):
@@ -565,7 +609,6 @@ class HermesDecayTest(unittest.TestCase):
 
 
 class DependenceOfDecayConstantOnScreening(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.system = System.load(
@@ -577,13 +620,14 @@ class DependenceOfDecayConstantOnScreening(unittest.TestCase):
     def test_relationship(self):
         decay_constants = []
         half_lives = []
-        for screening in range(0, 10):
+
+        for scr in range(0, 10):
             scenario = self.system.hyperphysics(
                 seconds=1,
                 moles=1,
                 active_fraction=1,
                 isotopic_fraction=1,
-                screening=screening,
+                screening=scr,
             )
             constant = scenario.df.partial_decay_constant.values[0]
             decay_constants.append(constant)

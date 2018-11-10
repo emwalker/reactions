@@ -1,34 +1,34 @@
+# pylint: disable=missing-docstring, wrong-import-position
 import argparse
 import sys
 import os
-
 import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 from reactions.system import System, Options
 from reactions.terminal import TerminalView, StudiesTerminalView
 
 
-class App(object):
-
+class App:
     def __init__(self, **kwargs):
         self.kwargs = kwargs
-        if 'studies' == self.kwargs.get('view') or kwargs.get('studies'):
+        if self.kwargs.get('view') == 'studies' or kwargs.get('studies'):
             self.view_cls = StudiesTerminalView
         else:
             self.view_cls = TerminalView
 
     def run(self):
-        s = System.load(self.kwargs['system'], **self.kwargs)
+        system = System.load(self.kwargs['system'], **self.kwargs)
         if self.kwargs.get('decay_power'):
-            scenario = s.hp(**self.kwargs)
-            if 'csv' == self.kwargs.get('format'):
+            scenario = system.hyperphysics(**self.kwargs)
+            if self.kwargs.get('format') == 'csv':
                 scenario.to_csv(sys.stdout)
             else:
                 self.print_scenario(scenario)
         else:
             options = Options(**self.kwargs)
-            for line in self.view_cls(s).lines(options):
+            for line in self.view_cls(system).lines(options):
                 print(line)
 
     def print_scenario(self, scenario):
@@ -39,7 +39,7 @@ class App(object):
         print('Watts:          {:.2e}'.format(scenario.power().watts))
         print()
 
-        df = scenario.df[[
+        frame = scenario.df[[
             'parent',
             'daughters',
             'parent_fraction',
@@ -51,12 +51,12 @@ class App(object):
             'watts',
         ]]
 
-        if df.empty:
+        if frame.empty:
             print('No active isotopes.')
         else:
             with pd.option_context('display.max_rows', 999, 'display.max_columns', 10):
-                df = df.dropna().sort(['watts', 'gamow_factor'], ascending=[0, 1])
-                print(df)
+                frame = frame.dropna().sort(['watts', 'gamow_factor'], ascending=[0, 1])
+                print(frame)
         print()
 
 
@@ -84,32 +84,32 @@ def parse_arguments():
     parser.add_argument('--format', dest='format')
     parser.add_argument('--daughter-count', dest='daughter_count')
     parser.set_defaults(
-        lower_bound      = 0,
-        upper_bound      = 500000,
-        spins            = False,
-        references       = False,
-        view             = 'default',
-        model            = 'standard',
-        unstable_parents = False,
-        ascii            = False,
-        excited          = False,
-        simple           = False,
-        gamow            = False,
-        parent_ub        = 1000,
-        daughter_count   = '',
-        decay_power      = False,
-        screening        = 0,
-        seconds          = 1,
-        moles            = 1,
-        active_fraction  = 1,
-        format           = None,
+        lower_bound=0,
+        upper_bound=500000,
+        spins=False,
+        references=False,
+        view='default',
+        model='standard',
+        unstable_parents=False,
+        ascii=False,
+        excited=False,
+        simple=False,
+        gamow=False,
+        parent_ub=1000,
+        daughter_count='',
+        decay_power=False,
+        screening=0,
+        seconds=1,
+        moles=1,
+        active_fraction=1,
+        format=None,
     )
     return parser.parse_args()
 
 
-if '__main__' == __name__:
-    opts = parse_arguments()
+if __name__ == '__main__':
+    ARGS = parse_arguments()
     try:
-        App(**vars(opts)).run()
+        App(**vars(ARGS)).run()
     except KeyboardInterrupt:
         print('command canceled.')

@@ -1,3 +1,6 @@
+"""
+Model various nuclear reactions under different sets of assumptions.
+"""
 import pandas as pd
 
 pd.set_option('display.max_columns', 500)

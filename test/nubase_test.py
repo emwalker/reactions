@@ -1,13 +1,10 @@
+# pylint: disable=missing-docstring, too-many-public-methods, invalid-name
 import unittest
-import os.path
-import sys
 
-from reactions.nubase import NUBASE_PATH, Nuclide, Nuclides, Energy
-from reactions.system import System
+from reactions.nubase import NUBASE_PATH, Nuclide, Nuclides
 
 
 class NuclideTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         with open(NUBASE_PATH) as fh:
@@ -35,7 +32,7 @@ class NuclideTest(unittest.TestCase):
             'spinAndParity':            '0+      T=1',
             'unknown':                  '14',
             'yearOfDiscovery':          '1981',
-        }, n._row)
+        }, n.row)
 
     def test_mass_number(self):
         n = Nuclide.load(line=self.lines[0])
@@ -142,16 +139,15 @@ class NuclideTest(unittest.TestCase):
         self.assertIn('→SF', n.notes)
 
     def test_mass(self):
-        nuclides = Nuclides.db()
+        nuclides = Nuclides.data()
         n0 = nuclides.get(('208Pb', '0'))
         self.assertEqual(193729.016588, n0.mass.mev)
 
 
 class NuclidesTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
-        cls.nuclides = Nuclides.db()
+        cls.nuclides = Nuclides.data()
 
     def test_nuclide(self):
         self.assertEqual('7Li', self.nuclides.get(('7Li', '0')).label)
