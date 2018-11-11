@@ -24,13 +24,13 @@ d + 6Li => n + 3He + 4He + 1795 keV
 ```
 
 
-# Requirements
+### Requirements
 
 The following components are required:
 * Python 3
 * [Virtualenv wrapper](https://virtualenvwrapper.readthedocs.org/en/latest/)
 
-# Setup
+### Setup
 
 To get set up, run the following commands:
 
@@ -47,7 +47,7 @@ Ran 63 tests in 0.211s
 OK
 ```
 
-# Running
+### Running
 
 Before doing anything else, make sure you are in the virtual environment that is used
 with this project:
@@ -55,7 +55,7 @@ with this project:
 % workon reactions
 ```
 
-## Example
+### Example
 
 Show additional information about the reactions:
 
@@ -79,7 +79,7 @@ d + 6Li → n + 7Be + 3382 keV                            n, →β-, →ε      
 d + 6Li → n + 3He + 4He + 1795 keV                      n, α, →β-                     ✗ 6Li [L15]
 ```
 
-## Leaving the virtual environment
+### Leaving the virtual environment
 To leave the Python virtualenv environment you set up, run this command:
 ```
 % deactivate
