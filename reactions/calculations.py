@@ -10,6 +10,7 @@ import scipy.constants as cs
 
 from .constants import FINE_STRUCTURE_CONSTANT_MEV_FM, HBAR_MEV_S
 from .units import Energy, Power, Distance
+from .views import DecayTerminalView
 
 # Choices of constant
 # r0 -- Fermi model nuclear radius
@@ -206,6 +207,10 @@ class DecayScenario:
     def to_csv(self, io):
         """Convert the calculated dataframe to .csv."""
         self.df.to_csv(io, index=False)
+
+    def to_terminal(self, io):
+        """Print the decay scenario to the io object."""
+        DecayTerminalView(self, io, **self.kwargs).call()
 
     def to_string(self):
         """Conver the calculated dataframe to a string that can be printed

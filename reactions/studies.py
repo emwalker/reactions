@@ -1,4 +1,5 @@
-"""Include references to academic studies that are relevant to a given reaction.
+"""
+Include references to academic studies that are relevant to a given reaction.
 """
 import os
 import json

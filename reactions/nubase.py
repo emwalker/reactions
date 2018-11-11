@@ -1,5 +1,5 @@
 """
-Provide a Python interface into the Nubase isotope file.
+Provide a Python interface into the Nubase isotope data file.
 """
 # pylint: disable=too-many-instance-attributes, too-few-public-methods
 from __future__ import absolute_import
@@ -409,7 +409,7 @@ class Nuclide:
 
     @property
     def is_excited(self):
-        """Is the isomer in an excited state?"""
+        """Is the nuclide an isomer in an excited state?"""
         if self.isotopic_abundance:
             return False
         if self.initial_label in self._not_excited:
@@ -448,7 +448,7 @@ class Nuclide:
 
 
 class Nuclides:
-    """Model a database of nuclides by atomic number, mass number, etc."""
+    """Provide a database of nuclides by atomic number, mass number, etc."""
 
     _nuclides = None
 

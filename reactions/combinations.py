@@ -34,7 +34,7 @@ class RejectCombination(RuntimeError):
 
 
 class GammaPhoton:
-    """Represent a gamma photon that results during a nuclear reaction."""
+    """Represent a gamma photon that results from a nuclear reaction."""
 
     def __init__(self):
         self.mass_number = 0
@@ -171,15 +171,15 @@ class Reaction:
         )
 
 
-def vectors3(integer):
+def vectors3(num):
     """Produce 3-tuples that sum up to the input."""
-    for i in range(integer):
-        j = integer - i
+    for i in range(num):
+        j = num - i
         for k in range(j):
             yield (j - k, k, i)
 
 
-class RegularCombinations:
+class CalculateCombinations:
     """Compute the possible combinations of neutrons and protons in the
     daughters for a given set of parent nuclides, using a cached result
     if one is available.
@@ -188,9 +188,9 @@ class RegularCombinations:
 
     def __init__(self, totals):
         self.totals = totals
-        self.cache_key = self._cache_key(totals)
+        self.mass_number, self.atomic_number = totals
 
-    def iterator(self):
+    def __iter__(self):
         """Return an iterator holding the possible combinations of protons
         and neutrons for a given pair of parent nuclides.  These are converted
         to daughter nuclides at a later step.
@@ -200,10 +200,9 @@ class RegularCombinations:
             yield from iterator
             return
 
-        mass_number, atomic_number = self.totals
         results, seen = [], set()
-        for masses in vectors3(mass_number):
-            for protons in vectors3(atomic_number):
+        for masses in vectors3(self.mass_number):
+            for protons in vectors3(self.atomic_number):
                 daughters = []
 
                 try:
@@ -221,15 +220,22 @@ class RegularCombinations:
                 daughters = tuple(sorted(daughters))
                 if daughters in seen:
                     continue
-
                 seen.add(daughters)
+
                 results.append(daughters)
                 yield daughters
+
         self._cache_results(results)
 
-    def _cache_key(self, totals):
-        string = json.dumps(totals, sort_keys=True).encode('utf-8')
+    @property
+    def _cache_key(self):
+        string = json.dumps(self.totals, sort_keys=True).encode('utf-8')
         return hashlib.sha1(string).hexdigest()
+
+    @property
+    def cache_path(self):
+        """File path for the cached results for this reaction."""
+        return os.path.join(self.basedir, self._cache_key)
 
     def _cache_results(self, results):
         try:
@@ -238,11 +244,6 @@ class RegularCombinations:
             pass
         with gzip.open(self.cache_path, 'wb+') as file:
             pickle.dump(results, file)
-
-    @property
-    def cache_path(self):
-        """File path for the cached results for this reaction."""
-        return os.path.join(self.basedir, self.cache_key)
 
     def _cached_results(self):
         if not os.path.exists(self.cache_path):
@@ -253,9 +254,9 @@ class RegularCombinations:
         return combinations
 
 
-def regular_combinations(totals):
-    """Convenience function for invoking the RegularCombinations class."""
-    return RegularCombinations(totals).iterator()
+def calculate_combinations(totals):
+    """Public interface."""
+    return iter(CalculateCombinations(totals))
 
 
 def add_numbers(*numbers):
@@ -264,7 +265,9 @@ def add_numbers(*numbers):
 
 
 def normalize(pair):
-    """Convert the pair into a normalized list of atomic and mass numbers."""
+    """Convert the (count, species) pair into a normalized list of atomic and mass
+    numbers.
+    """
     o_mass, o_atomic = pair
     if o_mass < 0:
         return [(o_mass, o_atomic)]
@@ -298,13 +301,13 @@ class Model:
 
 
 class StandardModel(Model):
-    """StandardModel captures a regular nuclear reaction without any bells
+    """StandardModel captures a standard nuclear reaction without any bells
     or whistles.
     """
     def __call__(self, reactants):
         numbers = [num * n.numbers for num, n in reactants]
         mass_number, atomic_number = add_numbers(*numbers)
-        return regular_combinations((mass_number, atomic_number))
+        return calculate_combinations((mass_number, atomic_number))
 
 
 class PionExchangeModel(Model):
@@ -334,8 +337,8 @@ class PionExchangeAndDecayModel(PionExchangeModel):
     allowed to change to protons and vice versa, along with other decays.
     """
     def _combinations(self, seen, p_left, p_right):
-        outcomes = regular_combinations(p_left)
-        for pairs in outcomes:
+        iterator = calculate_combinations(p_left)
+        for pairs in iterator:
             daughters = normalize(p_right)
             for pair in pairs:
                 daughters.extend(normalize(pair))
@@ -429,16 +432,16 @@ class ElectronMediatedFissionModel(Model):
         assert len(reactants) == 1
         num, nuclide0 = reactants[0]
         assert num == 1
-        return regular_combinations(nuclide0.numbers)
+        return calculate_combinations(nuclide0.numbers)
 
 
 MODELS = {
-    'standard':              StandardModel(),
-    'pion-exchange':         PionExchangeAndDecayModel(),
-    'strict-pion-exchange':  StrictPionExchangeModel(),
-    'induced-decay':         ElectronMediatedDecayModel(),
-    'separated-nuclide':     SeparatedNuclideModel(),
-    'induced-fission':       ElectronMediatedFissionModel(),
+    'standard':             StandardModel(),
+    'pion-exchange':        PionExchangeAndDecayModel(),
+    'strict-pion-exchange': StrictPionExchangeModel(),
+    'induced-decay':        ElectronMediatedDecayModel(),
+    'separated-nuclide':    SeparatedNuclideModel(),
+    'induced-fission':      ElectronMediatedFissionModel(),
 }
 
 

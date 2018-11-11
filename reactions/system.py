@@ -2,23 +2,11 @@
 Model a system of reactions specified by a reaction spec on the
 command line.
 """
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods, invalid-name
 from .nubase import parse_spec
 from .combinations import Combinations
 from .calculations import Decay
-
-
-class Options:
-    """Holds command-line options."""
-
-    def __init__(self, **kwargs):
-        self.kwargs = kwargs
-        self.simple = kwargs.get('simple', False)
-        self.references = not self.simple and kwargs.get('references')
-        self.spins = not self.simple and kwargs.get('spins')
-        self.gamow = kwargs.get('gamow')
-        self.ascii = kwargs.get('ascii', False)
-        self.notes = not self.simple
+from .views import SystemTerminalView
 
 
 class System:
@@ -56,6 +44,10 @@ class System:
     def hermes(self, **kwargs):
         """Cary out a set of decay calculations described by Hermes."""
         return self._decay().hermes(**kwargs)
+
+    def to_terminal(self, io, **kwargs):
+        """Print the system to the provided io object."""
+        SystemTerminalView(self, io, **kwargs).call()
 
     def _decay(self):
         return Decay.load(reactions=self.reactions())

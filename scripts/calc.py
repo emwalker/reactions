@@ -2,67 +2,36 @@
 import argparse
 import sys
 import os
-import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-
-from reactions.system import System, Options
-from reactions.terminal import TerminalView, StudiesTerminalView
+from reactions.system import System
 
 
 class App:
     def __init__(self, **kwargs):
         self.kwargs = kwargs
-        if self.kwargs.get('view') == 'studies' or kwargs.get('studies'):
-            self.view_cls = StudiesTerminalView
-        else:
-            self.view_cls = TerminalView
+        self.system = System.load(self.kwargs['system_spec'], **self.kwargs)
 
-    def run(self):
-        system = System.load(self.kwargs['system'], **self.kwargs)
+    def call(self):
         if self.kwargs.get('decay_power'):
-            scenario = system.hyperphysics(**self.kwargs)
-            if self.kwargs.get('format') == 'csv':
-                scenario.to_csv(sys.stdout)
-            else:
-                self.print_scenario(scenario)
+            self.print_decay_power()
+            return
+        self.print_possible_reactions()
+
+    def print_decay_power(self):
+        scenario = self.system.hyperphysics(**self.kwargs)
+        if self.kwargs.get('format') == 'csv':
+            scenario.to_csv(sys.stdout)
         else:
-            options = Options(**self.kwargs)
-            for line in self.view_cls(system).lines(options):
-                print(line)
+            scenario.to_terminal(sys.stdout)
 
-    def print_scenario(self, scenario):
-        print()
-        print('At second:      {}'.format(self.kwargs.get('seconds')))
-        print('Starting moles: {}'.format(self.kwargs.get('moles')))
-        print('Activity:       {:.2e}'.format(scenario.activity()))
-        print('Watts:          {:.2e}'.format(scenario.power().watts))
-        print()
-
-        frame = scenario.df[[
-            'parent',
-            'daughters',
-            'parent_fraction',
-            'q_value_mev',
-            'starting_moles',
-            'gamow_factor',
-            'partial_half_life',
-            'partial_activity',
-            'watts',
-        ]]
-
-        if frame.empty:
-            print('No active isotopes.')
-        else:
-            with pd.option_context('display.max_rows', 999, 'display.max_columns', 10):
-                frame = frame.dropna().sort(['watts', 'gamow_factor'], ascending=[0, 1])
-                print(frame)
-        print()
+    def print_possible_reactions(self):
+        self.system.to_terminal(sys.stdout, **self.kwargs)
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('system', type=str)
+    parser.add_argument('system_spec', type=str)
     parser.add_argument('--lb', dest='lower_bound')
     parser.add_argument('--ub', dest='upper_bound')
     parser.add_argument('--spins', dest='spins', action='store_true')
@@ -84,25 +53,25 @@ def parse_arguments():
     parser.add_argument('--format', dest='format')
     parser.add_argument('--daughter-count', dest='daughter_count')
     parser.set_defaults(
-        lower_bound=0,
-        upper_bound=500000,
-        spins=False,
-        references=False,
-        view='default',
-        model='standard',
-        unstable_parents=False,
+        active_fraction=1,
         ascii=False,
-        excited=False,
-        simple=False,
-        gamow=False,
-        parent_ub=1000,
         daughter_count='',
         decay_power=False,
+        excited=False,
+        format=None,
+        gamow=False,
+        lower_bound=0,
+        model='standard',
+        moles=1,
+        parent_ub=1000,
+        references=False,
         screening=0,
         seconds=1,
-        moles=1,
-        active_fraction=1,
-        format=None,
+        simple=False,
+        spins=False,
+        unstable_parents=False,
+        upper_bound=500000,
+        view='default',
     )
     return parser.parse_args()
 
@@ -110,6 +79,6 @@ def parse_arguments():
 if __name__ == '__main__':
     ARGS = parse_arguments()
     try:
-        App(**vars(ARGS)).run()
+        App(**vars(ARGS)).call()
     except KeyboardInterrupt:
         print('command canceled.')

@@ -7,7 +7,7 @@ from reactions.combinations import (
     ElectronMediatedDecayModel,
     PionExchangeAndDecayModel,
     Reaction,
-    regular_combinations,
+    calculate_combinations,
     StandardModel,
     StrictPionExchangeModel,
     vectors3,
@@ -103,14 +103,14 @@ class PossibleDaughtersTest(unittest.TestCase):
         self.assertTrue(all(v == 5 for v in sums))
 
     def test_triples(self):
-        it = regular_combinations((2, 1))
+        it = calculate_combinations((2, 1))
         self.assertEqual([
             ((2, 1),),
             ((1, 0), (1, 1)),
         ], list(it))
 
     def test_possible_daughters(self):
-        ts = list(regular_combinations((6, 3)))
+        ts = list(calculate_combinations((6, 3)))
         self.assertEqual(19, len(ts))
         self.assertTrue(all(sum(m for m, a in t) == 6 for t in ts))
         self.assertTrue(all(sum(a for m, a in t) == 3 for t in ts))

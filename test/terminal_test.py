@@ -1,8 +1,8 @@
 # pylint: disable=missing-docstring, invalid-name
 import unittest
 
-from reactions.system import System, Options
-from reactions.terminal import TerminalView
+from reactions.system import System
+from reactions.terminal import TerminalView, Options
 
 
 class SystemTest(unittest.TestCase):

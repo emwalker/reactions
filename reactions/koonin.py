@@ -5,6 +5,8 @@ Carry out some calculations of interest that were demonstrated by Koonin.
 import math
 import numpy as np
 
+from .constants import BOHR_RADIUS
+
 
 class LogLambda:
     """Calculate the (log) rates for a given set of reactions."""
@@ -24,9 +26,6 @@ class LogLambda:
         't': 1.032447e8,
     }
 
-    # Bohr radius
-    bohr_radius = 0.53e-8
-
     def __init__(self, reactants, scale_factors):
         self.reactants = reactants
         self.scale_factors = scale_factors
@@ -41,7 +40,7 @@ class LogLambda:
         mu_ratio = reduced_mass / nucleon_mass
 
         for scale in self.scale_factors:
-            term1 = math.log10(A/self.bohr_radius**3)
+            term1 = math.log10(A / BOHR_RADIUS**3)
             term2 = 3 * math.log10(mu_ratio)
             term3 = -79 * math.sqrt(mu_ratio) * math.sqrt(1./scale)
             rate = 6.5 + term1 + term2 + term3

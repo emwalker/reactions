@@ -1,6 +1,6 @@
 """
-Various helper classes for representing different kinds of output to a
-terminal.
+Various helper classes for serializing various reactions in a form that can
+be printed to a terminal.
 """
 # pylint: disable=no-self-use, too-few-public-methods, too-many-instance-attributes
 # pylint: disable=no-member
@@ -11,6 +11,19 @@ from .studies import Studies
 
 
 STUDIES = Studies.data()
+
+
+class Options:
+    """Holds command-line options."""
+
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+        self.simple = kwargs.get('simple', False)
+        self.references = not self.simple and kwargs.get('references')
+        self.spins = not self.simple and kwargs.get('spins')
+        self.gamow = kwargs.get('gamow')
+        self.ascii = kwargs.get('ascii', False)
+        self.notes = not self.simple
 
 
 class TerminalView:
@@ -31,14 +44,16 @@ class TerminalView:
     def _filter(self, reactions):
         return reactions
 
+    def _line_class(self, options):
+        return AsciiTerminalLine if options.ascii else UnicodeTerminalLine
+
     def lines(self, options):
         """Return all of the lies to be printed out to the terminal, together with references
         if any.
         """
         refs = set()
         lines = []
-        cls = AsciiTerminalLine if options.ascii else UnicodeTerminalLine
-        for reaction in self.reactions(cls):
+        for reaction in self.reactions(self._line_class(options)):
             line, _refs = reaction.terminal(options)
             lines.append(line)
             refs |= set(_refs)
