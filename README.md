@@ -69,7 +69,7 @@ Activate the virtual environment to start:
 ...
 ```
 
-Use `deactivate to leave virtual environment:
+Use `deactivate` to leave virtual environment:
 ```
 % deactivate
 ```
