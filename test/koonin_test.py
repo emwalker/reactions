@@ -27,7 +27,7 @@ class LogLambdaTest(unittest.TestCase):
             [-57.762163335348745,
              -37.72974365009073,
              -19.954359876769544,
-             -10.995589442761172], list(rates))
+             -10.99558944276117], list(rates))
 
     def test_d_d(self):
         rates = LogLambda(['d', 'd'], [1, 2, 5, 10]).rates()
