@@ -65,7 +65,7 @@ OK
 Activate the virtual environment to start:
 ```
 % workon reactions
-% python scripts/calc.py "H+Li"
+% python3 scripts/calc.py "H+Li"
 ...
 ```
 
